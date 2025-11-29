@@ -63,6 +63,14 @@ exports.handler = async function(event) {
       throw new Error((await putJsonRes.json()).message || "Update memories.json failed");
     }
 
+    // Clear cache after successful delete
+    try {
+      const cache = await caches.open('function-cache');
+      await cache.delete('memories-data');
+    } catch (e) {
+      console.log('Could not clear cache:', e.message);
+    }
+
     // Delete the image
     const imageUrl = `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
     const imageRes = await fetch(imageUrl, {

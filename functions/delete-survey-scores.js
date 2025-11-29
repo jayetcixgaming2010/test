@@ -47,6 +47,14 @@ exports.handler = async (event) => {
             sha: metadataFile.data.sha,
         });
 
+        // Clear cache after successful delete
+        try {
+            const cache = await caches.open('function-cache');
+            await cache.delete('survey-scores-data');
+        } catch (e) {
+            console.log('Could not clear cache:', e.message);
+        }
+
         return {
             statusCode: 200,
             body: JSON.stringify({ success: true }),

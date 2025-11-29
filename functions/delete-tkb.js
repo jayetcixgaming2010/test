@@ -70,7 +70,7 @@ exports.handler = async function(event) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                message: `Delete TKB file: ${fileToDelete.weekName}`,
+                message: `Delete TKB file`,
                 content: Buffer.from(JSON.stringify(tkbData, null, 2)).toString('base64'),
                 sha: fileSha
             })
@@ -104,6 +104,14 @@ exports.handler = async function(event) {
         } catch (e) {
             console.log('Could not delete file from GitHub:', e.message);
             // Continue anyway - metadata was updated
+        }
+
+        // Clear cache after successful delete
+        try {
+            const cache = await caches.open('function-cache');
+            await cache.delete('tkb-data');
+        } catch (e) {
+            console.log('Could not clear cache:', e.message);
         }
 
         return {

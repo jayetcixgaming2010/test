@@ -47,6 +47,14 @@ exports.handler = async (event) => {
             sha: metadataFile.data.sha,
         });
 
+        // Clear cache after successful delete
+        try {
+            const cache = await caches.open('function-cache');
+            await cache.delete('scores-data');
+        } catch (e) {
+            console.log('Could not clear cache:', e.message);
+        }
+
         // Try to delete file from GitHub (best effort)
         try {
             const filePath = entry.url.split('/').slice(-1)[0]; // Extract filename
