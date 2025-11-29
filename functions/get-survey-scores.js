@@ -19,8 +19,12 @@ exports.handler = async (event) => {
       // Nếu file tồn tại, parse nội dung và trả về
       if (response.status === 200) {
         const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
-        const metadata = JSON.parse(content);
-        return metadata;
+        try {
+          const metadata = JSON.parse(content);
+          return metadata;
+        } catch (e) {
+          return [];
+        }
       }
 
       // Nếu file không tồn tại, trả về mảng rỗng

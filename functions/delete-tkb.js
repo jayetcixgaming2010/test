@@ -43,7 +43,16 @@ exports.handler = async function(event) {
 
         const fileData = await getRes.json();
         const fileSha = fileData.sha;
-        let tkbData = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
+        
+        let tkbData = [];
+        try {
+            tkbData = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf8'));
+        } catch (e) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: 'Invalid tkb.json format' })
+            };
+        }
 
         // Find and remove the entry
         const indexToRemove = tkbData.findIndex(item => item.id === id);

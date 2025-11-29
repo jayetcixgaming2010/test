@@ -32,7 +32,12 @@ exports.handler = async function(event) {
       throw new Error((await jsonRes.json()).message || 'memories.json not found');
     }
     const jsonData = await jsonRes.json();
-    const memories = JSON.parse(atob(jsonData.content));
+    let memories = [];
+    try {
+      memories = JSON.parse(Buffer.from(jsonData.content, 'base64').toString('utf8'));
+    } catch (e) {
+      throw new Error('Invalid memories.json format');
+    }
 
     // Update matching entry
     let updated = false;
@@ -55,6 +60,14 @@ exports.handler = async function(event) {
     });
     if (!putRes.ok) {
       throw new Error((await putRes.json()).message || 'Update memories.json failed');
+    }
+
+    // Clear cache after successful update
+    try {
+      const cache = await caches.open('function-cache');
+      await cache.delete('memories-data');
+    } catch (e) {
+      console.log('Could not clear cache:', e.message);
     }
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };

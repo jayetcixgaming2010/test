@@ -25,7 +25,12 @@ exports.handler = async (event) => {
         });
 
         const metadataContent = Buffer.from(metadataFile.data.content, 'base64').toString('utf-8');
-        let surveyScores = JSON.parse(metadataContent);
+        let surveyScores = [];
+        try {
+            surveyScores = JSON.parse(metadataContent);
+        } catch (e) {
+            return { statusCode: 500, body: JSON.stringify({ error: 'Invalid survey-scores.json format' }) };
+        }
 
         // Find and remove entry
         const entry = surveyScores.find(s => s.id === id);

@@ -15,7 +15,11 @@ exports.handler = async (event) => {
       });
 
       const content = Buffer.from(file.data.content, 'base64').toString('utf-8');
-      return JSON.parse(content);
+      try {
+        return JSON.parse(content);
+      } catch (e) {
+        return [];
+      }
     });
 
     return {

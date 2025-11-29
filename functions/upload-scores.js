@@ -115,6 +115,14 @@ exports.handler = async (event) => {
             });
         }
 
+        // Clear cache after successful upload
+        try {
+            const cache = await caches.open('function-cache');
+            await cache.delete('scores-data');
+        } catch (e) {
+            console.log('Could not clear cache:', e.message);
+        }
+
         return {
             statusCode: 200,
             body: JSON.stringify({ success: true, entry: scoreEntry }),

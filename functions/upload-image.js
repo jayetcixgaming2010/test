@@ -102,6 +102,14 @@ exports.handler = async function(event, context) {
       throw new Error(putJsonData.message || "Update memories.json failed");
     }
 
+    // Clear cache after successful upload
+    try {
+      const cache = await caches.open('function-cache');
+      await cache.delete('memories-data');
+    } catch (e) {
+      console.log('Could not clear cache:', e.message);
+    }
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },

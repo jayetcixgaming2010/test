@@ -25,7 +25,12 @@ exports.handler = async (event) => {
         });
 
         const metadataContent = Buffer.from(metadataFile.data.content, 'base64').toString('utf-8');
-        let scores = JSON.parse(metadataContent);
+        let scores = [];
+        try {
+            scores = JSON.parse(metadataContent);
+        } catch (e) {
+            return { statusCode: 500, body: JSON.stringify({ error: 'Invalid scores.json format' }) };
+        }
 
         // Find and remove entry
         const entry = scores.find(s => s.id === id);

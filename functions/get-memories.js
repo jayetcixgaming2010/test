@@ -24,7 +24,11 @@ exports.handler = async function(event) {
       }
 
       const data = await res.json();
-      return JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+      try {
+        return JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+      } catch (e) {
+        return [];
+      }
     });
 
     return {
