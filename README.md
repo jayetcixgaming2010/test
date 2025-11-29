@@ -261,7 +261,6 @@ Muốn cải thiện dự án? Hãy:
 | **Email** | [letrungkien2k10phutho@gmail.com](mailto:letrungkien2k10phutho@gmail.com) |
 | **GitHub** | [github.com/jayetcixgaming2010](https://github.com/jayetcixgaming2010) |
 | **Website** | [a2k26thptquelam.netlify.app](https://a2k26thptquelam.netlify.app) |
-| **Issues** | [Report bug](letrungkienprofiles.netlify.app) |
 
 ## 📄 License
 
