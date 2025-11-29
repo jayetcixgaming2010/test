@@ -544,8 +544,18 @@
         </div>
 
         <!-- Student Grid -->
-        <div id="student-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+        <div id="student-container" class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
         <!-- JS will load students here -->
+        </div>
+        
+        <!-- Mobile pagination (4 per page) -->
+        <div id="studentMobilePagination" class="flex justify-center mt-6 md:hidden"></div>
+
+        <!-- Load More Button (Desktop only) -->
+        <div id="loadMoreContainer" class="text-center mt-8 hidden md:block">
+            <button onclick="loadMoreStudents()" class="px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition duration-300 inline-flex items-center gap-2">
+                <i class="fas fa-arrow-down mr-2"></i>Xem Thêm
+            </button>
         </div>
     </div>
     </section>

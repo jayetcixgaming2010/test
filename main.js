@@ -830,6 +830,18 @@ const students = [
 // Students state
 let sortedStudents = [];
 let currentFilter = 'all';
+let displayedCount = 0; // Track how many students are currently displayed
+let studentCurrentPage = 1; // used for mobile pagination
+
+// Detect if mobile (less than 768px width)
+function isMobile() {
+    return window.innerWidth < 768;
+}
+
+// Get items per page based on device
+function getItemsPerPage() {
+    return isMobile() ? 4 : 10; // 4 on mobile, 10 on desktop (2 rows of 5)
+}
 
 // Helper: Lấy text role cho badge (thay 'monitor' thành 'Lớp trưởng')
 function getRoleText(role) {
@@ -851,6 +863,8 @@ function renderStudents(studentsToRender = students) {
     // Sắp xếp theo order để đảm bảo thứ tự cố định
     const sorted = [...studentsToRender].sort((a, b) => a.order - b.order);
     sortedStudents = sorted;
+    displayedCount = 0; // Reset count
+    studentCurrentPage = 1;
 
     const container = document.getElementById('student-container');
     if (!container) {
@@ -859,48 +873,125 @@ function renderStudents(studentsToRender = students) {
     }
     container.innerHTML = '';
 
-    // Force flex layout để order hoạt động đúng
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '1.5rem';
-    container.style.justifyContent = 'center';
-
     const countEl = document.getElementById('studentCount');
     if (countEl) countEl.textContent = sortedStudents.length;
 
-    const batchSize = 8;
-    let currentIndex = 0;
-
-    function renderBatch() {
-        const batch = sortedStudents.slice(currentIndex, currentIndex + batchSize);
-        batch.forEach((student, index) => {
-            setTimeout(() => {
-                renderStudentCard(student, container, currentIndex + index);
-            }, index * 50);
-        });
-        currentIndex += batchSize;
-        if (currentIndex < sortedStudents.length) {
-            requestAnimationFrame(renderBatch);
-        } else {
-            // Force sort DOM elements by order sau khi render
-            setTimeout(() => {
-                const cards = Array.from(container.children);
-                cards.sort((a, b) => {
-                    const orderA = parseInt(a.dataset.order) || 999;
-                    const orderB = parseInt(b.dataset.order) || 999;
-                    return orderA - orderB;
-                });
-                cards.forEach(card => {
-                    container.appendChild(card);
-                });
-            }, 100); // Đợi animation xong
-
-            // Replace icons sau khi render xong
-            if (typeof feather !== 'undefined') feather.replace();
-        }
+    // If mobile: use pagination; otherwise use load-more (desktop)
+    if (isMobile()) {
+        renderStudentsPage(1);
+    } else {
+        // Desktop initial batch
+        loadMoreStudents();
+        setTimeout(updateLoadMoreButton, 150);
     }
-    renderBatch();
 }
+
+// Function to render a specific page (mobile pagination)
+function renderStudentsPage(page) {
+    const container = document.getElementById('student-container');
+    if (!container) return;
+
+    const itemsPerPage = getItemsPerPage();
+    const totalPages = Math.max(1, Math.ceil(sortedStudents.length / itemsPerPage));
+    studentCurrentPage = Math.min(Math.max(1, page), totalPages);
+
+    const startIndex = (studentCurrentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, sortedStudents.length);
+
+    container.innerHTML = '';
+    for (let i = startIndex; i < endIndex; i++) {
+        const student = sortedStudents[i];
+        setTimeout(() => {
+            renderStudentCard(student, container, i);
+        }, (i - startIndex) * 50);
+    }
+
+    displayedCount = endIndex;
+    setTimeout(() => {
+        updateMobilePagination(totalPages);
+        if (typeof feather !== 'undefined') feather.replace();
+    }, 120);
+}
+
+// Function to load more students (desktop load-more)
+function loadMoreStudents() {
+    const container = document.getElementById('student-container');
+    if (!container) return;
+
+    const itemsPerPage = getItemsPerPage();
+    const startIndex = displayedCount;
+    const endIndex = Math.min(startIndex + itemsPerPage, sortedStudents.length);
+
+    // Render new batch
+    for (let i = startIndex; i < endIndex; i++) {
+        const student = sortedStudents[i];
+        setTimeout(() => {
+            renderStudentCard(student, container, i);
+        }, (i - startIndex) * 50);
+    }
+
+    displayedCount = endIndex;
+
+    // Show/hide "Xem thêm" button
+    setTimeout(() => {
+        updateLoadMoreButton();
+        if (typeof feather !== 'undefined') feather.replace();
+    }, 100);
+}
+
+// Function to update "Xem thêm" button visibility (desktop)
+function updateLoadMoreButton() {
+    const loadMoreBtn = document.getElementById('loadMoreContainer');
+    if (!loadMoreBtn) return;
+
+    if (displayedCount < sortedStudents.length) {
+        loadMoreBtn.classList.remove('hidden');
+    } else {
+        loadMoreBtn.classList.add('hidden');
+    }
+}
+
+// Mobile pagination controls
+function updateMobilePagination(totalPages) {
+    const pag = document.getElementById('studentMobilePagination');
+    if (!pag) return;
+    pag.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'inline-flex items-center gap-3';
+
+    const prev = document.createElement('button');
+    prev.className = 'px-3 py-2 bg-white/10 rounded disabled:opacity-50';
+    prev.textContent = 'Trang trước';
+    prev.disabled = studentCurrentPage <= 1;
+    prev.onclick = () => { if (studentCurrentPage > 1) renderStudentsPage(studentCurrentPage - 1); };
+
+    const info = document.createElement('span');
+    info.className = 'px-3 py-2 text-sm';
+    info.textContent = `Trang ${studentCurrentPage} / ${totalPages}`;
+
+    const next = document.createElement('button');
+    next.className = 'px-3 py-2 bg-white/10 rounded disabled:opacity-50';
+    next.textContent = 'Trang sau';
+    next.disabled = studentCurrentPage >= totalPages;
+    next.onclick = () => { if (studentCurrentPage < totalPages) renderStudentsPage(studentCurrentPage + 1); };
+
+    wrapper.appendChild(prev);
+    wrapper.appendChild(info);
+    wrapper.appendChild(next);
+    pag.appendChild(wrapper);
+}
+
+// Re-render when viewport crosses mobile/desktop threshold
+let _lastIsMobile = isMobile();
+window.addEventListener('resize', () => {
+    const nowMobile = isMobile();
+    if (nowMobile !== _lastIsMobile) {
+        _lastIsMobile = nowMobile;
+        // re-render list for the new layout
+        renderStudents(sortedStudents);
+    }
+});
 
 function renderStudentCard(student, container, index = 0) {
     const defaultImg = 'img/default.jpg';
@@ -931,9 +1022,6 @@ function renderStudentCard(student, container, index = 0) {
     card.dataset.order = student.order;
     card.style.animationDelay = `${index * 0.07}s`;
     card.style.cursor = 'pointer';
-    card.style.order = student.order; // Set CSS order
-    card.style.flex = '1 1 250px'; // Flex basis cho grid-like
-    card.style.maxWidth = '300px';
     // Keep original behavior without extra AOS attributes here
     card.onclick = (e) => {
         if (e.target.classList.contains('role-badge')) return;
