@@ -551,13 +551,18 @@
         <!-- Mobile pagination (4 per page) -->
         <div id="studentMobilePagination" class="flex justify-center mt-6 md:hidden"></div>
 
-        <!-- Load More Button (Desktop only) -->
-        <div id="loadMoreContainer" class="text-center mt-8 hidden md:block">
-            <button onclick="loadMoreStudents()" class="px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition duration-300 inline-flex items-center gap-2">
-                <i class="fas fa-arrow-down mr-2"></i>Xem Thêm
-            </button>
+        <!-- Desktop controls: Load more + Show all -->
+        <div id="loadMoreContainer" class="text-center mt-8 hidden md:block" role="region" aria-label="Controls danh sách học sinh">
+            <div class="inline-flex items-center gap-3">
+                <button id="btnLoadMore" onclick="loadMoreStudents()" class="px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition duration-300 inline-flex items-center gap-2" aria-label="Xem thêm học sinh">
+                    <i class="fas fa-arrow-down mr-2"></i>Xem Thêm
+                </button>
+                <button id="btnShowAll" onclick="showAllStudents()" class="px-6 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition duration-300 inline-flex items-center gap-2" aria-label="Xem tất cả học sinh">
+                    <i class="fas fa-list mr-2"></i>Xem hết
+                </button>
+            </div>
         </div>
-    </div>
+    </div> 
     </section>
 
     <!-- Class Activities Marquee -->
