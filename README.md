@@ -272,11 +272,12 @@ Bạn có quyền sử dụng, sửa đổi và phân phối code này, với đ
 </p>
 
 <p align="center">
-  <img src="https://github.com/Kiendzzz/testweb/blob/main/anhlop.png" alt="Ảnh tập thể lớp A2K26" width="600"/>
+  <img src="https://github.com/jayetcixgaming2010/A2-K26-THPT-QUELAM/blob/main/anhlop.png" alt="Ảnh tập thể lớp A2K26" width="600"/>
 </p>
 
 ---
 
 **Last Updated**: November 2025
+
 
 
