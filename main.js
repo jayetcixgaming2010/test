@@ -46,6 +46,85 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
+// Modal & focus helpers
+const __modalState = { active: false, lastFocused: null, keyHandler: null, scrollTop: 0 };
+
+function lockBodyScroll() {
+    if (__modalState.active) return;
+    __modalState.scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${__modalState.scrollTop}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    __modalState.active = true;
+}
+
+function unlockBodyScroll() {
+    if (!__modalState.active) return;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    window.scrollTo(0, __modalState.scrollTop || 0);
+    __modalState.active = false;
+}
+
+function trapFocus(modal) {
+    if (!modal) return;
+    __modalState.lastFocused = document.activeElement;
+    const focusable = modal.querySelectorAll('a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (first && typeof first.focus === 'function') first.focus();
+
+    __modalState.keyHandler = function(e) {
+        if (e.key === 'Tab') {
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            if (e.shiftKey) {
+                if (document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else {
+                if (document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        }
+    };
+    document.addEventListener('keydown', __modalState.keyHandler);
+}
+
+function releaseFocusTrap() {
+    if (__modalState.keyHandler) {
+        document.removeEventListener('keydown', __modalState.keyHandler);
+        __modalState.keyHandler = null;
+    }
+    try { if (__modalState.lastFocused && typeof __modalState.lastFocused.focus === 'function') __modalState.lastFocused.focus(); } catch(e){}
+    __modalState.lastFocused = null;
+}
+
+// Close visible modals when Escape is pressed
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modals = ['studentModal','imageModal','uploadModal','passwordModal','editModal','scoreUploadModal','tkbUploadModal'];
+        for (const id of modals) {
+            const el = document.getElementById(id);
+            if (el && !el.classList.contains('hidden')) {
+                el.classList.add('hidden');
+                el.classList.remove('show');
+                releaseFocusTrap();
+                unlockBodyScroll();
+                break;
+            }
+        }
+    }
+});
+
 // Check if user can upload (rate limiting)
 function canUpload() {
     const now = Date.now();
@@ -226,10 +305,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup lazy loading
     setupLazyLoading();
     
-    // Load memories after DOM is ready
+    // Load memories after DOM is ready (shorter on mobile)
     setTimeout(() => {
         loadMemories();
-    }, 100);
+    }, mobileDelay(100));
 
     // Event listeners for search and sort
     const searchInput = document.getElementById('searchMemory');
@@ -369,14 +448,27 @@ function openPasswordModal() {
     if (isAuthenticated) {
         openUploadModal();
     } else {
-        document.getElementById('passwordModal').classList.remove('hidden');
+        const modal = document.getElementById('passwordModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('aria-hidden', 'false');
+            lockBodyScroll();
+            trapFocus(modal);
+        }
     }
 }
 
 function closePasswordModal() {
-    document.getElementById('passwordModal').classList.add('hidden');
+    const modal = document.getElementById('passwordModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
     document.getElementById('passwordError').classList.add('hidden');
     document.getElementById('passwordInput').value = '';
+    releaseFocusTrap();
+    unlockBodyScroll();
 }
 
 async function checkPassword() {
@@ -435,13 +527,26 @@ function openUploadModal() {
         openPasswordModal();
         return;
     }
-    document.getElementById('uploadModal').classList.remove('hidden');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('aria-hidden', 'false');
+        lockBodyScroll();
+        trapFocus(modal);
+    }
 }
 
 function closeUploadModal() {
-    document.getElementById('uploadModal').classList.add('hidden');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
     document.getElementById('uploadForm').reset();
     document.getElementById('fileName').classList.add('hidden');
+    releaseFocusTrap();
+    unlockBodyScroll();
 }
 
 // Save edit metadata
@@ -459,11 +564,27 @@ async function saveEdit() {
         });
         if (!resp.ok) throw new Error('Cập nhật thất bại');
         showSuccessToast('Đã cập nhật thông tin ảnh!');
-        document.getElementById('editModal').classList.add('hidden');
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.classList.add('hidden');
+            editModal.setAttribute('aria-hidden', 'true');
+        }
+        releaseFocusTrap();
+        unlockBodyScroll();
         loadMemories();
     } catch (e) {
         showErrorToast('Lỗi khi cập nhật!');
     }
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    releaseFocusTrap();
+    unlockBodyScroll();
 }
 
 // File input display + validate size
@@ -625,10 +746,10 @@ function uploadImage() {
             
             closeUploadModal();
             
-            // Reload memories after a short delay to ensure server is updated
+            // Reload memories after a short delay to ensure server is updated (shorter on mobile)
             setTimeout(() => {
                 loadMemories();
-            }, 800);
+            }, mobileDelay(800));
             
             lastUploadTime = Date.now();
 
@@ -638,14 +759,14 @@ function uploadImage() {
             progressText.textContent = 'Lỗi...';
             progressBar.style.backgroundColor = '#ef4444';
         } finally {
-            // Clean up faster - 500ms instead of 1500ms
+            // Clean up faster - shorter on mobile
             setTimeout(() => {
                 uploadBtn.innerHTML = originalText;
                 uploadBtn.disabled = false;
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';
                 progressBar.style.backgroundColor = '#7b2ff7';
-            }, 500);
+            }, mobileDelay(500));
         }
     }).catch((err) => {
         clearInterval(progressInterval);
@@ -660,7 +781,7 @@ function uploadImage() {
             uploadProgress.classList.add('hidden');
             progressBar.style.width = '0%';
             progressBar.style.backgroundColor = '#7b2ff7';
-        }, 500);
+        }, mobileDelay(500));
     });
 }
 
@@ -669,7 +790,8 @@ function showSuccessToast(message) {
     const toast = document.getElementById('successToast');
     toast.querySelector('span').textContent = message;
     toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+    const duration = isMobile() ? 2000 : 3000;
+    setTimeout(() => toast.classList.add('hidden'), duration);
 }
 
 function showErrorToast(message) {
@@ -677,10 +799,11 @@ function showErrorToast(message) {
     toast.classList.add('bg-red-500'); // Override to red
     toast.querySelector('span').textContent = message;
     toast.classList.remove('hidden');
+    const duration = isMobile() ? 2000 : 3000;
     setTimeout(() => {
         toast.classList.add('hidden');
         toast.classList.remove('bg-red-500'); // Reset to green
-    }, 3000);
+    }, duration);
 }
 
 // ================== MEMORY ACTIONS (Authenticated) ==================
@@ -716,7 +839,13 @@ document.addEventListener('click', async (e) => {
         document.getElementById('editPath').value = path;
         document.getElementById('editTitle').value = title;
         document.getElementById('editDate').value = date ? new Date(date).toISOString().slice(0,10) : '';
-        modal.classList.remove('hidden');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('aria-hidden', 'false');
+            lockBodyScroll();
+            trapFocus(modal);
+        }
         if (typeof feather !== 'undefined') feather.replace();
     }
 });
@@ -750,13 +879,13 @@ if (mobileMenuBtn && mobileMenu) {
             mobileMenu.classList.remove('hidden');
             setTimeout(() => {
                 mobileMenu.classList.remove('-translate-y-5', 'opacity-0');
-            }, 10);
+            }, mobileDelay(10));
         } else {
             // Hide menu
             mobileMenu.classList.add('-translate-y-5', 'opacity-0');
             setTimeout(() => {
                 mobileMenu.classList.add('hidden');
-            }, 300);
+            }, mobileDelay(300));
         }
     });
 
@@ -767,7 +896,7 @@ if (mobileMenuBtn && mobileMenu) {
                 mobileMenu.classList.add('-translate-y-5', 'opacity-0');
                 setTimeout(() => {
                     mobileMenu.classList.add('hidden');
-                }, 300);
+                }, mobileDelay(300));
             }
         }
     });
@@ -916,6 +1045,15 @@ function isMobile() {
     return window.innerWidth < 768;
 }
 
+// Return a shorter delay on mobile for snappier UX
+function mobileDelay(ms) {
+    try {
+        return isMobile() ? Math.max(30, Math.floor(ms * 0.45)) : ms;
+    } catch (e) {
+        return ms;
+    }
+}
+
 // Get items per page based on device
 function getItemsPerPage() {
     return isMobile() ? 4 : 10; // 4 on mobile, 10 on desktop (2 rows of 5)
@@ -976,18 +1114,19 @@ function renderStudentsPage(page) {
     const endIndex = Math.min(startIndex + itemsPerPage, sortedStudents.length);
 
     container.innerHTML = '';
+    const stagger = isMobile() ? 20 : 50;
     for (let i = startIndex; i < endIndex; i++) {
         const student = sortedStudents[i];
         setTimeout(() => {
             renderStudentCard(student, container, i);
-        }, (i - startIndex) * 50);
+        }, (i - startIndex) * stagger);
     }
 
     displayedCount = endIndex;
     setTimeout(() => {
         updateMobilePagination(totalPages);
         if (typeof feather !== 'undefined') feather.replace();
-    }, 120);
+    }, mobileDelay(120));
 }
 
 // Function to load more students (desktop load-more)
@@ -1000,11 +1139,12 @@ function loadMoreStudents() {
     const endIndex = Math.min(startIndex + itemsPerPage, sortedStudents.length);
 
     // Render new batch
+    const stagger = isMobile() ? 20 : 50;
     for (let i = startIndex; i < endIndex; i++) {
         const student = sortedStudents[i];
         setTimeout(() => {
             renderStudentCard(student, container, i);
-        }, (i - startIndex) * 50);
+        }, (i - startIndex) * stagger);
     }
 
     displayedCount = endIndex;
@@ -1013,7 +1153,7 @@ function loadMoreStudents() {
     setTimeout(() => {
         updateLoadMoreButton();
         if (typeof feather !== 'undefined') feather.replace();
-    }, 100);
+    }, mobileDelay(100));
 }
 
 // Function to update "Xem thêm" button visibility (desktop)
@@ -1161,6 +1301,10 @@ function openStudentModal(name, img, badgesHtml) {
     if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('show');
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('aria-hidden', 'false');
+        lockBodyScroll();
+        trapFocus(modal);
     }
     if (typeof feather !== 'undefined') feather.replace();
 }
@@ -1173,19 +1317,33 @@ window.openImageModal = function(src) {
         modalImage.src = src;
         modal.classList.remove('hidden');
         modal.classList.add('show');
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('aria-hidden', 'false');
+        lockBodyScroll();
+        trapFocus(modal);
     }
 };
 
 // Close image modal
 window.closeImageModal = function() {
     const modal = document.getElementById('imageModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    releaseFocusTrap();
+    unlockBodyScroll();
 };
 
 // Close student modal
 window.closeStudentModal = function() {
     const modal = document.getElementById('studentModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    releaseFocusTrap();
+    unlockBodyScroll();
 };
 
 // Thêm vào DOMContentLoaded để init students với thứ tự order
@@ -1275,13 +1433,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modal && modalImage) {
             modalImage.src = src;
             modal.classList.remove('hidden');
+            modal.setAttribute('tabindex', '-1');
+            modal.setAttribute('aria-hidden', 'false');
+            lockBodyScroll();
+            trapFocus(modal);
         }
     };
 
     // Close image modal
     window.closeImageModal = function() {
         const modal = document.getElementById('imageModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+        releaseFocusTrap();
+        unlockBodyScroll();
     };
 
     // Close student modal
@@ -1469,11 +1636,24 @@ async function openScoreUploadModal() {
         openPasswordModal();
         return;
     }
-    document.getElementById('scoreUploadModal').classList.remove('hidden');
+    const modal = document.getElementById('scoreUploadModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('aria-hidden', 'false');
+        lockBodyScroll();
+        trapFocus(modal);
+    }
 }
 
 function closeScoreUploadModal() {
-    document.getElementById('scoreUploadModal').classList.add('hidden');
+    const modal = document.getElementById('scoreUploadModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    releaseFocusTrap();
+    unlockBodyScroll();
 }
 
 async function uploadScoreFile() {
@@ -1640,7 +1820,7 @@ function renderTKBFiles() {
     const paginated = filteredFiles.slice(start, end);
 
     container.innerHTML = paginated.map((file, idx) => `
-        <div class="bg-white bg-opacity-10 p-6 rounded-xl backdrop-blur-sm hover:scale-105 transition border border-white/20 tkb-card" data-aos="zoom-in" data-aos-delay="${idx * 150}">
+        <div class="bg-white bg-opacity-10 p-6 rounded-xl backdrop-blur-sm hover:scale-105 transition border border-white/20 tkb-card" data-aos="zoom-in" data-aos-delay="${idx * (isMobile() ? 60 : 150)}">
             <div class="flex items-start gap-4">
                 <div class="flex-shrink-0">
                     ${file.type === 'docx' ? 
@@ -1726,13 +1906,26 @@ function openTKBUploadModal() {
         openPasswordModal();
         return;
     }
-    document.getElementById('tkbUploadModal').classList.remove('hidden');
+    const modal = document.getElementById('tkbUploadModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.setAttribute('tabindex', '-1');
+        modal.setAttribute('aria-hidden', 'false');
+        lockBodyScroll();
+        trapFocus(modal);
+    }
 }
 
 function closeTKBUploadModal() {
-    document.getElementById('tkbUploadModal').classList.add('hidden');
+    const modal = document.getElementById('tkbUploadModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+    }
     document.getElementById('tkbUploadForm').reset();
     document.getElementById('tkbFileName').classList.add('hidden');
+    releaseFocusTrap();
+    unlockBodyScroll();
 }
 
 document.getElementById('tkbFile').addEventListener('change', function(e) {

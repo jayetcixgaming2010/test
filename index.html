@@ -76,6 +76,8 @@
   /* Critical CSS cho phần đầu trang */
   .global-loader { display: flex; }
   #mainContent { display: none; }
+    /* Screen-reader only helper */
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body class="bg-memory min-h-screen">
@@ -485,8 +487,8 @@
     </section>
 
     <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[1000] hidden">
-        <span class="absolute top-4 right-6 text-white text-4xl cursor-pointer" onclick="closeImageModal()">&times;</span>
+    <div id="imageModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[1000] hidden">
+        <button type="button" aria-label="Đóng" class="absolute top-4 right-6 text-white text-4xl cursor-pointer bg-transparent border-0" onclick="closeImageModal()">&times;<span class="sr-only">Đóng</span></button>
         <img id="modalImage" src="" alt="Ảnh phóng to" class="max-h-[90%] max-w-[90%] rounded-lg shadow-2xl">
     </div>
 
@@ -649,11 +651,11 @@
     </section>
 
     <!-- Score Upload Modal -->
-    <div id="scoreUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="scoreUploadModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Upload Bảng Điểm</h3>
-                <button onclick="closeScoreUploadModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                <button type="button" aria-label="Đóng" onclick="closeScoreUploadModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;<span class="sr-only">Đóng</span></button>
             </div>
             <form id="scoreUploadForm" class="space-y-4">
                 <div>
@@ -689,11 +691,11 @@
     </div>
 
     <!-- TKB Upload Modal -->
-    <div id="tkbUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="tkbUploadModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-8 max-w-md w-full shadow-xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Upload TKB</h3>
-                <button onclick="closeTKBUploadModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                <button type="button" aria-label="Đóng" onclick="closeTKBUploadModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;<span class="sr-only">Đóng</span></button>
             </div>
             
             <form id="tkbUploadForm" class="space-y-4">
@@ -856,12 +858,12 @@
     </footer>
 
     <!-- Password Modal -->
-    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="passwordModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4" data-aos="zoom-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Nhập mật khẩu</h3>
-                <button onclick="closePasswordModal()" class="text-gray-500 hover:text-gray-700">
-                    <i data-feather="x"></i>
+                <button type="button" aria-label="Đóng" onclick="closePasswordModal()" class="text-gray-500 hover:text-gray-700">
+                    <i data-feather="x"></i><span class="sr-only">Đóng</span>
                 </button>
             </div>
             <p class="text-gray-600 mb-6">Vui lòng nhập mật khẩu lớp để tiếp tục upload ảnh.</p>
@@ -876,12 +878,12 @@
     </div>
 
     <!-- Upload Modal -->
-    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="uploadModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4" data-aos="zoom-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Upload ảnh</h3>
-                <button onclick="closeUploadModal()" class="text-gray-500 hover:text-gray-700">
-                    <i data-feather="x"></i>
+                <button type="button" aria-label="Đóng" onclick="closeUploadModal()" class="text-gray-500 hover:text-gray-700">
+                    <i data-feather="x"></i><span class="sr-only">Đóng</span>
                 </button>
             </div>
             <form id="uploadForm" class="space-y-4">
@@ -923,12 +925,12 @@
     </div>
 
     <!-- Edit Image Modal -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="editModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4" data-aos="zoom-in">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-gray-800">Chỉnh sửa ảnh</h3>
-                <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
-                    <i data-feather="x"></i>
+                <button type="button" aria-label="Đóng" onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
+                    <i data-feather="x"></i><span class="sr-only">Đóng</span>
                 </button>
             </div>
             <form id="editForm" class="space-y-4">
@@ -957,10 +959,10 @@
     </div>
 
     <!-- Student Modal -->
-    <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[2000] hidden">
+    <div id="studentModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[2000] hidden">
         <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-11/12 relative">
-            <button onclick="closeStudentModal()" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">
-            <i data-feather="x"></i>
+            <button type="button" aria-label="Đóng" onclick="closeStudentModal()" class="absolute top-3 right-3 text-gray-600 hover:text-red-500">
+            <i data-feather="x"></i><span class="sr-only">Đóng</span>
             </button>
             <div class="text-center">
             <img id="studentModalImg" src="" alt="Học sinh" class="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-purple-500" loading="lazy">
@@ -990,16 +992,17 @@
     document.getElementById('mainContent').style.display = 'block';
 
     // Khởi tạo hiệu ứng sau khi nội dung đã hiện
-    setTimeout(function() {
-      if (window.AOS) AOS.init({
-        duration: 1000,  // Tăng để mượt hơn
-        once: false,     // Fix lỗi mất hiệu ứng khi scroll lại
-        offset: 150,      // Trigger sớm hơn
-        easing: 'ease-in-out-sine',  // Mượt mà hơn
-        mirror: true     // Animate khi scroll ngược
-      });
-      if (window.feather) feather.replace();
-    }, 100); // Đợi DOM render xong
+        const __initDelay = (window.innerWidth < 768) ? 50 : 100;
+        setTimeout(function() {
+            if (window.AOS) AOS.init({
+                duration: 1000,  // Tăng để mượt hơn
+                once: false,     // Fix lỗi mất hiệu ứng khi scroll lại
+                offset: 150,      // Trigger sớm hơn
+                easing: 'ease-in-out-sine',  // Mượt mà hơn
+                mirror: true     // Animate khi scroll ngược
+            });
+            if (window.feather) feather.replace();
+        }, __initDelay); // Đợi DOM render xong
   }
 
   // Cho phép gọi từ main.js khi dữ liệu đã tải xong
