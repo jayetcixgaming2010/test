@@ -1,3 +1,12 @@
+// Helper function to format date as Ngày/Tháng/Năm
+function formatDateDMY(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 exports.handler = async (event) => {
     try {
         if (event.httpMethod !== 'POST') {
@@ -93,7 +102,8 @@ exports.handler = async (event) => {
             fileTypeCategory = 'xlsx';
         }
 
-        // Add new survey score entry
+        // Add new survey score entry with formatted date
+        const uploadDate = new Date();
         const newEntry = {
             id: `survey_${timestamp}`,
             year: year,
@@ -101,7 +111,7 @@ exports.handler = async (event) => {
             fileName: fileName,
             type: fileTypeCategory,
             url: `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${filePath}`,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: formatDateDMY(uploadDate.toISOString())
         };
 
         surveyScoresData.push(newEntry);
@@ -124,13 +134,7 @@ exports.handler = async (event) => {
             throw new Error('Failed to update survey scores metadata');
         }
 
-        // Clear cache after successful upload
-        try {
-            const cache = await caches.open('function-cache');
-            await cache.delete('survey-scores-data');
-        } catch (e) {
-            console.log('Could not clear cache:', e.message);
-        }
+        // Cache clearing is not needed for Netlify Functions
 
         return {
             statusCode: 200,

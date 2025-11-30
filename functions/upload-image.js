@@ -1,3 +1,12 @@
+// Helper function to format date as Ngày/Tháng/Năm
+function formatDateDMY(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 exports.handler = async function(event, context) {
   if (event.httpMethod !== "POST") {
     return {
@@ -78,7 +87,9 @@ exports.handler = async function(event, context) {
     }
 
     // Add new entry (unshift for newest first)
-    memories.unshift({ title, date, url: rawUrl, path });
+    // Format date as Ngày/Tháng/Năm
+    const formattedDate = formatDateDMY(date);
+    memories.unshift({ title, date: formattedDate, url: rawUrl, path });
 
     // Put updated json with explicit UTF-8
     const newContent = Buffer.from(JSON.stringify(memories, null, 2), 'utf8').toString('base64');
@@ -107,7 +118,7 @@ exports.handler = async function(event, context) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ url: rawUrl, title, date, path }),
+      body: JSON.stringify({ url: rawUrl, title, date: formattedDate, path }),
     };
   } catch (err) {
     console.error('Upload error:', err);

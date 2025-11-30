@@ -1,5 +1,14 @@
 const { Octokit } = require('@octokit/rest');
 
+// Helper function to format date as Ngày/Tháng/Năm
+function formatDateDMY(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 exports.handler = async (event) => {
     try {
         if (event.httpMethod !== 'POST') {
@@ -70,7 +79,8 @@ exports.handler = async (event) => {
             scores = [];
         }
 
-        // Add new score entry
+        // Add new score entry with formatted date
+        const uploadDate = new Date();
         const scoreEntry = {
             id: timestamp.toString(),
             year: year,
@@ -78,7 +88,7 @@ exports.handler = async (event) => {
             semesterText: typeMap[semester] || semester,
             fileName: fileName,
             url: `https://raw.githubusercontent.com/${process.env.GITHUB_USER}/${process.env.GITHUB_REPO}/${branch}/${filePath}`,
-            uploadedAt: new Date().toISOString(),
+            uploadedAt: formatDateDMY(uploadDate.toISOString()),
         };
 
         scores.push(scoreEntry);
@@ -115,13 +125,7 @@ exports.handler = async (event) => {
             });
         }
 
-        // Clear cache after successful upload
-        try {
-            const cache = await caches.open('function-cache');
-            await cache.delete('scores-data');
-        } catch (e) {
-            console.log('Could not clear cache:', e.message);
-        }
+        // Cache clearing is not needed for Netlify Functions
 
         return {
             statusCode: 200,

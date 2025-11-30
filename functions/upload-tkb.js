@@ -1,3 +1,12 @@
+// Helper function to format date as Ngày/Tháng/Năm
+function formatDateDMY(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 exports.handler = async function(event) {
     try {
         if (event.httpMethod !== 'POST') {
@@ -94,7 +103,8 @@ exports.handler = async function(event) {
             fileTypeCategory = 'image';
         }
 
-        // Add new TKB entry
+        // Add new TKB entry with formatted date
+        const uploadDate = new Date();
         const newEntry = {
             id: `tkb_${timestamp}`,
             class: tkbClass,
@@ -102,7 +112,7 @@ exports.handler = async function(event) {
             fileName: fileName,
             type: fileTypeCategory,
             url: `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${filePath}`,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: formatDateDMY(uploadDate.toISOString())
         };
 
         tkbData.push(newEntry);
@@ -125,13 +135,7 @@ exports.handler = async function(event) {
             throw new Error('Failed to update TKB metadata');
         }
 
-        // Clear cache after successful upload
-        try {
-            const cache = await caches.open('function-cache');
-            await cache.delete('tkb-data');
-        } catch (e) {
-            console.log('Could not clear cache:', e.message);
-        }
+        // Cache clearing is not needed for Netlify Functions
 
         return {
             statusCode: 200,
