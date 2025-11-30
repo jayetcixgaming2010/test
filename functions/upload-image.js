@@ -8,10 +8,20 @@ exports.handler = async function(event, context) {
 
   try {
     const { title, date, filename, contentBase64, password } = JSON.parse(event.body);
+    
+    // Get environment variables
     const CLASS_PASSWORD = process.env.CLASS_PASSWORD;
-    if (!CLASS_PASSWORD) {
+    const user = process.env.GITHUB_USER;
+    const repo = process.env.GITHUB_REPO;
+    const branch = process.env.GITHUB_BRANCH || "main";
+    const token = process.env.GITHUB_TOKEN;
+
+    // Validate required environment variables
+    if (!CLASS_PASSWORD || !user || !repo || !token) {
       return { statusCode: 500, body: JSON.stringify({ error: 'Server misconfigured' }) };
     }
+
+    // Validate password first
     if (password !== CLASS_PASSWORD) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Sai mật khẩu lớp!' }) };
     }
@@ -25,17 +35,6 @@ exports.handler = async function(event, context) {
     const approxSize = Buffer.from(contentBase64, 'base64').length;
     if (approxSize > 5 * 1024 * 1024) {
       throw new Error('File too large: Max 5MB');
-    }
-
-    const user = process.env.GITHUB_USER;
-    const repo = process.env.GITHUB_REPO;
-    const branch = process.env.GITHUB_BRANCH || "main";
-    const token = process.env.GITHUB_TOKEN;
-    const CLASS_PASSWORD = process.env.CLASS_PASSWORD;
-
-    // Validate required environment variables
-    if (!user || !repo || !token) {
-      throw new Error('Missing required environment variables: GITHUB_USER, GITHUB_REPO, GITHUB_TOKEN');
     }
 
     const timestamp = Date.now();
@@ -103,12 +102,7 @@ exports.handler = async function(event, context) {
     }
 
     // Clear cache after successful upload
-    try {
-      const cache = await caches.open('function-cache');
-      await cache.delete('memories-data');
-    } catch (e) {
-      console.log('Could not clear cache:', e.message);
-    }
+    // Note: Netlify Functions don't have access to browser caches
 
     return {
       statusCode: 200,
