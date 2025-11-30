@@ -184,8 +184,8 @@
                 <!-- Upload Button & Mobile Menu -->
                 <div class="flex items-center space-x-3">
                     <button id="uploadBtn" onclick="isAuthenticated ? openUploadModal() : openPasswordModal()" 
-                        class="hidden sm:flex items-center py-2 px-4 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 hover:shadow-lg transition duration-300 transform hover:-translate-y-0.5">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i> Upload
+                        class="hidden sm:flex items-center py-2 px-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold hover:from-purple-600 hover:to-pink-600 hover:shadow-xl transition duration-300 transform hover:-translate-y-1 shadow-lg">
+                        <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Upload
                     </button>
                 </div>
 
@@ -222,8 +222,8 @@
                 </div>
                 <div class="mt-4 pt-4 border-t border-white/20">
                     <button id="mobileUploadBtn" onclick="isAuthenticated ? openUploadModal() : openPasswordModal()"
-                        class="w-full py-2 px-4 bg-white text-purple-600 rounded-lg font-semibold hover:bg-opacity-90 transition duration-300 flex items-center justify-center">
-                        <i class="fas fa-cloud-upload-alt mr-2"></i> Upload
+                        class="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold hover:from-purple-600 hover:to-pink-600 transition duration-300 flex items-center justify-center shadow-lg">
+                        <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Upload
                     </button>
                 </div>
             </div>
@@ -492,6 +492,19 @@
         <img id="modalImage" src="" alt="Ảnh phóng to" class="max-h-[90%] max-w-[90%] rounded-lg shadow-2xl">
     </div>
 
+    <!-- File Preview Modal -->
+    <div id="filePreviewModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[1000] hidden overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h3 id="previewTitle" class="text-lg font-bold text-gray-800"></h3>
+                <button type="button" aria-label="Đóng" class="text-gray-500 hover:text-gray-700 text-2xl" onclick="closeFilePreviewModal()">&times;</button>
+            </div>
+            <div id="previewContent" class="p-6">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Homeroom Teacher -->
     <section id="teacher" class="py-20 bg-gradient-to-br from-purple-50 via-white to-pink-50" data-aos="fade-up">
         <div class="max-w-5xl mx-auto px-4">
@@ -633,8 +646,8 @@
         
         <!-- Upload TKB Section (Only for authenticated users) -->
         <div class="mb-12 text-center">
-            <button onclick="openTKBUploadModal()" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg inline-flex items-center gap-2" id="uploadTKBBtn">
-                <i class="fas fa-plus"></i>Upload TKB
+            <button onclick="openTKBUploadModal()" class="bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-8 py-3 rounded-full font-bold hover:from-cyan-500 hover:to-blue-600 transition duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center gap-2" id="uploadTKBBtn">
+                <i class="fas fa-calendar-plus text-lg"></i>Upload TKB
             </button>
         </div>
 
@@ -778,8 +791,8 @@
         
         <!-- Upload Button -->
         <div class="mb-12 text-center">
-            <button onclick="openScoreUploadModal()" class="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg inline-flex items-center gap-2" id="uploadScoreBtn">
-                <i class="fas fa-plus"></i>Upload Bảng Điểm
+            <button onclick="openScoreUploadModal()" class="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-8 py-3 rounded-full font-bold hover:from-green-500 hover:to-emerald-600 transition duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center gap-2" id="uploadScoreBtn">
+                <i class="fas fa-chart-line text-lg"></i>Upload Bảng Điểm
             </button>
         </div>
         
