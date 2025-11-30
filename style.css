@@ -779,6 +779,18 @@ body {
     font-size: 1rem;
   }
 
+/* Mobile safety: ensure the topbar upload button never appears outside the mobile menu.
+   This prevents JS race conditions where the button might be shown briefly on small viewports. */
+@media (max-width: 767px) {
+  #uploadBtn {
+    display: none !important;
+  }
+  /* Ensure the mobile upload button inside the menu remains visible */
+  #mobileUploadBtn {
+    display: inline-flex !important;
+  }
+}
+
   .role-badge, .member-badge {
     padding: 6px 12px;
     font-size: 0.95rem;

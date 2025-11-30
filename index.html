@@ -981,6 +981,30 @@
     <!-- Removed duplicate logout buttons (IDs already exist in navbar) -->
   
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98deddbbdb68d4b4',t:'MTc2MDM1ODgxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+        <!-- Runtime overrides: ensure AOS uses shorter durations on mobile and re-run upload button UI after main.min.js loads -->
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                try {
+                    if (window.AOS) {
+                        AOS.init({
+                            duration: (window.innerWidth < 768) ? 700 : 1000,
+                            once: false,
+                            offset: 120,
+                            easing: 'ease-in-out-sine',
+                            mirror: true
+                        });
+                    }
+
+                    if (typeof updateUploadButtonUI === 'function') {
+                        try { updateUploadButtonUI(); } catch (e) { console.warn('updateUploadButtonUI failed', e); }
+                    }
+
+                    console.debug('post-load overrides applied: AOS init + upload UI');
+                } catch (e) {
+                    console.warn('post-load override error', e);
+                }
+            });
+        </script>
 <script>
   // Hiện loader khi vào web
   document.getElementById('globalLoader').style.display = 'flex';

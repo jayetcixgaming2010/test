@@ -424,19 +424,32 @@ function updateUploadButtonUI() {
     const mobileUploadBtn = document.getElementById('mobileUploadBtn');
     const uploadTKBBtn = document.getElementById('uploadTKBBtn');
 
-    // Desktop
+    // Desktop: show the topbar upload button only on non-mobile viewports.
     if (uploadBtn) {
+        // keep the button behavior bound, but only make it visible when not on mobile
         uploadBtn.onclick = isAuthenticated ? openUploadModal : openPasswordModal;
         uploadBtn.innerHTML = isAuthenticated ? '<i data-feather="upload" class="mr-2"></i> Upload ảnh' : '<i data-feather="lock" class="mr-2"></i> Nhập mật khẩu';
-        uploadBtn.style.display = 'inline-flex';
+        if (!isMobile()) {
+            uploadBtn.style.display = 'inline-flex';
+        } else {
+            // On small screens the topbar upload button must remain hidden so the
+            // upload action stays inside the three-dot mobile menu.
+            uploadBtn.style.display = '';
+        }
     }
 
-    // Mobile
+    // Mobile: the upload control inside the mobile menu should be the one used on small screens
     if (mobileUploadBtn) {
         mobileUploadBtn.onclick = isAuthenticated ? openUploadModal : openPasswordModal;
         mobileUploadBtn.innerHTML = isAuthenticated ? '<i data-feather="upload" class="mr-2"></i> Upload ảnh' : '<i data-feather="lock" class="mr-2"></i> Nhập mật khẩu';
+        // keep it visible in the mobile menu; its parent menu controls overall visibility
         mobileUploadBtn.style.display = 'inline-flex';
     }
+
+    // Debugging help: log current device and auth state (useful for QA)
+    try {
+        console.debug('[updateUploadButtonUI] isMobile:', isMobile(), 'isAuthenticated:', !!isAuthenticated);
+    } catch (e) {}
 
     // TKB Upload: visible but will prompt for password when needed
     if (uploadTKBBtn) uploadTKBBtn.style.display = 'inline-block';
@@ -1420,11 +1433,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function updateUploadButtonUI() {
-        // Update upload button if authenticated
-        const uploadBtn = document.getElementById('uploadBtn');
-        if (uploadBtn) uploadBtn.classList.remove('hidden');
-    }
+    // (updateUploadButtonUI is defined globally above) - removed duplicate to avoid overwriting
 
     // Open image modal
     window.openImageModal = function(src) {
@@ -1468,6 +1477,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update Score upload button visibility
     updateScoreUploadButtonUI();
+
+    // Ensure AOS is initialized with mobile-aware durations after page render
+    if (window.AOS) {
+        try {
+            AOS.init({
+                duration: isMobile() ? 700 : 1000,
+                once: false,
+                offset: 120,
+                easing: 'ease-in-out-sine',
+                mirror: true
+            });
+        } catch (e) {
+            // Non-fatal
+            console.warn('AOS init override failed', e);
+        }
+    }
 });
 
 // ================== SCORES FUNCTIONS ==================
