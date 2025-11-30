@@ -243,7 +243,10 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadMemories() {
     try {
         showLoadingState(true);
-        const resp = await fetch('/.netlify/functions/get-memories');
+        
+        // Add cache busting to force fresh data from server
+        const cacheParam = '?cache=' + Date.now();
+        const resp = await fetch('/.netlify/functions/get-memories' + cacheParam);
         if (!resp.ok) {
             const errorData = await resp.json().catch(() => ({ error: 'Unknown error' }));
             throw new Error(errorData.error || `HTTP ${resp.status}: Failed to load memories`);
@@ -281,9 +284,13 @@ async function loadMemories() {
             memoryCard.dataset.title = mem.title;
             memoryCard.dataset.date = mem.date;
             memoryCard.style.display = 'none'; // Initially hidden
+            
+            // Add cache busting to image URL to force fresh load
+            const imageUrl = mem.url + (mem.url.includes('?') ? '&' : '?') + 't=' + Date.now();
+            
             // Keep original behavior; no extra AOS attributes added here
             memoryCard.innerHTML = `
-                <img src="${mem.url}" alt="${mem.title}" class="memory-img" loading="lazy">
+                <img src="${imageUrl}" alt="${mem.title}" class="memory-img" loading="lazy">
                 <div class="memory-overlay">
                     <h3 class="memory-title">${escapeHtml(mem.title)}</h3>
                     <p class="memory-date">${new Date(mem.date).toLocaleDateString('vi-VN')}</p>
@@ -294,12 +301,12 @@ async function loadMemories() {
                 </div>
             `;
             const imgEl = memoryCard.querySelector('.memory-img');
-            if (imgEl) imgEl.onclick = () => openImageModal(mem.url);
+            if (imgEl) imgEl.onclick = () => openImageModal(imageUrl);
             // fallback: open when clicking anywhere on card except actions
             memoryCard.addEventListener('click', (evt) => {
                 if (evt.target.closest('.memory-action-btn')) return;
                 if (evt.target.closest('.memory-actions')) return;
-                openImageModal(mem.url);
+                openImageModal(imageUrl);
             });
             grid.appendChild(memoryCard);
             allMemoryElements.push(memoryCard);
@@ -478,6 +485,49 @@ document.getElementById('imageFile').addEventListener('change', function(e) {
 });
 
 // ================== UPLOAD IMAGE ==================
+// Helper: Compress image before upload
+async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                // Calculate new dimensions (max 1920x1440)
+                const MAX_WIDTH = 1920;
+                const MAX_HEIGHT = 1440;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to compressed base64 (quality 0.75 for good balance)
+                const base64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+                resolve(base64);
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+            img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+}
+
 function uploadImage() {
     // Rate limiting check
     if (!canUpload()) {
@@ -528,20 +578,22 @@ function uploadImage() {
     uploadBtn.disabled = true;
     uploadProgress.classList.remove('hidden');
     
-    // Simulate progress
+    // Progressive progress: 0-40% for compression, 40-100% for upload
     let progress = 0;
     const progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
+        progress += Math.random() * 8;
+        if (progress > 95) progress = 95;
         progressBar.style.width = progress + '%';
         progressText.textContent = `Đang upload... ${Math.round(progress)}%`;
-    }, 200);
+    }, 150);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-        const base64 = reader.result.split(',')[1];
-
+    // Compress image in parallel
+    compressImage(file).then(async (base64) => {
         try {
+            // Update progress to 50% after compression
+            progress = 50;
+            progressBar.style.width = progress + '%';
+            
             const resp = await fetch('/.netlify/functions/upload-image', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -553,6 +605,7 @@ function uploadImage() {
                     password: classPassword,
                 }),
             });
+            
             clearInterval(progressInterval);
             progressBar.style.width = '100%';
             progressText.textContent = 'Hoàn tất...';
@@ -564,8 +617,19 @@ function uploadImage() {
 
             const data = await resp.json();
             showSuccessToast(`Upload thành công: ${data.path}`);
+            
+            // Force cache busting - add timestamp to image URL
+            if (data.url) {
+                data.url = data.url + '?t=' + Date.now();
+            }
+            
             closeUploadModal();
-            loadMemories(); // Reload memories
+            
+            // Reload memories after a short delay to ensure server is updated
+            setTimeout(() => {
+                loadMemories();
+            }, 800);
+            
             lastUploadTime = Date.now();
 
         } catch (err) {
@@ -574,16 +638,30 @@ function uploadImage() {
             progressText.textContent = 'Lỗi...';
             progressBar.style.backgroundColor = '#ef4444';
         } finally {
+            // Clean up faster - 500ms instead of 1500ms
             setTimeout(() => {
                 uploadBtn.innerHTML = originalText;
                 uploadBtn.disabled = false;
                 uploadProgress.classList.add('hidden');
                 progressBar.style.width = '0%';
                 progressBar.style.backgroundColor = '#7b2ff7';
-            }, 1500);
+            }, 500);
         }
-    };
-    reader.readAsDataURL(file);
+    }).catch((err) => {
+        clearInterval(progressInterval);
+        console.error('Compression error:', err);
+        showErrorToast(`Lỗi xử lý ảnh: ${err.message}`);
+        progressText.textContent = 'Lỗi...';
+        progressBar.style.backgroundColor = '#ef4444';
+        
+        setTimeout(() => {
+            uploadBtn.innerHTML = originalText;
+            uploadBtn.disabled = false;
+            uploadProgress.classList.add('hidden');
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '#7b2ff7';
+        }, 500);
+    });
 }
 
 // ================== TOAST NOTIFICATIONS ==================
@@ -1400,7 +1478,7 @@ function closeScoreUploadModal() {
 
 async function uploadScoreFile() {
     if (!isAuthenticated) {
-        alert('Bạn cần xác thực trước khi upload!');
+        showErrorToast('Bạn cần xác thực trước khi upload!');
         return;
     }
     
@@ -1409,38 +1487,44 @@ async function uploadScoreFile() {
     const file = document.getElementById('scoreFile').files[0];
     
     if (!year || !semester || !file) {
-        alert('Vui lòng chọn đủ thông tin!');
+        showErrorToast('Vui lòng chọn đủ thông tin!');
         return;
     }
     
+    const uploadBtn = document.querySelector('#scoreUploadForm button[type="button"]:last-child');
+    const originalBtnText = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = 'Đang upload...';
+
     try {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64 = e.target.result;
-            const fileName = file.name;
-            const fileType = file.type || 'application/octet-stream';
-            
-            const response = await fetch('/.netlify/functions/upload-scores', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ year, semester, file: base64, fileName, fileType })
-            });
-            
-            if (response.ok) {
-                alert('Upload bảng điểm thành công!');
-                document.getElementById('scoreUploadForm').reset();
-                document.getElementById('scoreFileName').classList.add('hidden');
-                closeScoreUploadModal();
-                loadScores();
-            } else {
-                const error = await response.json();
-                alert('Lỗi upload: ' + (error.message || 'Unknown error'));
-            }
-        };
-        reader.readAsDataURL(file);
+        // Use arrayBuffer for faster processing
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        const fileName = file.name;
+        const fileType = file.type || 'application/octet-stream';
+        
+        const response = await fetch('/.netlify/functions/upload-scores', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ year, semester, file: 'data:' + fileType + ';base64,' + base64, fileName, fileType })
+        });
+        
+        if (response.ok) {
+            showSuccessToast('Upload bảng điểm thành công!');
+            document.getElementById('scoreUploadForm').reset();
+            document.getElementById('scoreFileName').classList.add('hidden');
+            closeScoreUploadModal();
+            loadScores();
+        } else {
+            const error = await response.json();
+            showErrorToast('Lỗi upload: ' + (error.message || 'Unknown error'));
+        }
     } catch (err) {
-        console.error('Upload error:', err);
-        alert('Lỗi upload: ' + err.message);
+        console.error('Upload score error:', err);
+        showErrorToast('Lỗi upload: ' + err.message);
+    } finally {
+        uploadBtn.innerHTML = originalBtnText;
+        uploadBtn.disabled = false;
     }
 }
 
@@ -1707,45 +1791,41 @@ async function uploadTKBFile() {
     }
 
     const uploadBtn = document.querySelector('#tkbUploadForm button[type="button"]:last-child');
+    const originalBtnText = uploadBtn.innerHTML;
     uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang upload...';
+    uploadBtn.textContent = 'Đang upload...';
 
     try {
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            try {
-                const response = await fetch('/.netlify/functions/upload-tkb', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tkbClass,
-                        tkbNumber: parseInt(tkbNumber),
-                        file: reader.result,
-                        fileName: file.name,
-                        fileType: file.type
-                    })
-                });
+        // Use arrayBuffer for faster processing
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-                if (response.ok) {
-                    showSuccessToast('Upload TKB thành công!');
-                    closeTKBUploadModal();
-                    loadTKBFiles();
-                } else {
-                    const err = await response.json();
-                    showErrorToast(err.message || 'Lỗi upload');
-                }
-            } catch (e) {
-                showErrorToast('Lỗi upload file: ' + e.message);
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload';
-            }
-        };
-        reader.readAsDataURL(file);
+        const response = await fetch('/.netlify/functions/upload-tkb', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tkbClass,
+                tkbNumber: parseInt(tkbNumber),
+                file: 'data:' + file.type + ';base64,' + base64,
+                fileName: file.name,
+                fileType: file.type
+            })
+        });
+
+        if (response.ok) {
+            showSuccessToast('Upload TKB thành công!');
+            closeTKBUploadModal();
+            loadTKBFiles();
+        } else {
+            const err = await response.json();
+            showErrorToast(err.message || 'Lỗi upload');
+        }
     } catch (e) {
-        showErrorToast('Lỗi: ' + e.message);
+        console.error('Upload TKB error:', e);
+        showErrorToast('Lỗi upload file: ' + e.message);
+    } finally {
+        uploadBtn.innerHTML = originalBtnText;
         uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload';
     }
 }
 
