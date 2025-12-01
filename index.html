@@ -184,7 +184,7 @@
                 <!-- Upload Button & Mobile Menu -->
                 <div class="flex items-center space-x-3">
                     <button id="uploadBtn" onclick="isAuthenticated ? openUploadModal() : openPasswordModal()" 
-                        class="hidden sm:flex items-center py-2 px-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold hover:from-purple-600 hover:to-pink-600 hover:shadow-xl transition duration-300 transform hover:-translate-y-1 shadow-lg">
+                        class="hidden items-center py-2 px-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold hover:from-purple-600 hover:to-pink-600 hover:shadow-xl transition duration-300 transform hover:-translate-y-1 shadow-lg">
                         <i class="fas fa-cloud-upload-alt mr-2 text-lg"></i> Upload
                     </button>
                 </div>
@@ -492,14 +492,16 @@
         <img id="modalImage" src="" alt="Ảnh phóng to" class="max-h-[90%] max-w-[90%] rounded-lg shadow-2xl">
     </div>
 
-    <!-- File Preview Modal -->
-    <div id="filePreviewModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[1000] hidden overflow-y-auto">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
-            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-                <h3 id="previewTitle" class="text-lg font-bold text-gray-800"></h3>
-                <button type="button" aria-label="Đóng" class="text-gray-500 hover:text-gray-700 text-2xl" onclick="closeFilePreviewModal()">&times;</button>
+    <!-- File Preview Modal - Mobile Responsive -->
+    <div id="filePreviewModal" role="dialog" aria-modal="true" aria-hidden="true" class="fixed inset-0 bg-black bg-opacity-80 z-[1000] hidden overflow-y-auto md:flex md:items-center md:justify-center">
+        <div class="bg-white w-full h-full md:w-11/12 md:h-auto md:max-w-4xl md:max-h-[90vh] md:rounded-lg md:shadow-2xl flex flex-col">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 border-b p-4 flex justify-between items-center text-white md:rounded-t-lg z-10">
+                <h3 id="previewTitle" class="text-lg md:text-xl font-bold truncate flex-1"></h3>
+                <button type="button" aria-label="Đóng" class="text-white hover:bg-white/20 text-2xl md:text-3xl p-2 rounded transition flex-shrink-0 ml-2" onclick="closeFilePreviewModal()">&times;</button>
             </div>
-            <div id="previewContent" class="p-6">
+            <!-- Content Area -->
+            <div id="previewContent" class="flex-1 overflow-y-auto p-4 md:p-6">
                 <!-- Content will be dynamically loaded here -->
             </div>
         </div>

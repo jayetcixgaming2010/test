@@ -1363,18 +1363,26 @@ window.openFilePreview = function(url, fileName) {
     
     // Create preview based on file type
     let previewHTML = '';
+    const encodedUrl = encodeURIComponent(url);
     
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-        previewHTML = `<img src="${url}" alt="${escapeHtml(fileName)}" class="max-w-full h-auto mx-auto rounded" />`;
+        previewHTML = `
+            <div class="flex flex-col items-center justify-center">
+                <img src="${url}" alt="${escapeHtml(fileName)}" class="max-w-full h-auto mx-auto rounded-lg shadow-md" loading="lazy" />
+            </div>
+        `;
     } 
     else if (ext === 'pdf') {
         previewHTML = `
             <div class="space-y-4">
-                <p class="text-gray-600">Xem PDF trực tiếp hoặc tải về để xem đầy đủ:</p>
-                <iframe src="${url}#toolbar=0" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 6px;"></iframe>
-                <div class="text-center">
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                <p class="text-gray-600 text-sm md:text-base">Xem PDF trực tiếp hoặc tải về để xem đầy đủ:</p>
+                <iframe src="${url}#toolbar=0" width="100%" height="400" class="md:h-600 border border-gray-300 rounded-lg" loading="lazy"></iframe>
+                <div class="flex flex-col md:flex-row gap-3 justify-center">
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
                         <i class="fas fa-download mr-2"></i>Tải xuống PDF
+                    </a>
+                    <a href="https://docs.google.com/viewer?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition">
+                        <i class="fas fa-external-link-alt mr-2"></i>Xem Google
                     </a>
                 </div>
             </div>
@@ -1383,13 +1391,23 @@ window.openFilePreview = function(url, fileName) {
     else if (['xls', 'xlsx'].includes(ext)) {
         previewHTML = `
             <div class="space-y-4">
-                <p class="text-gray-600">File Excel không thể xem trực tiếp trên web. Vui lòng tải về để xem:</p>
-                <div class="bg-gray-100 p-8 rounded-lg text-center">
-                    <i class="fas fa-file-excel text-6xl text-green-600 mb-4"></i>
-                    <p class="font-semibold text-gray-700 mb-4">${escapeHtml(fileName)}</p>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
-                        <i class="fas fa-download mr-2"></i>Tải xuống
-                    </a>
+                <div class="file-preview-info">
+                    <div class="file-icon">
+                        <i class="fas fa-file-excel text-green-600"></i>
+                    </div>
+                    <p class="font-semibold text-gray-800 mb-2">${escapeHtml(fileName)}</p>
+                    <p class="text-gray-600 text-sm mb-4">File Excel - Xem trực tiếp bên dưới hoặc tải về để chỉnh sửa</p>
+                    <div class="flex flex-col md:flex-row gap-3 justify-center">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition download-btn">
+                            <i class="fas fa-download mr-2"></i>Tải xuống Excel
+                        </a>
+                        <a href="https://docs.google.com/viewer?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition download-btn">
+                            <i class="fas fa-external-link-alt mr-2"></i>Xem Google
+                        </a>
+                    </div>
+                </div>
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-xs md:text-sm">💡 Gợi ý: Sử dụng Google Sheets để xem trực tiếp hoặc tải về file để chỉnh sửa trên máy tính.</p>
                 </div>
             </div>
         `;
@@ -1397,13 +1415,23 @@ window.openFilePreview = function(url, fileName) {
     else if (['doc', 'docx'].includes(ext)) {
         previewHTML = `
             <div class="space-y-4">
-                <p class="text-gray-600">File Word không thể xem trực tiếp trên web. Vui lòng tải về để xem:</p>
-                <div class="bg-gray-100 p-8 rounded-lg text-center">
-                    <i class="fas fa-file-word text-6xl text-blue-600 mb-4"></i>
-                    <p class="font-semibold text-gray-700 mb-4">${escapeHtml(fileName)}</p>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                        <i class="fas fa-download mr-2"></i>Tải xuống
-                    </a>
+                <div class="file-preview-info">
+                    <div class="file-icon">
+                        <i class="fas fa-file-word text-blue-600"></i>
+                    </div>
+                    <p class="font-semibold text-gray-800 mb-2">${escapeHtml(fileName)}</p>
+                    <p class="text-gray-600 text-sm mb-4">File Word - Xem trực tiếp bên dưới hoặc tải về để chỉnh sửa</p>
+                    <div class="flex flex-col md:flex-row gap-3 justify-center">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition download-btn">
+                            <i class="fas fa-download mr-2"></i>Tải xuống Word
+                        </a>
+                        <a href="https://docs.google.com/viewer?url=${encodedUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition download-btn">
+                            <i class="fas fa-external-link-alt mr-2"></i>Xem Google
+                        </a>
+                    </div>
+                </div>
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-xs md:text-sm">💡 Gợi ý: Sử dụng Google Docs để xem trực tiếp hoặc tải về file để chỉnh sửa trên máy tính.</p>
                 </div>
             </div>
         `;
@@ -1411,11 +1439,13 @@ window.openFilePreview = function(url, fileName) {
     else {
         previewHTML = `
             <div class="space-y-4">
-                <p class="text-gray-600">Không thể xem trước file này. Vui lòng tải về để xem:</p>
-                <div class="bg-gray-100 p-8 rounded-lg text-center">
-                    <i class="fas fa-file text-6xl text-gray-400 mb-4"></i>
-                    <p class="font-semibold text-gray-700 mb-4">${escapeHtml(fileName)}</p>
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+                <div class="file-preview-info">
+                    <div class="file-icon">
+                        <i class="fas fa-file text-gray-400"></i>
+                    </div>
+                    <p class="font-semibold text-gray-800 mb-2">${escapeHtml(fileName)}</p>
+                    <p class="text-gray-600 text-sm mb-4">Loại file này không thể xem trực tiếp. Vui lòng tải về để xem.</p>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition download-btn">
                         <i class="fas fa-download mr-2"></i>Tải xuống
                     </a>
                 </div>

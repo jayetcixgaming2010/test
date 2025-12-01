@@ -763,6 +763,151 @@ body {
 .survey-score-pagination-btn.active { background: #fbbf24; color: #111; }
 .survey-score-pagination-btn.disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+/* File Preview Modal - Mobile Responsive Styles */
+#filePreviewModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#filePreviewModal:not(.hidden) {
+  display: block;
+}
+
+#filePreviewModal .bg-white {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+#filePreviewModal #previewContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem;
+}
+
+/* Preview content responsive images and embeds */
+#previewContent img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+#previewContent iframe {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* File type icon styling */
+#previewContent .file-icon {
+  font-size: 3rem;
+  margin: 1rem auto;
+  text-align: center;
+}
+
+/* Download button styling */
+#previewContent .download-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 1rem 0;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+#previewContent .download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+/* Excel/Word file preview container */
+#previewContent .file-preview-info {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+#previewContent .file-preview-info p {
+  color: #666;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+/* Tablet and up media queries */
+@media (min-width: 768px) {
+  #filePreviewModal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  #filePreviewModal:not(.hidden) {
+    display: flex;
+  }
+
+  #filePreviewModal .bg-white {
+    width: 95%;
+    max-width: 60rem;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 0.5rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  #filePreviewModal #previewContent {
+    padding: 1.5rem;
+  }
+
+  #previewContent .file-preview-info {
+    padding: 3rem 2rem;
+  }
+}
+
+/* Mobile-first improvements */
+@media (max-width: 767px) {
+  #filePreviewModal .bg-white {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  #filePreviewModal #previewContent {
+    padding: 1rem;
+  }
+
+  #previewContent img {
+    border-radius: 4px;
+  }
+
+  #previewContent .file-icon {
+    font-size: 2.5rem;
+  }
+
+  #previewContent .download-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
 /* Mobile-first improvements: larger touch targets, full-screen modals, simpler animations */
 @media (max-width: 768px) {
   /* Make the memory grid single column on narrow phones for better readability */
@@ -895,4 +1040,3 @@ button:focus, .filter-btn:focus, .memory-action-btn:focus, input:focus, select:f
     min-height: 44px;
   }
 }
-
