@@ -2162,3 +2162,27 @@ function updateTKBUploadButtonUI() {
         uploadTKBBtn.style.display = isAuthenticated ? 'inline-block' : 'none';
     }
 }
+
+// Load TKB data from local JSON file (for testing/demo)
+async function loadTKB() {
+    try {
+        const response = await fetch('data/tkb.json');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const tkbData = await response.json();
+
+        const tkbFilesList = document.getElementById('tkbFilesList');
+        tkbFilesList.innerHTML = ''; // Clear existing content
+
+        tkbData.forEach(tkb => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'tkb-file-item';
+            fileItem.innerHTML = `<a href='${tkb.url}' target='_blank'>${tkb.name}</a>`;
+            tkbFilesList.appendChild(fileItem);
+        });
+    } catch (error) {
+        console.error('Error loading TKB:', error);
+    }
+}
+
+// Call loadTKB on page load
+window.onload = loadTKB;
