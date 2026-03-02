@@ -27,6 +27,65 @@ local tween = nil
 local stopbypass = false
 
 -- =============================================
+-- FIX HOP: Tự động bấm OK khi Roblox hiện popup xác nhận teleport
+-- Xử lý cả TeleportGui lẫn PromptOverlay
+-- =============================================
+spawn(function()
+    -- Tự động confirm popup teleport của Roblox (nút "Teleport" / "OK" / "Yes")
+    local function autoConfirmTeleport(gui)
+        for _, btn in pairs(gui:GetDescendants()) do
+            if (btn:IsA("TextButton") or btn:IsA("ImageButton")) then
+                local t = string.lower(btn.Text or "")
+                if t == "ok" or t == "yes" or t == "teleport" or t == "confirm" or t == "leave" then
+                    pcall(function() btn:activate() end)
+                    pcall(function() btn.MouseButton1Click:Fire() end)
+                end
+            end
+        end
+    end
+
+    -- Theo dõi CoreGui → RobloxPromptGui (popup hệ thống)
+    local promptGui = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui", 10)
+    if promptGui then
+        local overlay = promptGui:FindFirstChild("promptOverlay")
+        if overlay then
+            overlay.ChildAdded:Connect(function(child)
+                task.wait(0.1)
+                autoConfirmTeleport(overlay)
+            end)
+            -- Xử lý nếu đã có sẵn child
+            for _, child in pairs(overlay:GetChildren()) do
+                autoConfirmTeleport(overlay)
+            end
+        end
+    end
+
+    -- Theo dõi toàn bộ CoreGui phòng trường hợp gui khác
+    game:GetService("CoreGui").ChildAdded:Connect(function(child)
+        task.wait(0.2)
+        autoConfirmTeleport(child)
+    end)
+
+    -- Theo dõi PlayerGui (một số executor inject popup vào đây)
+    game.Players.LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
+        task.wait(0.2)
+        autoConfirmTeleport(child)
+    end)
+
+    -- Loop quét liên tục mỗi 0.5s phòng popup load chậm
+    while task.wait(0.5) do
+        pcall(function()
+            local cg = game:GetService("CoreGui")
+            autoConfirmTeleport(cg)
+        end)
+        pcall(function()
+            local pg = game.Players.LocalPlayer.PlayerGui
+            autoConfirmTeleport(pg)
+        end)
+    end
+end)
+
+-- =============================================
 -- TÍNH NĂNG: Danger Blacklist
 -- =============================================
 getgenv().dangerCount = {}
