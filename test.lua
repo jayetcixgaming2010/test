@@ -501,45 +501,47 @@ end
 function to(Pos)
     pcall(function()
         if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health > 0 then
-            local Distance = (Pos.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            if not game.Players.LocalPlayer.Character.PrimaryPart:FindFirstChild("Hold") then
-                local Hold = Instance.new("BodyVelocity", game.Players.LocalPlayer.Character.PrimaryPart)
+            local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
+            local Distance = (Pos.Position - hrp.Position).Magnitude
+
+            -- Giữ character không bị gravity kéo trong khi tween
+            if not hrp:FindFirstChild("Hold") then
+                local Hold = Instance.new("BodyVelocity", hrp)
                 Hold.Name = "Hold"
                 Hold.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
                 Hold.Velocity = Vector3.new(0, 0, 0)
             end
+
             if game.Players.LocalPlayer.Character.Humanoid.Sit == true then
                 game.Players.LocalPlayer.Character.Humanoid.Sit = false
             end
-            local Speed
+
+            -- Teleport thẳng nếu gần
             if Distance <= 250 then
                 if tween then tween:Cancel() end
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Pos
-            elseif Distance < 1000 then
-                Speed = 340
-            elseif Distance >= 1000 then
-                Speed = 320
+                hrp.CFrame = Pos
+                return
             end
+
+            local Speed = Distance < 1000 and 340 or 320
+
+            if tween then tween:Cancel() end
+
+            -- FIX: Chỉ tween CFrame, KHÔNG set Y thủ công sau khi play
+            -- Tránh xung đột khiến character bị kéo lên/xuống bất thường
             pcall(function()
                 tween = game:GetService("TweenService"):Create(
-                    game.Players.LocalPlayer.Character.HumanoidRootPart,
-                    TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear),
+                    hrp,
+                    TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
                     {CFrame = Pos}
                 )
                 tween:Play()
             end)
-            
+
             if game.Players.LocalPlayer.Character.Humanoid.Sit == true then
                 game.Players.LocalPlayer.Character.Humanoid.Sit = false
             end
-            
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.X, 
-                    Pos.Y, 
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.Z
-                )
-            end
+            -- ĐÃ XÓA: đoạn set CFrame.Y thủ công gây ra bay kiểu rơi lên rồi xuống
         end
     end)
 end
