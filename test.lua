@@ -745,27 +745,29 @@ end)
 spawn(function()
     while task.wait() do
         if starthop then
-            repeat task.wait()
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    to(lp.Character.HumanoidRootPart.CFrame*CFrame.new(0, math.random(500, 10000), 0))
-                end
-            until (lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and 
-                  lp.PlayerGui.Main:FindFirstChild("InCombat") and
-                  lp.PlayerGui.Main.InCombat.Visible and 
-                  not string.find(string.lower(lp.PlayerGui.Main.InCombat.Text), "risk")) or 
-                  (lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and
-                  lp.PlayerGui.Main:FindFirstChild("InCombat") and 
-                  not lp.PlayerGui.Main.InCombat.Visible)
-            
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                to(CFrame.new(0, 10000, 0))
+            -- Chỉ chờ thoát combat nếu đang thực sự trong combat (InCombat visible + có chữ risk)
+            -- Nếu không có combat thì hop luôn, không cần bay lên trời
+            local inCombat = pcall(function()
+                return lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and
+                       lp.PlayerGui.Main:FindFirstChild("BottomHUDList") and
+                       lp.PlayerGui.Main.BottomHUDList:FindFirstChild("InCombat") and
+                       lp.PlayerGui.Main.BottomHUDList.InCombat.Visible and
+                       string.find(string.lower(lp.PlayerGui.Main.BottomHUDList.InCombat.Text), "risk")
+            end)
+            if inCombat then
+                -- Đang trong combat, bay lên trời chờ hết combat tag
+                repeat task.wait()
+                    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                        to(lp.Character.HumanoidRootPart.CFrame*CFrame.new(0, math.random(500, 2000), 0))
+                    end
+                until not (lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and
+                           lp.PlayerGui.Main:FindFirstChild("BottomHUDList") and
+                           lp.PlayerGui.Main.BottomHUDList:FindFirstChild("InCombat") and
+                           lp.PlayerGui.Main.BottomHUDList.InCombat.Visible and
+                           string.find(string.lower(lp.PlayerGui.Main.BottomHUDList.InCombat.Text), "risk"))
             end
-            
+            starthop = false
             HopServer()
-            
-            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                to(lp.Character.HumanoidRootPart.CFrame*CFrame.new(0, math.random(500, 10000), 0))
-            end
         end
     end
 end)
