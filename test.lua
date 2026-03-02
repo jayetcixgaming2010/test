@@ -21,6 +21,46 @@ getgenv().lasttarrget = nil
 getgenv().checked = {}
 getgenv().pl = game.Players:GetPlayers()
 getgenv().killed = nil
+
+-- =============================================
+-- TÍNH NĂNG MỚI: Danger Blacklist
+-- Blacklist player đánh lại nguy hiểm (máu ≤ 30% sau 3 lần)
+-- =============================================
+getgenv().dangerCount = {}      -- {[playerName] = số lần bị đánh nguy hiểm}
+getgenv().dangerBlacklist = {}  -- {[playerName] = true}
+-- Theo dõi máu của mình lần trước để phát hiện bị đánh tụt máu mạnh
+local lastMyHealth = nil
+local dangerCooldown = {}       -- tránh đếm trùng trong cùng 1 đợt máu thấp
+
+local function checkDangerAndBlacklist()
+    local cfg = getgenv().Setting.Another.DangerBlacklist
+    if not cfg or not cfg.Enable then return end
+    if not getgenv().targ then return end
+    local myHum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if not myHum then return end
+    local myHealth = myHum.Health
+    local myMaxHealth = myHum.MaxHealth
+    if myMaxHealth <= 0 then return end
+    local healthPct = myHealth / myMaxHealth
+    local targName = getgenv().targ.Name
+    -- Chỉ đếm khi máu xuống dưới ngưỡng nguy hiểm VÀ chưa đếm lần này
+    if healthPct <= cfg.DangerHealthPct then
+        if not dangerCooldown[targName] then
+            dangerCooldown[targName] = true
+            getgenv().dangerCount[targName] = (getgenv().dangerCount[targName] or 0) + 1
+            print("⚠️ [DangerBlacklist] Bị " .. targName .. " đánh nguy hiểm lần " .. getgenv().dangerCount[targName] .. "/" .. cfg.MaxAttempts)
+            if getgenv().dangerCount[targName] >= cfg.MaxAttempts then
+                getgenv().dangerBlacklist[targName] = true
+                print("🚫 [DangerBlacklist] Blacklist: " .. targName .. " - bỏ qua vĩnh viễn trong session này!")
+                SkipPlayer()
+            end
+        end
+    else
+        -- Máu hồi lại trên ngưỡng → reset cooldown để lần sau có thể đếm tiếp
+        dangerCooldown[targName] = nil
+    end
+end
+
 local MainGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
@@ -504,7 +544,6 @@ function to(Pos)
             local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
             local Distance = (Pos.Position - hrp.Position).Magnitude
 
-            -- Giữ character không bị gravity kéo trong khi tween
             if not hrp:FindFirstChild("Hold") then
                 local Hold = Instance.new("BodyVelocity", hrp)
                 Hold.Name = "Hold"
@@ -516,7 +555,6 @@ function to(Pos)
                 game.Players.LocalPlayer.Character.Humanoid.Sit = false
             end
 
-            -- Teleport thẳng nếu gần
             if Distance <= 250 then
                 if tween then tween:Cancel() end
                 hrp.CFrame = Pos
@@ -527,8 +565,6 @@ function to(Pos)
 
             if tween then tween:Cancel() end
 
-            -- FIX: Chỉ tween CFrame, KHÔNG set Y thủ công sau khi play
-            -- Tránh xung đột khiến character bị kéo lên/xuống bất thường
             pcall(function()
                 tween = game:GetService("TweenService"):Create(
                     hrp,
@@ -541,7 +577,6 @@ function to(Pos)
             if game.Players.LocalPlayer.Character.Humanoid.Sit == true then
                 game.Players.LocalPlayer.Character.Humanoid.Sit = false
             end
-            -- ĐÃ XÓA: đoạn set CFrame.Y thủ công gây ra bay kiểu rơi lên rồi xuống
         end
     end)
 end
@@ -729,7 +764,6 @@ end
 
 function HopServer(counts)
     local S = game.JobId
-    -- FIX: khởi tạo ServerBlacklist TRƯỚC khi insert, tránh insert vào bảng tạm
     if not getgenv().ServerBlacklist then getgenv().ServerBlacklist = {} end
     table.insert(getgenv().ServerBlacklist, S)
     local T, U = pcall(function()
@@ -794,62 +828,123 @@ end
 
 getgenv().SkipPlayer = SkipPlayer
 
+-- =============================================
+-- HÀM KIỂM TRA: Người chơi có đủ điều kiện nhận bounty không
+-- Điều kiện: bounty trong range Hunt.Min~Max, đủ level, không safezone,
+--            không trong blacklist nguy hiểm, không bị skip
+-- =============================================
+local function isValidBountyTarget(v)
+    if not v or v == lp then return false end
+    if not v.Character or not v.Character:FindFirstChild("HumanoidRootPart") then return false end
+    if not v:FindFirstChild("Data") then return false end
+    if not v:FindFirstChild("leaderstats") then return false end
+    if not v.leaderstats["Bounty/Honor"] then return false end
+
+    -- Kiểm tra bounty range
+    local bounty = v.leaderstats["Bounty/Honor"].Value
+    if bounty < getgenv().Setting.Hunt.Min or bounty > getgenv().Setting.Hunt.Max then return false end
+
+    -- Kiểm tra level (không được thấp hơn mình quá 250)
+    if (tonumber(lp.Data.Level.Value) - 250) >= v.Data.Level.Value then return false end
+
+    -- Kiểm tra team
+    if v.Team == nil then return false end
+    if not (tostring(lp.Team) == getgenv().Setting.Team or (tostring(v.Team) == getgenv().Setting.Team and tostring(lp.Team) ~= getgenv().Setting.Team)) then return false end
+
+    -- Kiểm tra fruit skip
+    if getgenv().Setting.Skip.Fruit and hasValue(getgenv().Setting.Skip.FruitList, v.Data.DevilFruit.Value) then return false end
+
+    -- Kiểm tra Race V4 skip
+    if getgenv().Setting.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
+    if getgenv().Setting["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then return false end
+
+    -- Kiểm tra safezone
+    if getgenv().Setting.Skip.SafeZone then
+        local safeOk = true
+        pcall(function()
+            safeOk = not CheckSafeZone(v.Character.HumanoidRootPart)
+        end)
+        if not safeOk then return false end
+    end
+
+    -- Kiểm tra danger blacklist
+    if getgenv().dangerBlacklist[v.Name] then return false end
+
+    -- Kiểm tra đã skip chưa
+    if hasValue(getgenv().checked, v) then return false end
+
+    -- Kiểm tra Y quá cao (đang bay lên trời)
+    if v.Character.HumanoidRootPart.CFrame.Y > 12000 then return false end
+
+    return true
+end
+
 function target() 
     pcall(function()
         local d = math.huge
         local p = nil
         getgenv().targ = nil        
-        for _, v in pairs(game.Players:GetPlayers()) do 
-            if v.Team ~= nil and (tostring(lp.Team) == getgenv().Setting.Team or (tostring(v.Team) == getgenv().Setting.Team and tostring(lp.Team) ~= getgenv().Setting.Team)) then
-                if v and v:FindFirstChild("Data") and ((getgenv().Setting.Skip.Fruit and hasValue(getgenv().Setting.Skip.FruitList, v.Data.DevilFruit.Value) == false) or not getgenv().Setting.Skip.Fruit) then
-                    if v ~= lp and v ~= getgenv().targ and 
-                       v.Character and v.Character:FindFirstChild("HumanoidRootPart") and
-                       (v.Character.HumanoidRootPart.CFrame.Position - lp.Character.HumanoidRootPart.CFrame.Position).Magnitude < d and 
-                       not hasValue(getgenv().checked, v) and 
-                       v.Character.HumanoidRootPart.CFrame.Y <= 12000 then
-                        
-                        -- FIX: check SafeZone trong target() nếu setting bật
-                        if getgenv().Setting.Skip.SafeZone then
-                            local inSafe = pcall(function()
-                                if CheckSafeZone(v.Character.HumanoidRootPart) then
-                                    error("insafe")
-                                end
-                            end)
-                            -- nếu trong safezone thì bỏ qua player này
-                            local safeOk = true
-                            pcall(function()
-                                safeOk = not CheckSafeZone(v.Character.HumanoidRootPart)
-                            end)
-                            if not safeOk then continue end
-                        end
 
-                        if (tonumber(lp.Data.Level.Value) - 250) < v.Data.Level.Value then
-                            if v.leaderstats["Bounty/Honor"] and 
-                               v.leaderstats["Bounty/Honor"].Value >= getgenv().Setting.Hunt.Min and 
-                               v.leaderstats["Bounty/Honor"].Value <= getgenv().Setting.Hunt.Max and 
-                               not hopserver then 
-                                
-                                if (getgenv().Setting["Skip Race V4"] and not v.Character:FindFirstChild("RaceTransformed")) or not getgenv().Setting["Skip Race V4"] then
-                                    p = v 
-                                    d = (v.Character.HumanoidRootPart.CFrame.Position - lp.Character.HumanoidRootPart.CFrame.Position).Magnitude 
-                                    
-                                    if getgenv().Setting.Chat and #getgenv().Setting.Chat > 0 then
-                                        local chatMsg = getgenv().Setting.Chat[math.random(1, #getgenv().Setting.Chat)]
-                                        if chatMsg then
-                                            game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
-                                        end
+        for _, v in pairs(game.Players:GetPlayers()) do 
+            if isValidBountyTarget(v) then
+                local dist = (v.Character.HumanoidRootPart.CFrame.Position - lp.Character.HumanoidRootPart.CFrame.Position).Magnitude
+                if dist < d and not hopserver then
+                    p = v 
+                    d = dist
+                    
+                    if getgenv().Setting.Chat and #getgenv().Setting.Chat > 0 then
+                        local chatMsg = getgenv().Setting.Chat[math.random(1, #getgenv().Setting.Chat)]
+                        if chatMsg then
+                            game:GetService("ReplicatedStorage"):WaitForChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
+                        end
+                    end
+                end
+            end
+        end
+
+        -- =============================================
+        -- TÍNH NĂNG MỚI: HopAfterAllPlayers
+        -- Chỉ hop khi đã đánh/skip hết TẤT CẢ player đủ điều kiện trong server
+        -- =============================================
+        if p == nil then
+            if getgenv().Setting.Another.HopAfterAllPlayers then
+                -- Kiểm tra còn player nào đủ điều kiện nhận bounty nhưng chưa đánh không
+                -- (không tính dangerBlacklist và checked)
+                local hasRemainingValidPlayer = false
+                for _, v in pairs(game.Players:GetPlayers()) do
+                    if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                        if v:FindFirstChild("Data") and v:FindFirstChild("leaderstats") and v.leaderstats["Bounty/Honor"] then
+                            local bounty = v.leaderstats["Bounty/Honor"].Value
+                            if bounty >= getgenv().Setting.Hunt.Min and bounty <= getgenv().Setting.Hunt.Max then
+                                if (tonumber(lp.Data.Level.Value) - 250) < v.Data.Level.Value then
+                                    if not hasValue(getgenv().checked, v) and not getgenv().dangerBlacklist[v.Name] then
+                                        -- Còn player hợp lệ nhưng có thể đang ở safezone tạm thời
+                                        -- → không hop, chờ họ ra
+                                        hasRemainingValidPlayer = true
+                                        break
                                     end
                                 end
                             end
                         end
-                    end 
+                    end
                 end
+
+                if hasRemainingValidPlayer then
+                    -- Còn player chưa đánh → chờ, không hop
+                    print("⏳ [HopAfterAllPlayers] Còn player đủ điều kiện, chờ...")
+                    -- Không gán targ, vòng lặp chính sẽ gọi target() lại sau
+                else
+                    -- Đã đánh/skip hết tất cả → reset checked và hop
+                    print("✅ [HopAfterAllPlayers] Đã xử lý hết player trong server → Hop!")
+                    getgenv().checked = {}
+                    HopServer()
+                end
+            else
+                -- Chế độ cũ: hop ngay khi không tìm được target
+                HopServer()
             end
-        end         
-        if p == nil then 
-            HopServer()
         else
-            print("Đã tìm thấy mục tiêu: " .. p.Name, "success")
+            print("🎯 Đã tìm thấy mục tiêu: " .. p.Name)
         end        
         getgenv().targ = p
     end)
@@ -977,8 +1072,6 @@ spawn(function()
                                                    lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("V") and
                                                    lp.PlayerGui.Main.Skills[v.Name].V.Cooldown.AbsoluteSize.X <= 0 then	
                                                 down("V", getgenv().Setting.Melee.V.HoldTime)
-                                            else
-                                                -- ĐÃ XÓA CLICK
                                             end
                                         end
                                     elseif v.ToolTip == "Gun" then
@@ -991,8 +1084,6 @@ spawn(function()
                                                    lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and 
                                                    getgenv().Setting.Gun.X.Enable then	
                                                 down("X", getgenv().Setting.Gun.X.HoldTime)
-                                            else
-                                                -- ĐÃ XÓA CLICK
                                             end
                                         end
                                     elseif v.ToolTip == "Sword" then
@@ -1005,8 +1096,6 @@ spawn(function()
                                                    lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and 
                                                getgenv().Setting.Sword.X.Enable then	
                                                 down("X", getgenv().Setting.Sword.X.HoldTime)
-                                            else
-                                                -- ĐÃ XÓA CLICK
                                             end
                                         end
                                     elseif v.ToolTip == "Blox Fruit" then
@@ -1031,8 +1120,6 @@ spawn(function()
                                                    lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("F") and
                                                    lp.PlayerGui.Main.Skills[v.Name].F.Cooldown.AbsoluteSize.X <= 0 then	
                                                 down("F", getgenv().Setting.Fruit.F.HoldTime)
-                                            else
-                                                -- ĐÃ XÓA CLICK
                                             end
                                         end
                                     end
@@ -1137,6 +1224,12 @@ spawn(function()
                         else
                             helloae = false
                         end
+
+                        -- =============================================
+                        -- GỌI KIỂM TRA DANGER BLACKLIST mỗi 0.05s
+                        -- =============================================
+                        checkDangerAndBlacklist()
+
                     else
                         safehealth = true                        
                         if getgenv().targ.Character:FindFirstChild("HumanoidRootPart") then
@@ -1298,7 +1391,6 @@ spawn(function()
                 if character:FindFirstChild("Humanoid") and character.Humanoid.Health <= 0 then                    
                     if lastKilledPlayer ~= targetPlayer.Name then
                         task.wait(2)
-                        -- FIX: đọc bounty thực từ leaderstats thay vì ước tính random
                         local player = game.Players.LocalPlayer
                         local currentBounty = player.leaderstats["Bounty/Honor"] and player.leaderstats["Bounty/Honor"].Value or 0
                         local bountyEarned = currentBounty - lastBounty
@@ -1404,7 +1496,7 @@ spawn(function()
                 if v:IsA("TextLabel") then 
                     local text = string.lower(v.Text)                    
                     local skipKeywords = {
-                        "nguoi choi vua tu tran", -- FIX: dùng không dấu để match tốt hơn
+                        "nguoi choi vua tu tran",
                         "player", "nguoi choi", "cannot attack", "unable to attack"
                     }                   
                     for _, keyword in pairs(skipKeywords) do
