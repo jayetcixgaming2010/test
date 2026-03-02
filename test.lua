@@ -339,11 +339,17 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 ServerButton.MouseButton1Click:Connect(function()
-    print("Hop Server button clicked!")
-    -- Dùng getgenv để tránh lỗi scope (hopserver local chưa được khai báo tại đây)
-    if getgenv().HopServer then
-        getgenv().HopServer()
-    end
+    print("Hop Server button clicked! Bat dau hop lien tuc...")
+    getgenv().hopserver = true
+    getgenv().autoHopLoop = true
+    spawn(function()
+        while getgenv().autoHopLoop do
+            if getgenv().HopServer then
+                pcall(function() getgenv().HopServer() end)
+            end
+            task.wait(3)
+        end
+    end)
 end)
 SkipButton.MouseButton1Click:Connect(function()
     print("Next Player button clicked!")
