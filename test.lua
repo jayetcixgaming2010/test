@@ -1179,9 +1179,14 @@ local safehealth = false
 spawn(function()
     while task.wait(0.05) do
         -- Khi máu thấp đang bay thoát combat → không tìm target mới, không hop vội
+        -- Dùng % thay vì số tuyệt đối để tránh bug khi MaxHealth thấp hơn SafeHealth.Health
         local myHum2 = lp.Character and lp.Character:FindFirstChild("Humanoid")
         local myHp2 = myHum2 and myHum2.Health or 0
-        if myHp2 > 0 and myHp2 <= getgenv().Setting.SafeHealth.Health then
+        local myMaxHp2 = myHum2 and myHum2.MaxHealth or 1
+        local safeHealthVal = getgenv().Setting.SafeHealth.Health
+        -- Chỉ coi là nguy hiểm khi: máu > 0 (đang sống), MaxHealth > SafeHealth (nhân vật đủ lớn),
+        -- và máu hiện tại dưới ngưỡng SafeHealth
+        if myHp2 > 0 and myMaxHp2 > safeHealthVal and myHp2 <= safeHealthVal then
             task.wait(1)
             continue
         end
@@ -1194,7 +1199,12 @@ spawn(function()
                 lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and
                 lp.Character:FindFirstChild("Humanoid") then
                     
-                    if lp.Character.Humanoid.Health > getgenv().Setting.SafeHealth.Health then
+                    local _hum = lp.Character.Humanoid
+                    local _hp = _hum.Health
+                    local _maxhp = _hum.MaxHealth
+                    local _safeVal = getgenv().Setting.SafeHealth.Health
+                    -- Chỉ coi nguy hiểm khi MaxHealth đủ lớn VÀ máu thực sự dưới ngưỡng
+                    if _hp > _safeVal or _maxhp <= _safeVal then
                         pcall(function()    
                             if not (game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1") and 
                                 getgenv().targ:DistanceFromCharacter(game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1").Position) < 10000) then
