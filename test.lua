@@ -1166,6 +1166,14 @@ local safehealth = false
 
 spawn(function()
     while task.wait(0.05) do
+        -- Khi máu thấp đang bay thoát combat → không tìm target mới, không hop vội
+        local myHum2 = lp.Character and lp.Character:FindFirstChild("Humanoid")
+        local myHp2 = myHum2 and myHum2.Health or 0
+        if myHp2 > 0 and myHp2 <= getgenv().Setting.SafeHealth.Health then
+            task.wait(1)
+            continue
+        end
+        safehealth = false
         if not getgenv().targ then target() end
         if not getgenv().targ then hopserver = true end 
         if not game:GetService("Players").LocalPlayer.PlayerGui.Main.BottomHUDList.PvpDisabled.Visible then
@@ -1225,15 +1233,17 @@ spawn(function()
                             helloae = false
                         end
 
-                        -- =============================================
-                        -- GỌI KIỂM TRA DANGER BLACKLIST mỗi 0.05s
-                        -- =============================================
+                        -- GỌI KIỂM TRA DANGER BLACKLIST khi máu còn trên ngưỡng SafeHealth
                         checkDangerAndBlacklist()
 
                     else
-                        safehealth = true                        
-                        if getgenv().targ.Character:FindFirstChild("HumanoidRootPart") then
-                            to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, math.random(5000, 100000), 0))
+                        -- Máu xuống dưới SafeHealth → bay lên cao TẠI VỊ TRÍ CỦA MÌNH để thoát combat
+                        -- KHÔNG bay theo target tránh bị đánh tiếp
+                        safehealth = true
+                        -- Gọi DangerBlacklist ở đây vì máu đã thấp = bị đánh nguy hiểm rõ ràng
+                        checkDangerAndBlacklist()
+                        if lp.Character:FindFirstChild("HumanoidRootPart") then
+                            to(lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, math.random(5000, 100000), 0))
                         end
                     end
                 end
