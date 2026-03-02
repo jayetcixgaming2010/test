@@ -1194,17 +1194,61 @@ local Nguvc = 5
 local helloae = false
 local safehealth = false
 
--- FIX #1: Thay `continue` bằng if/else hợp lệ trong Lua
+-- =============================================
+-- SAFE HEALTH: Dùng % máu thay vì số tuyệt đối
+-- Ví dụ Setting.SafeHealth.Health = 1000 → coi là 1000/MaxHealth %
+-- Nhưng nếu MaxHealth > 5000 thì nên dùng % để tránh bug
+-- Logic: nếu máu% <= safeHealthPct thì bay lên trời né
+-- safeHealthPct = SafeHealth.Health / MaxHealth (lúc đầu game)
+-- =============================================
+local function getHealthPct()
+    local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
+    if not hum or hum.MaxHealth <= 0 then return 1 end
+    return hum.Health / hum.MaxHealth
+end
+
+local function getSafeHealthPct()
+    -- Nếu setting là số tuyệt đối (vd 1000), convert sang %
+    -- Dựa trên MaxHealth hiện tại của nhân vật
+    local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
+    if not hum or hum.MaxHealth <= 0 then return 0.3 end
+    local safeVal = getgenv().Setting.SafeHealth.Health
+    -- Nếu safeVal nhỏ hơn 1 thì người dùng đã dùng % sẵn (0.3 = 30%)
+    if safeVal <= 1 then
+        return safeVal
+    else
+        -- Convert số tuyệt đối sang %
+        return safeVal / hum.MaxHealth
+    end
+end
+
+local function isLowHealth()
+    local pct = getHealthPct()
+    local safePct = getSafeHealthPct()
+    local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
+    -- Chỉ trigger khi đang sống (Health > 0) và máu thực sự thấp
+    return hum and hum.Health > 0 and pct <= safePct
+end
+
 spawn(function()
     while task.wait(0.05) do
-        local myHum2 = lp.Character and lp.Character:FindFirstChild("Humanoid")
-        local myHp2 = myHum2 and myHum2.Health or 0
-        local myMaxHp2 = myHum2 and myHum2.MaxHealth or 1
-        local safeHealthVal = getgenv().Setting.SafeHealth.Health
-
-        local isDangerous = myHp2 > 0 and myMaxHp2 > safeHealthVal and myHp2 <= safeHealthVal
-        if isDangerous then
-            task.wait(1)
+        if isLowHealth() then
+            -- ===== MÁU THẤP: BAY LÊN TRỜI NÉ =====
+            safehealth = true
+            checkDangerAndBlacklist()
+            pcall(function()
+                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                    -- Bay thẳng lên cao tại vị trí của mình, không theo target
+                    local hrp = lp.Character.HumanoidRootPart
+                    local flyHeight = math.random(8000, 15000)
+                    -- Dùng CFrame teleport ngay để thoát nhanh thay vì tween chậm
+                    hrp.CFrame = hrp.CFrame * CFrame.new(0, flyHeight, 0)
+                end
+            end)
+            -- Chờ máu hồi lại trên ngưỡng an toàn rồi mới tiếp tục
+            repeat task.wait(0.5) until not isLowHealth() or not lp.Character
+            safehealth = false
+            print("💚 [SafeHealth] Máu đã hồi, tiếp tục hunt!")
         else
             safehealth = false
             if not getgenv().targ then getgenv().target() end
@@ -1214,69 +1258,52 @@ spawn(function()
                     if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and 
                     lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and
                     lp.Character:FindFirstChild("Humanoid") then
-                        
-                        local _hum = lp.Character.Humanoid
-                        local _hp = _hum.Health
-                        local _maxhp = _hum.MaxHealth
-                        local _safeVal = getgenv().Setting.SafeHealth.Health
-                        if _hp > _safeVal or _maxhp <= _safeVal then
-                            pcall(function()    
-                                if not (game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1") and 
-                                    getgenv().targ:DistanceFromCharacter(game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1").Position) < 10000) then
-                                    if (getgenv().targ.Character:WaitForChild("HumanoidRootPart").CFrame.Position - lp.Character:WaitForChild("HumanoidRootPart").CFrame.Position).Magnitude < 40 then 
-                                        if game:GetService("Players").LocalPlayer.PlayerGui.Main.SafeZone.Visible == true then
-                                            SkipPlayer()
-                                        end
-                                        if getgenv().targ.Character.Humanoid.Health > 0 then
-                                            if helloae then
-                                                to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
-                                            else
-                                                to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
-                                            end
-                                        else 
-                                            SkipPlayer()
-                                        end
-                                    else
-                                        if getgenv().targ.Character.Humanoid.Health > 0 then
-                                            to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
-                                        else
-                                            SkipPlayer()
-                                        end
+                        pcall(function()    
+                            if not (game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1") and 
+                                getgenv().targ:DistanceFromCharacter(game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild("Island 1").Position) < 10000) then
+                                if (getgenv().targ.Character:WaitForChild("HumanoidRootPart").CFrame.Position - lp.Character:WaitForChild("HumanoidRootPart").CFrame.Position).Magnitude < 40 then 
+                                    if game:GetService("Players").LocalPlayer.PlayerGui.Main.SafeZone.Visible == true then
+                                        SkipPlayer()
+                                    end
+                                    if getgenv().targ.Character.Humanoid.Health > 0 then
+                                        to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
+                                    else 
+                                        SkipPlayer()
                                     end
                                 else
-                                    SkipPlayer()
-                                end
-                            end)                        
-                            a = getgenv().targ.Character.HumanoidRootPart.Position                        
-                            if a ~= b then
-                                yTween = 0
-                                b = a                           
-                                if (getgenv().Setting.Gun.Enable and getgenv().Setting.Gun.GunMode) then
-                                    Nguvc = 14
-                                else
-                                    Nguvc = 15
+                                    if getgenv().targ.Character.Humanoid.Health > 0 then
+                                        to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
+                                    else
+                                        SkipPlayer()
+                                    end
                                 end
                             else
-                                yTween = 5                          
-                                if (getgenv().Setting.Gun.Enable and getgenv().Setting.Gun.GunMode) then
-                                    Nguvc = 3
-                                else
-                                    Nguvc = 5
-                                end
-                            end                        
-                            if getgenv().targ.Character.HumanoidRootPart.CFrame.Y >= 10 then
-                                helloae = true
-                            else
-                                helloae = false
+                                SkipPlayer()
                             end
-                            checkDangerAndBlacklist()
+                        end)                        
+                        a = getgenv().targ.Character.HumanoidRootPart.Position                        
+                        if a ~= b then
+                            yTween = 0
+                            b = a                           
+                            if (getgenv().Setting.Gun.Enable and getgenv().Setting.Gun.GunMode) then
+                                Nguvc = 14
+                            else
+                                Nguvc = 15
+                            end
                         else
-                            safehealth = true
-                            checkDangerAndBlacklist()
-                            if lp.Character:FindFirstChild("HumanoidRootPart") then
-                                to(lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, math.random(5000, 100000), 0))
+                            yTween = 5                          
+                            if (getgenv().Setting.Gun.Enable and getgenv().Setting.Gun.GunMode) then
+                                Nguvc = 3
+                            else
+                                Nguvc = 5
                             end
+                        end                        
+                        if getgenv().targ.Character.HumanoidRootPart.CFrame.Y >= 10 then
+                            helloae = true
+                        else
+                            helloae = false
                         end
+                        checkDangerAndBlacklist()
                     end
                 end)
             else
