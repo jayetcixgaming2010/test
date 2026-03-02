@@ -769,7 +769,8 @@ spawn(function()
         if y and typeof(y) == "table" then
             pcall(function()
                 if y.activeController then
-                    y.activeController.hitboxMagnitude = 60
+                    -- HITBOX MỞ RỘNG: tăng từ 60 lên 80 để đánh trúng dễ hơn
+                    y.activeController.hitboxMagnitude = 80
                     y.activeController.active = false
                     y.activeController.timeToNextBlock = 0
                     y.activeController.focusStart = 1655503339.0980349
@@ -783,6 +784,58 @@ spawn(function()
             end)
         end
     end)
+end)
+
+-- =============================================
+-- ATTACK AURA: Tự động đánh tất cả enemy trong vùng bán kính
+-- Mở rộng hitbox của từng Part trong character
+-- =============================================
+spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            if not lp.Character then return end
+            if not getgenv().targ or not getgenv().targ.Character then return end
+
+            local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            -- Mở rộng hitbox tất cả Parts của mình
+            for _, part in pairs(lp.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    pcall(function()
+                        part.Size = Vector3.new(
+                            math.max(part.Size.X, 6),
+                            math.max(part.Size.Y, 6),
+                            math.max(part.Size.Z, 6)
+                        )
+                    end)
+                end
+            end
+        end)
+    end
+end)
+
+-- =============================================
+-- HITBOX EXPANDER: Mở rộng hitbox target để đánh trúng dễ hơn
+-- =============================================
+spawn(function()
+    while task.wait(0.1) do
+        pcall(function()
+            if not getgenv().targ or not getgenv().targ.Character then return end
+            local targChar = getgenv().targ.Character
+            for _, part in pairs(targChar:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    pcall(function()
+                        part.Size = Vector3.new(
+                            math.max(part.Size.X, 8),
+                            math.max(part.Size.Y, 8),
+                            math.max(part.Size.Z, 8)
+                        )
+                    end)
+                end
+            end
+        end)
+    end
 end)
 
 local radius = 25
