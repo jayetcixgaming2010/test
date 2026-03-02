@@ -1174,11 +1174,24 @@ spawn(function()
                         for _, v in pairs(game.Players.LocalPlayer.PlayerGui.Notifications:GetChildren()) do 
                             if v:IsA("TextLabel") then 
                                 local text = string.lower(v.Text)
-                                if string.find(text, "người chơi vừa tử trận") or string.find(text, "nguoi choi vua tu tran") then          
-                                    print("🎯 PHÁT HIỆN THÔNG BÁO CẦN SKIP:", string.sub(v.Text, 1, 50))
-                                    SkipPlayer()
-                                    pcall(function() v:Destroy() end)
-                                    break
+                                local combatSkipKeywords = {
+                                    "player died recently",
+                                    "you can't attack them yet",
+                                    "cannot attack",
+                                    "nguoi choi vua tu tran",
+                                    "người chơi vừa tử trận",
+                                    "died recently",
+                                    "can't attack them",
+                                    "cannot attack this player",
+                                    "skill locked",
+                                }
+                                for _, keyword in pairs(combatSkipKeywords) do
+                                    if string.find(text, keyword) then
+                                        print("🎯 PHÁT HIỆN THÔNG BÁO CẦN SKIP:", string.sub(v.Text, 1, 60))
+                                        SkipPlayer()
+                                        pcall(function() v:Destroy() end)
+                                        break
+                                    end
                                 end
                             end
                         end
@@ -1495,9 +1508,13 @@ spawn(function()
                     local skipKeywords = {
                         "nguoi choi vua tu tran",
                         "người chơi vừa tử trận",
+                        "player died recently",
+                        "you can't attack them yet",
+                        "died recently",
+                        "can't attack them",
                         "cannot attack this player",
+                        "cannot attack",
                         "unable to attack",
-                        "cannot attack"
                     }                   
                     for _, keyword in pairs(skipKeywords) do
                         if string.find(text, keyword) then
