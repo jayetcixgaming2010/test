@@ -52,7 +52,7 @@ local function checkDangerAndBlacklist()
             if getgenv().dangerCount[targName] >= cfg.MaxAttempts then
                 getgenv().dangerBlacklist[targName] = true
                 print("🚫 [DangerBlacklist] Blacklist: " .. targName .. " - bỏ qua vĩnh viễn trong session này!")
-                SkipPlayer()
+                if getgenv().SkipPlayer then getgenv().SkipPlayer() end
             end
         end
     else
@@ -340,11 +340,17 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 ServerButton.MouseButton1Click:Connect(function()
     print("Hop Server button clicked!")
-    hopserver = true
+    -- Dùng getgenv để tránh lỗi scope (hopserver local chưa được khai báo tại đây)
+    if getgenv().HopServer then
+        getgenv().HopServer()
+    end
 end)
 SkipButton.MouseButton1Click:Connect(function()
     print("Next Player button clicked!")
-    SkipPlayer()
+    -- Dùng getgenv để đảm bảo gọi đúng hàm dù thứ tự khai báo
+    if getgenv().SkipPlayer then
+        getgenv().SkipPlayer()
+    end
 end)
 local startTime = os.time()
 local accountStartTime = os.time()
@@ -717,13 +723,13 @@ local function getNextPosition(center)
     return center + Vector3.new(math.sin(math.rad(angle)) * radius, yTween, math.cos(math.rad(angle)) * radius)
 end
 
-local hopserver = false
+getgenv().hopserver = false
 local starthop = false
 local stopbypass = false
 
 spawn(function()
     while task.wait() do
-        if hopserver then
+        if getgenv().hopserver then
             stopbypass = true
             starthop = true
         end
@@ -888,7 +894,7 @@ function target()
         for _, v in pairs(game.Players:GetPlayers()) do 
             if isValidBountyTarget(v) then
                 local dist = (v.Character.HumanoidRootPart.CFrame.Position - lp.Character.HumanoidRootPart.CFrame.Position).Magnitude
-                if dist < d and not hopserver then
+                if dist < d and not getgenv().hopserver then
                     p = v 
                     d = dist
                     
@@ -1041,7 +1047,7 @@ end)
 spawn(function()
     while task.wait() do
         if not getgenv().targ or not getgenv().targ.Character then target() end
-        if not getgenv().targ then hopserver = true end         
+        if not getgenv().targ then getgenv().hopserver = true end         
         pcall(function()
             if getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and 
                lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
@@ -1175,7 +1181,7 @@ spawn(function()
         end
         safehealth = false
         if not getgenv().targ then target() end
-        if not getgenv().targ then hopserver = true end 
+        if not getgenv().targ then getgenv().hopserver = true end 
         if not game:GetService("Players").LocalPlayer.PlayerGui.Main.BottomHUDList.PvpDisabled.Visible then
             pcall(function()
                 if getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and 
@@ -1296,7 +1302,7 @@ spawn(function()
 end)
 
 game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-    if not hopserver and child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+    if not getgenv().hopserver and child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
         game:GetService("TeleportService"):Teleport(game.PlaceId)
     end
 end)
