@@ -596,10 +596,11 @@ function EquipWeapon(Tool)
 end
 
 -- =============================================
--- KHÔNG CẦN FIREHIT NỮA – FASTATTACK ĐẢM NHIỆM
+-- FASTATTACK ĐÃ ĐẢM NHIỆM ĐÒN ĐÁNH THƯỜNG
+-- KHÔNG CẦN FIREHIT
 -- =============================================
 
--- Vẫn giữ các vòng lặp hỗ trợ (chống xuyên tường, hitbox, v.v.)
+-- Vòng lặp chống xuyên tường (giữ nguyên)
 spawn(function()
     while task.wait() do
         pcall(function()
@@ -614,6 +615,7 @@ spawn(function()
     end
 end)
 
+-- Tối ưu đồ họa
 if CFG.Another and CFG.Another.FPSBoots then
     local g = game
     local w = g.Workspace
@@ -640,6 +642,7 @@ function hasValue(array, targetString)
     return false
 end
 
+-- Hack CombatFramework (giữ nguyên)
 local y = nil
 pcall(function()
     if lp:FindFirstChild("PlayerScripts") then
@@ -676,55 +679,11 @@ spawn(function()
 end)
 
 -- =============================================
--- ATTACK AURA: Mở rộng hitbox của mình
+-- ĐÃ LOẠI BỎ HOÀN TOÀN CÁC ĐOẠN MỞ RỘNG HITBOX
+-- (không còn phình to nhân vật)
 -- =============================================
-spawn(function()
-    while task.wait(0.1) do
-        pcall(function()
-            if not lp.Character then return end
-            if not getgenv().targ or not getgenv().targ.Character then return end
 
-            local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-
-            for _, part in pairs(lp.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    pcall(function()
-                        part.Size = Vector3.new(
-                            math.max(part.Size.X, 6),
-                            math.max(part.Size.Y, 6),
-                            math.max(part.Size.Z, 6)
-                        )
-                    end)
-                end
-            end
-        end)
-    end
-end)
-
--- =============================================
--- HITBOX EXPANDER: Mở rộng hitbox target
--- =============================================
-spawn(function()
-    while task.wait(0.1) do
-        pcall(function()
-            if not getgenv().targ or not getgenv().targ.Character then return end
-            local targChar = getgenv().targ.Character
-            for _, part in pairs(targChar:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    pcall(function()
-                        part.Size = Vector3.new(
-                            math.max(part.Size.X, 8),
-                            math.max(part.Size.Y, 8),
-                            math.max(part.Size.Z, 8)
-                        )
-                    end)
-                end
-            end
-        end)
-    end
-end)
-
+-- Các biến hỗ trợ di chuyển vòng tròn (giữ nguyên)
 local radius = 25
 local speedCircle = 30
 local angle = 0
@@ -967,6 +926,7 @@ function target()
 end
 getgenv().target = target
 
+-- Kích hoạt Ken (giữ nguyên)
 spawn(function()
     while task.wait() do
         pcall(function()
@@ -978,6 +938,7 @@ spawn(function()
     end
 end)
 
+-- Luân phiên vũ khí (giữ nguyên)
 local gunmethod = CFG.Gun and CFG.Gun.GunMode or false
 
 spawn(function()
@@ -1015,6 +976,7 @@ spawn(function()
     end
 end)
 
+-- Bật PVP và buso (giữ nguyên)
 spawn(function()
     while task.wait(3) do
         pcall(function()
@@ -1036,6 +998,7 @@ spawn(function()
     end
 end)
 
+-- Vòng lặp chính: di chuyển và sử dụng kỹ năng
 spawn(function()
     while task.wait() do
         if not getgenv().targ or not getgenv().targ.Character then
@@ -1156,7 +1119,7 @@ local helloae = false
 local safehealth = false
 
 -- =============================================
--- SAFE HEALTH
+-- SAFE HEALTH (tự động bay lên cao khi máu thấp)
 -- =============================================
 local function getHealthPct()
     local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
@@ -1280,7 +1243,7 @@ spawn(function()
     end
 end)
 
--- Hook namecall (nếu game cho phép)
+-- Hook namecall (giữ nguyên, nhưng bọc pcall)
 pcall(function()
     local gg = getrawmetatable(game)
     local old = gg.__namecall
@@ -1310,7 +1273,7 @@ CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
     end
 end)
 
--- Webhook kill
+-- Webhook kill (giữ nguyên)
 function sendKillWebhook(targetName, bountyEarned, currentBounty)
     if not CFG.Webhook or not CFG.Webhook.Enabled or CFG.Webhook.Url == "" then return end
     local url = CFG.Webhook.Url
@@ -1425,7 +1388,7 @@ pcall(function()
     end
 end)
 
--- Kiểm tra thông báo skip
+-- Kiểm tra thông báo skip (giữ nguyên)
 spawn(function()
     while task.wait(0.5) do
         pcall(function()
