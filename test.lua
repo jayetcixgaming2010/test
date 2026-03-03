@@ -548,6 +548,55 @@ function EquipWeapon(Tool)
         end
     end)
 end
+-- =============================================
+-- FIX DAME: Gửi RegisterHit trực tiếp mỗi 0.05s khi trong range
+-- =============================================
+local function FireHit()
+    pcall(function()
+        if not getgenv().targ or not getgenv().targ.Character then return end
+        local targHRP = getgenv().targ.Character:FindFirstChild("HumanoidRootPart")
+        if not targHRP then return end
+
+        local net = game:GetService("ReplicatedStorage").Modules.Net
+        if net then
+            pcall(function() net["RE/RegisterAttack"]:FireServer(0) end)
+            pcall(function()
+                net["RE/RegisterHit"]:FireServer(
+                    targHRP,
+                    {{getgenv().targ.Character, targHRP}}
+                )
+            end)
+        end
+
+        -- Kích hoạt tool đang cầm + LeftClickRemote cho Blox Fruit
+        local char = lp.Character
+        if char then
+            for _, tool in pairs(char:GetChildren()) do
+                if tool:IsA("Tool") then
+                    pcall(function() tool:Activate() end)
+                    if tool:FindFirstChild("LeftClickRemote") then
+                        pcall(function()
+                            tool.LeftClickRemote:FireServer(targHRP.Position, 1)
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+spawn(function()
+    while task.wait(0.05) do
+        pcall(function()
+            if not getgenv().targ or not getgenv().targ.Character then return end
+            if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
+            local dist = (lp.Character.HumanoidRootPart.Position - getgenv().targ.Character.HumanoidRootPart.Position).Magnitude
+            if dist < 45 then
+                FireHit()
+            end
+        end)
+    end
+end)
 
 spawn(function()
     while game:GetService("RunService").Stepped:wait() do
@@ -962,13 +1011,12 @@ spawn(function()
 end)
 
 spawn(function()
-    while task.wait() do 
+    while task.wait(3) do 
         pcall(function()
-            if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main") and
-               game:GetService("Players").LocalPlayer.PlayerGui.Main:FindFirstChild("PvpDisabled") and
-               game:GetService("Players").LocalPlayer.PlayerGui.Main.PvpDisabled.Visible == true then
+            -- Luôn luôn enable PVP, không cần check UI
+            pcall(function()
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("EnablePvp")
-            end
+            end)
             
             if getgenv().targ and getgenv().targ.Character and lp.Character and
                (getgenv().targ.Character.HumanoidRootPart.CFrame.Position - lp.Character.HumanoidRootPart.CFrame.Position).Magnitude < 50 then
@@ -1157,8 +1205,7 @@ spawn(function()
             safehealth = false
             if not getgenv().targ then getgenv().target() end
             if not getgenv().targ then getgenv().hopserver = true end 
-            if not game:GetService("Players").LocalPlayer.PlayerGui.Main.BottomHUDList.PvpDisabled.Visible then
-                pcall(function()
+            pcall(function() 
                     if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and 
                     lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and
                     lp.Character:FindFirstChild("Humanoid") then
@@ -1210,8 +1257,6 @@ spawn(function()
                         checkDangerAndBlacklist()
                     end
                 end)
-            else
-                game.ReplicatedStorage.Remotes.CommF_:InvokeServer("EnablePvp")
             end
         end
     end
@@ -1313,6 +1358,15 @@ function sendKillWebhook(targetName, bountyEarned, currentBounty)
     end)
 end
 
+local lastBounty = 0
+spawn(function()
+    task.wait(3)
+    local p = game.Players.LocalPlayer
+    if p and p:FindFirstChild("leaderstats") then
+        lastBounty = p.leaderstats["Bounty/Honor"] and p.leaderstats["Bounty/Honor"].Value or 0
+    end
+end)
+
 local lastKilledPlayer = nil
 spawn(function()
     while task.wait(1) do
@@ -1333,6 +1387,8 @@ spawn(function()
                         lastKilledPlayer = targetPlayer.Name                       
                         print("🎯 ELIMINATED: " .. targetPlayer.Name)
                         print("💰 Bounty earned: " .. bountyEarned)
+                        -- Cập nhật lastBounty sau mỗi kill để lần sau tính đúng
+                        lastBounty = currentBounty
                         task.wait(3)
                         SkipPlayer()
                     end
