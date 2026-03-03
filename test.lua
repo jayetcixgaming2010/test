@@ -15,16 +15,32 @@ local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 -- Đợi character
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Tải thêm script (nếu cần)
-pcall(function()
-    loadstring(game:HttpGet("https://pastefy.app/0vZrrYO0/raw"))()
-end)
+-- =============================================
+-- TẢI VÀ CẤU HÌNH FASTATTACK MODULE
+-- =============================================
+loadstring(game:HttpGet("https://pastefy.app/0vZrrYO0/raw"))()
+local FastAttack = getgenv().rz_FastAttack
+if FastAttack then
+    -- Ghi đè hàm tìm kẻ địch gần nhất để chỉ tấn công target hiện tại
+    FastAttack.GetClosestEnemy = function(self, ...)
+        local targ = getgenv().targ
+        if targ and targ.Character and targ.Character:FindFirstChild("HumanoidRootPart") then
+            return targ.Character.HumanoidRootPart
+        end
+        return nil
+    end
+    -- Đảm bảo AutoClick được bật (mặc định đã true)
+    print("✅ FastAttack loaded and configured")
+end
 
--- Khởi tạo biến toàn cục
+-- =============================================
+-- BIẾN TOÀN CỤC
+-- =============================================
 getgenv().weapon = nil
 getgenv().targ = nil 
 getgenv().lasttarrget = nil
@@ -580,55 +596,10 @@ function EquipWeapon(Tool)
 end
 
 -- =============================================
--- FIX DAME: Gửi RegisterHit trực tiếp mỗi 0.05s khi trong range
+-- KHÔNG CẦN FIREHIT NỮA – FASTATTACK ĐẢM NHIỆM
 -- =============================================
-local function FireHit()
-    pcall(function()
-        if not getgenv().targ or not getgenv().targ.Character then return end
-        local targHRP = getgenv().targ.Character:FindFirstChild("HumanoidRootPart")
-        if not targHRP then return end
 
-        local net = ReplicatedStorage:FindFirstChild("Modules") and ReplicatedStorage.Modules:FindFirstChild("Net")
-        if net then
-            pcall(function() net["RE/RegisterAttack"]:FireServer(0) end)
-            pcall(function()
-                net["RE/RegisterHit"]:FireServer(
-                    targHRP,
-                    {{getgenv().targ.Character, targHRP}}
-                )
-            end)
-        end
-
-        -- Kích hoạt tool đang cầm
-        local char = lp.Character
-        if char then
-            for _, tool in pairs(char:GetChildren()) do
-                if tool:IsA("Tool") then
-                    pcall(function() tool:Activate() end)
-                    if tool:FindFirstChild("LeftClickRemote") then
-                        pcall(function()
-                            tool.LeftClickRemote:FireServer(targHRP.Position, 1)
-                        end)
-                    end
-                end
-            end
-        end
-    end)
-end
-
-spawn(function()
-    while task.wait(0.05) do
-        pcall(function()
-            if not getgenv().targ or not getgenv().targ.Character then return end
-            if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-            local dist = (lp.Character.HumanoidRootPart.Position - getgenv().targ.Character.HumanoidRootPart.Position).Magnitude
-            if dist < 45 then
-                FireHit()
-            end
-        end)
-    end
-end)
-
+-- Vẫn giữ các vòng lặp hỗ trợ (chống xuyên tường, hitbox, v.v.)
 spawn(function()
     while task.wait() do
         pcall(function()
@@ -705,8 +676,7 @@ spawn(function()
 end)
 
 -- =============================================
--- ATTACK AURA: Tự động đánh tất cả enemy trong vùng bán kính
--- Mở rộng hitbox của từng Part trong character
+-- ATTACK AURA: Mở rộng hitbox của mình
 -- =============================================
 spawn(function()
     while task.wait(0.1) do
@@ -733,7 +703,7 @@ spawn(function()
 end)
 
 -- =============================================
--- HITBOX EXPANDER: Mở rộng hitbox target để đánh trúng dễ hơn
+-- HITBOX EXPANDER: Mở rộng hitbox target
 -- =============================================
 spawn(function()
     while task.wait(0.1) do
