@@ -34,7 +34,6 @@ if FastAttack then
         end
         return nil
     end
-    -- Đảm bảo AutoClick được bật (mặc định đã true)
     print("✅ FastAttack loaded and configured")
 end
 
@@ -383,7 +382,9 @@ if World3 then
         ["Loaf Island"] = CFrame.new(-889.8325805664062, 64.72842407226562, -10895.8876953125),
         ["Peanut Island"] = CFrame.new(-1943.59716796875, 37.012996673583984, -10288.01171875),
         ["Cocoa Island"] = CFrame.new(147.35205078125, 23.642955780029297, -12030.5498046875),
-        ["Tiki Outpost"] = CFrame.new(-16218.6826, 9.08636189, 445.618408, -0.0610186495, 0.00000000110512588, -0.99813664, -0.0000000183458475, 1, 0.00000000222871765, 0.99813664, 0.0000000184476558, -0.0610186495)
+        ["Tiki Outpost"] = CFrame.new(-16218.6826, 9.08636189, 445.618408, -0.0610186495, 0.00000000110512588, -0.99813664, -0.0000000183458475, 1, 0.00000000222871765, 0.99813664, 0.0000000184476558, -0.0610186495),
+        -- ADDED FOR SUBMERGED ISLAND
+        ["Submerged Island"] = CFrame.new(-16269.7041, 25.2288494, 1373.65955, 0.997390985, 1.47309942e-09, -0.0721890926, -4.00651912e-09, 0.99999994, -2.51183763e-09, 0.0721890852, 5.75363091e-10, 0.997390926)
     }
 elseif World2 then
     distbyp = 3500
@@ -448,10 +449,12 @@ function bypass(Pos)
             if tween then
                 pcall(function() tween:Destroy() end)
             end
+            -- ADDED SUBMERGED ISLAND CONDITION
             if (is.X == 61163.8515625 and is.Y == 11.6796875 and is.Z == 1819.7841796875) or
                is == CFrame.new(-12471.169921875 + 50, 374.94024658203, -7551.677734375) or
                is == CFrame.new(-5085.23681640625 + 50, 316.5072021484375, -3156.202880859375) or
-               is == CFrame.new(5749.7861328125 + 50, 611.9736938476562, -276.2497863769531) then
+               is == CFrame.new(5749.7861328125 + 50, 611.9736938476562, -276.2497863769531) or
+               is == CFrame.new(-16269.7041, 25.2288494, 1373.65955, 0.997390985, 1.47309942e-09, -0.0721890926, -4.00651912e-09, 0.99999994, -2.51183763e-09, 0.0721890852, 5.75363091e-10, 0.997390926) then
                 if tween then
                     pcall(function() tween:Cancel() end)
                 end
@@ -597,7 +600,6 @@ end
 
 -- =============================================
 -- FASTATTACK ĐÃ ĐẢM NHIỆM ĐÒN ĐÁNH THƯỜNG
--- KHÔNG CẦN FIREHIT
 -- =============================================
 
 -- Vòng lặp chống xuyên tường (giữ nguyên)
@@ -680,7 +682,6 @@ end)
 
 -- =============================================
 -- ĐÃ LOẠI BỎ HOÀN TOÀN CÁC ĐOẠN MỞ RỘNG HITBOX
--- (không còn phình to nhân vật)
 -- =============================================
 
 -- Các biến hỗ trợ di chuyển vòng tròn (giữ nguyên)
@@ -998,7 +999,72 @@ spawn(function()
     end
 end)
 
--- Vòng lặp chính: di chuyển và sử dụng kỹ năng
+-- =============================================
+-- NÂNG CẤP AIM CHO TẤT CẢ SKILL (MELEE, SWORD, GUN, FRUIT)
+-- =============================================
+
+-- Auto-rotate: luôn quay mặt về phía target
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
+               lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") and lp.Character.Humanoid.Health > 0 then
+                local hrp = lp.Character.HumanoidRootPart
+                local targPos = getgenv().targ.Character.HumanoidRootPart.Position
+                hrp.CFrame = CFrame.lookAt(hrp.Position, Vector3.new(targPos.X, hrp.Position.Y, targPos.Z))
+            end
+        end)
+    end
+end)
+
+-- Hook mở rộng: bắt tất cả các remote liên quan đến tấn công và sửa vị trí thành vị trí của target
+local oldNamecall
+pcall(function()
+    local mt = getrawmetatable(game)
+    if not mt then return end
+    oldNamecall = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+
+        -- Nếu là FireServer và có target, thử sửa vị trí
+        if method == "FireServer" and getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") then
+            -- Danh sách các remote thường chứa vị trí (có thể mở rộng)
+            local remoteNames = {
+                "UpdateMousePos", "MousePos", "Click", "LeftClick", "RightClick",
+                "Activate", "Deactivate", "Skill", "SkillActivate", "Ability",
+                "Z", "X", "C", "V", "F", -- các phím skill
+                "RemoteEvent", "RemoteFunction"
+            }
+            local remoteName = tostring(self)
+            for _, name in ipairs(remoteNames) do
+                if remoteName:find(name) then
+                    -- Thử tìm argument là Vector3 và thay bằng vị trí target
+                    for i = 1, #args do
+                        if type(args[i]) == "Vector3" then
+                            args[i] = getgenv().targ.Character.HumanoidRootPart.Position
+                        elseif type(args[i]) == "CFrame" then
+                            args[i] = CFrame.new(getgenv().targ.Character.HumanoidRootPart.Position) * (args[i] - args[i].Position)
+                        elseif type(args[i]) == "table" then
+                            -- Có thể đệ quy nếu cần, nhưng tạm thời bỏ qua
+                        end
+                    end
+                    break
+                end
+            end
+            return oldNamecall(self, unpack(args))
+        end
+        return oldNamecall(self, ...)
+    end)
+    setreadonly(mt, true)
+end)
+
+-- Điều chỉnh vị trí đứng dựa trên loại vũ khí (cải thiện aim)
+-- Thêm vào trong vòng lặp chính (phần di chuyển đến target)
+-- Đoạn này sẽ thay thế cách tính CFrame trong phần "to" hiện tại? Không, ta sẽ chỉnh sửa trong vòng lặp chính dưới đây.
+
+-- Vòng lặp chính: di chuyển và sử dụng kỹ năng (đã được sửa để có vị trí đứng thông minh hơn)
 spawn(function()
     while task.wait() do
         if not getgenv().targ or not getgenv().targ.Character then
@@ -1010,7 +1076,35 @@ spawn(function()
         pcall(function()
             if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
                lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                if (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude < 40 then
+                local dist = (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                local weaponType = getgenv().weapon or "Melee" -- mặc định nếu chưa có
+
+                -- Xác định khoảng cách lý tưởng dựa trên vũ khí
+                local idealDistance = 20 -- melee
+                if weaponType == "Gun" then
+                    idealDistance = 30
+                elseif weaponType == "Blox Fruit" then
+                    idealDistance = 25
+                elseif weaponType == "Sword" then
+                    idealDistance = 18
+                end
+
+                -- Nếu khoảng cách quá xa, di chuyển đến vị trí lý tưởng
+                if dist > idealDistance + 5 then
+                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
+                    local direction = (targetPos - lp.Character.HumanoidRootPart.Position).Unit
+                    local goalPos = targetPos - direction * idealDistance
+                    to(CFrame.new(goalPos))
+                elseif dist < idealDistance - 5 then
+                    -- Nếu quá gần, lùi ra
+                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
+                    local direction = (lp.Character.HumanoidRootPart.Position - targetPos).Unit
+                    local goalPos = targetPos + direction * idealDistance
+                    to(CFrame.new(goalPos))
+                end
+
+                -- Sau khi đã ở vị trí tốt, tiếp tục xử lý kỹ năng như cũ
+                if dist < 40 then
                     spawn(function()
                         if not gunmethod then
                             pcall(function() EquipWeapon("Summon Sea Beast") end)
@@ -1113,13 +1207,9 @@ spawn(function()
     end
 end)
 
-local a, b
-local Nguvc = 5
-local helloae = false
-local safehealth = false
-
+-- (Phần còn lại giữ nguyên: safe health, aim, namecall hook cũ, webhook...)
 -- =============================================
--- SAFE HEALTH (tự động bay lên cao khi máu thấp)
+-- SAFE HEALTH
 -- =============================================
 local function getHealthPct()
     local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
@@ -1164,65 +1254,12 @@ spawn(function()
             print("💚 [SafeHealth] Máu đã hồi, tiếp tục hunt!")
         else
             safehealth = false
-            if not getgenv().targ then getgenv().target() end
-            if not getgenv().targ then getgenv().hopserver = true end
-            pcall(function()
-                if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
-                   lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") then
-                    pcall(function()
-                        local locations = Workspace:FindFirstChild("_WorldOrigin") and Workspace._WorldOrigin:FindFirstChild("Locations")
-                        if not (locations and locations:FindFirstChild("Island 1") and getgenv().targ:DistanceFromCharacter(locations["Island 1"].Position) < 10000) then
-                            if (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude < 40 then
-                                if lp.PlayerGui.Main and lp.PlayerGui.Main.SafeZone and lp.PlayerGui.Main.SafeZone.Visible then
-                                    SkipPlayer()
-                                end
-                                if getgenv().targ.Character.Humanoid.Health > 0 then
-                                    to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
-                                else
-                                    SkipPlayer()
-                                end
-                            else
-                                if getgenv().targ.Character.Humanoid.Health > 0 then
-                                    to(getgenv().targ.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, 5))
-                                else
-                                    SkipPlayer()
-                                end
-                            end
-                        else
-                            SkipPlayer()
-                        end
-                    end)
-
-                    a = getgenv().targ.Character.HumanoidRootPart.Position
-                    if a ~= b then
-                        yTween = 0
-                        b = a
-                        if (CFG.Gun and CFG.Gun.Enable and CFG.Gun.GunMode) then
-                            Nguvc = 14
-                        else
-                            Nguvc = 15
-                        end
-                    else
-                        yTween = 5
-                        if (CFG.Gun and CFG.Gun.Enable and CFG.Gun.GunMode) then
-                            Nguvc = 3
-                        else
-                            Nguvc = 5
-                        end
-                    end
-
-                    if getgenv().targ.Character.HumanoidRootPart.CFrame.Y >= 10 then
-                        helloae = true
-                    else
-                        helloae = false
-                    end
-                    checkDangerAndBlacklist()
-                end
-            end)
+            -- không cần làm gì thêm, phần còn lại đã xử lý trong vòng lặp chính
         end
     end
 end)
 
+-- Hook namecall cũ (giữ lại nhưng có thể không cần vì đã có hook mới, nhưng để an toàn ta giữ)
 local aim = false
 local CFrameHunt
 
@@ -1243,7 +1280,7 @@ spawn(function()
     end
 end)
 
--- Hook namecall (giữ nguyên, nhưng bọc pcall)
+-- Hook namecall cũ (sửa vị trí cho remote)
 pcall(function()
     local gg = getrawmetatable(game)
     local old = gg.__namecall
@@ -1273,7 +1310,7 @@ CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
     end
 end)
 
--- Webhook kill (giữ nguyên)
+-- Webhook kill
 function sendKillWebhook(targetName, bountyEarned, currentBounty)
     if not CFG.Webhook or not CFG.Webhook.Enabled or CFG.Webhook.Url == "" then return end
     local url = CFG.Webhook.Url
@@ -1388,7 +1425,7 @@ pcall(function()
     end
 end)
 
--- Kiểm tra thông báo skip (giữ nguyên)
+-- Kiểm tra thông báo skip
 spawn(function()
     while task.wait(0.5) do
         pcall(function()
