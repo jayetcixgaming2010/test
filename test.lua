@@ -121,205 +121,230 @@ local function checkDangerAndBlacklist()
 end
 
 -- =============================================
--- GUI
+-- GUI (REDESIGNED - DISCORD EMBED STYLE)
 -- =============================================
 local MainGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local Background = Instance.new("ImageLabel")
-local UICorner_Background = Instance.new("UICorner")
-local Character = Instance.new("ImageLabel")
-local UICorner_Character = Instance.new("UICorner")
-local TextLabel = Instance.new("TextLabel")
-local CharacterIcon = Instance.new("ImageLabel")
-local UICorner_Icon = Instance.new("UICorner")
+local LeftBorder = Instance.new("Frame")
+local AuthorIcon = Instance.new("ImageLabel")
+local AuthorName = Instance.new("TextLabel")
+local FieldsFrame = Instance.new("Frame")
+local DescrCurrent = Instance.new("TextLabel")
+local DescrSession = Instance.new("TextLabel")
+local DescrTotal = Instance.new("TextLabel")
+local DescrClient = Instance.new("TextLabel")
+local DescrAccount = Instance.new("TextLabel")
+local CrentBounty = Instance.new("TextLabel")
 local BountyEarned = Instance.new("TextLabel")
 local TotalBountyEarned = Instance.new("TextLabel")
 local CilentTimeElapsed = Instance.new("TextLabel")
 local AccoutTimeElapsed = Instance.new("TextLabel")
-local SkipImg = Instance.new("ImageLabel")
-local UICorner_Skip = Instance.new("UICorner")
+local Footer = Instance.new("TextLabel")
+local SkipImg = Instance.new("Frame")
 local SkipButton = Instance.new("TextButton")
-local CrentBounty = Instance.new("TextLabel")
-local ServerImg = Instance.new("ImageLabel")
-local UICorner_Server = Instance.new("UICorner")
+local ServerImg = Instance.new("Frame")
 local ServerButton = Instance.new("TextButton")
 local ToggleButton = Instance.new("ImageButton")
-local UICorner_Toggle = Instance.new("UICorner")
+
 MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainGui.Name = "MainGui"
 MainGui.Parent = game:GetService("CoreGui")
+
+-- Main Frame
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BackgroundColor3 = Color3.fromRGB(47, 49, 54)  -- Discord dark
 MainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.Size = UDim2.new(0, 380, 0, 180)
+MainFrame.Size = UDim2.new(0, 450, 0, 280)
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = MainGui
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
-Background.Image = "rbxassetid://128136450619493"
-Background.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-Background.BackgroundTransparency = 1
-Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Background.BorderSizePixel = 0
-Background.Size = UDim2.new(0, 674, 0, 346)
-Background.Name = "Background"
-Background.Parent = MainFrame
-UICorner_Background.CornerRadius = UDim.new(0, 12)
-UICorner_Background.Parent = Background
-Character.Image = "rbxassetid://95939250980299"
-Character.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Character.BackgroundTransparency = 1
-Character.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Character.BorderSizePixel = 0
-Character.Position = UDim2.new(0.55, 0, -0.05, 0)
-Character.Size = UDim2.new(0, 160, 0, 180)
-Character.Name = "Character"
-Character.Parent = MainFrame
-UICorner_Character.CornerRadius = UDim.new(0, 8)
-UICorner_Character.Parent = Character
-TextLabel.Font = Enum.Font.GothamBold
-TextLabel.Text = "lo hub"
-TextLabel.TextColor3 = Color3.fromRGB(125, 194, 14)
-TextLabel.TextSize = 14
-TextLabel.TextTransparency = 0
-TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel.BackgroundTransparency = 1
-TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel.BorderSizePixel = 0
-TextLabel.Position = UDim2.new(0, 40, 0, 8)
-TextLabel.Size = UDim2.new(0, 200, 0, 20)
-TextLabel.Parent = MainFrame
-CharacterIcon.Image = "rbxassetid://128160729162320"
-CharacterIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-CharacterIcon.BackgroundTransparency = 1
-CharacterIcon.BorderColor3 = Color3.fromRGB(0, 0, 0)
-CharacterIcon.BorderSizePixel = 0
-CharacterIcon.Position = UDim2.new(0, 10, 0, 8)
-CharacterIcon.Size = UDim2.new(0, 25, 0, 25)
-CharacterIcon.Name = "CharacterIcon"
-CharacterIcon.Parent = MainFrame
-UICorner_Icon.CornerRadius = UDim.new(0, 6)
-UICorner_Icon.Parent = CharacterIcon
-CrentBounty.Font = Enum.Font.Gotham
-CrentBounty.Text = "Current Bounty:"
+
+-- Left accent border (Discord embed color)
+LeftBorder.BackgroundColor3 = Color3.fromRGB(103, 235, 52)  -- Green from embed
+LeftBorder.BorderSizePixel = 0
+LeftBorder.Size = UDim2.new(0, 4, 1, 0)
+LeftBorder.Name = "LeftBorder"
+LeftBorder.Parent = MainFrame
+
+-- Author Icon (using existing CharacterIcon asset)
+AuthorIcon.Image = "rbxassetid://128160729162320"
+AuthorIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AuthorIcon.BackgroundTransparency = 1
+AuthorIcon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+AuthorIcon.BorderSizePixel = 0
+AuthorIcon.Position = UDim2.new(0, 20, 0, 15)
+AuthorIcon.Size = UDim2.new(0, 30, 0, 30)
+AuthorIcon.Name = "AuthorIcon"
+AuthorIcon.Parent = MainFrame
+local iconCorner = Instance.new("UICorner")
+iconCorner.CornerRadius = UDim.new(1, 0)
+iconCorner.Parent = AuthorIcon
+
+-- Author Name
+AuthorName.Font = Enum.Font.GothamBold
+AuthorName.Text = "Lo Hub"
+AuthorName.TextColor3 = Color3.fromRGB(255, 255, 255)
+AuthorName.TextSize = 16
+AuthorName.TextXAlignment = Enum.TextXAlignment.Left
+AuthorName.BackgroundTransparency = 1
+AuthorName.Position = UDim2.new(0, 60, 0, 18)
+AuthorName.Size = UDim2.new(0, 150, 0, 24)
+AuthorName.Parent = MainFrame
+
+-- Fields Frame (holds all stat rows)
+FieldsFrame.BackgroundTransparency = 1
+FieldsFrame.Position = UDim2.new(0, 20, 0, 55)
+FieldsFrame.Size = UDim2.new(1, -40, 0, 150)
+FieldsFrame.Parent = MainFrame
+
+-- Left column descriptors
+local function createDescriptor(name, posY)
+    local desc = Instance.new("TextLabel")
+    desc.Font = Enum.Font.Gotham
+    desc.Text = name
+    desc.TextColor3 = Color3.fromRGB(160, 160, 160)
+    desc.TextSize = 12
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.BackgroundTransparency = 1
+    desc.Position = UDim2.new(0, 0, 0, posY)
+    desc.Size = UDim2.new(0, 150, 0, 20)
+    desc.Parent = FieldsFrame
+    return desc
+end
+
+-- Right column descriptors
+local function createRightDescriptor(name, posY)
+    local desc = Instance.new("TextLabel")
+    desc.Font = Enum.Font.Gotham
+    desc.Text = name
+    desc.TextColor3 = Color3.fromRGB(160, 160, 160)
+    desc.TextSize = 12
+    desc.TextXAlignment = Enum.TextXAlignment.Left
+    desc.BackgroundTransparency = 1
+    desc.Position = UDim2.new(0, 210, 0, posY)
+    desc.Size = UDim2.new(0, 150, 0, 20)
+    desc.Parent = FieldsFrame
+    return desc
+end
+
+-- Left column descriptors
+DescrCurrent = createDescriptor("Current Bounty", 0)
+DescrSession = createDescriptor("Bounty Earned (session)", 25)
+DescrTotal = createDescriptor("Total Bounty", 50)
+
+-- Right column descriptors
+DescrClient = createRightDescriptor("Client Time", 0)
+DescrAccount = createRightDescriptor("Account Time", 25)
+
+-- Value labels (left column)
+CrentBounty.Font = Enum.Font.GothamBold
+CrentBounty.Text = "0"
 CrentBounty.TextColor3 = Color3.fromRGB(255, 255, 255)
-CrentBounty.TextSize = 12
-CrentBounty.TextTransparency = 0
-CrentBounty.TextXAlignment = Enum.TextXAlignment.Left
-CrentBounty.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CrentBounty.TextSize = 14
+CrentBounty.TextXAlignment = Enum.TextXAlignment.Right
 CrentBounty.BackgroundTransparency = 1
-CrentBounty.BorderColor3 = Color3.fromRGB(0, 0, 0)
-CrentBounty.BorderSizePixel = 0
-CrentBounty.Position = UDim2.new(0, 12, 0, 40)
-CrentBounty.Size = UDim2.new(0, 180, 0, 16)
+CrentBounty.Position = UDim2.new(0, 140, 0, 0)
+CrentBounty.Size = UDim2.new(0, 60, 0, 20)
 CrentBounty.Name = "CrentBounty"
-CrentBounty.Parent = MainFrame
-BountyEarned.Font = Enum.Font.Gotham
-BountyEarned.Text = "Bounty Earned: 0$ "
+CrentBounty.Parent = FieldsFrame
+
+BountyEarned.Font = Enum.Font.GothamBold
+BountyEarned.Text = "0$"
 BountyEarned.TextColor3 = Color3.fromRGB(255, 255, 255)
-BountyEarned.TextSize = 12
-BountyEarned.TextTransparency = 0
-BountyEarned.TextXAlignment = Enum.TextXAlignment.Left
-BountyEarned.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BountyEarned.TextSize = 14
+BountyEarned.TextXAlignment = Enum.TextXAlignment.Right
 BountyEarned.BackgroundTransparency = 1
-BountyEarned.BorderColor3 = Color3.fromRGB(0, 0, 0)
-BountyEarned.BorderSizePixel = 0
-BountyEarned.Position = UDim2.new(0, 12, 0, 60)
-BountyEarned.Size = UDim2.new(0, 180, 0, 16)
+BountyEarned.Position = UDim2.new(0, 140, 0, 25)
+BountyEarned.Size = UDim2.new(0, 60, 0, 20)
 BountyEarned.Name = "BountyEarned"
-BountyEarned.Parent = MainFrame
-TotalBountyEarned.Font = Enum.Font.Gotham
-TotalBountyEarned.Text = "Total Bounty Earned: 0$"
+BountyEarned.Parent = FieldsFrame
+
+TotalBountyEarned.Font = Enum.Font.GothamBold
+TotalBountyEarned.Text = "0$"
 TotalBountyEarned.TextColor3 = Color3.fromRGB(255, 255, 255)
-TotalBountyEarned.TextSize = 12
-TotalBountyEarned.TextTransparency = 0
-TotalBountyEarned.TextXAlignment = Enum.TextXAlignment.Left
-TotalBountyEarned.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+TotalBountyEarned.TextSize = 14
+TotalBountyEarned.TextXAlignment = Enum.TextXAlignment.Right
 TotalBountyEarned.BackgroundTransparency = 1
-TotalBountyEarned.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TotalBountyEarned.BorderSizePixel = 0
-TotalBountyEarned.Position = UDim2.new(0, 12, 0, 80)
-TotalBountyEarned.Size = UDim2.new(0, 180, 0, 16)
+TotalBountyEarned.Position = UDim2.new(0, 140, 0, 50)
+TotalBountyEarned.Size = UDim2.new(0, 60, 0, 20)
 TotalBountyEarned.Name = "TotalBountyEarned"
-TotalBountyEarned.Parent = MainFrame
-CilentTimeElapsed.Font = Enum.Font.Gotham
-CilentTimeElapsed.Text = "Client Time Elapsed: 0h:0m:00s"
+TotalBountyEarned.Parent = FieldsFrame
+
+-- Value labels (right column)
+CilentTimeElapsed.Font = Enum.Font.GothamBold
+CilentTimeElapsed.Text = "0h:0m:00s"
 CilentTimeElapsed.TextColor3 = Color3.fromRGB(255, 255, 255)
-CilentTimeElapsed.TextSize = 12
-CilentTimeElapsed.TextTransparency = 0
-CilentTimeElapsed.TextXAlignment = Enum.TextXAlignment.Left
-CilentTimeElapsed.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CilentTimeElapsed.TextSize = 14
+CilentTimeElapsed.TextXAlignment = Enum.TextXAlignment.Right
 CilentTimeElapsed.BackgroundTransparency = 1
-CilentTimeElapsed.BorderColor3 = Color3.fromRGB(0, 0, 0)
-CilentTimeElapsed.BorderSizePixel = 0
-CilentTimeElapsed.Position = UDim2.new(0, 12, 0, 100)
-CilentTimeElapsed.Size = UDim2.new(0, 180, 0, 16)
+CilentTimeElapsed.Position = UDim2.new(0, 350, 0, 0)
+CilentTimeElapsed.Size = UDim2.new(0, 80, 0, 20)
 CilentTimeElapsed.Name = "CilentTimeElapsed"
-CilentTimeElapsed.Parent = MainFrame
-AccoutTimeElapsed.Font = Enum.Font.Gotham
-AccoutTimeElapsed.Text = "Acount Time Elapsed: 0h:0m:00s"
+CilentTimeElapsed.Parent = FieldsFrame
+
+AccoutTimeElapsed.Font = Enum.Font.GothamBold
+AccoutTimeElapsed.Text = "0h:0m:00s"
 AccoutTimeElapsed.TextColor3 = Color3.fromRGB(255, 255, 255)
-AccoutTimeElapsed.TextSize = 12
-AccoutTimeElapsed.TextTransparency = 0
-AccoutTimeElapsed.TextXAlignment = Enum.TextXAlignment.Left
-AccoutTimeElapsed.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AccoutTimeElapsed.TextSize = 14
+AccoutTimeElapsed.TextXAlignment = Enum.TextXAlignment.Right
 AccoutTimeElapsed.BackgroundTransparency = 1
-AccoutTimeElapsed.BorderColor3 = Color3.fromRGB(0, 0, 0)
-AccoutTimeElapsed.BorderSizePixel = 0
-AccoutTimeElapsed.Position = UDim2.new(0, 12, 0, 120)
-AccoutTimeElapsed.Size = UDim2.new(0, 180, 0, 16)
+AccoutTimeElapsed.Position = UDim2.new(0, 350, 0, 25)
+AccoutTimeElapsed.Size = UDim2.new(0, 80, 0, 20)
 AccoutTimeElapsed.Name = "AccoutTimeElapsed"
-AccoutTimeElapsed.Parent = MainFrame
-SkipImg.Image = "rbxassetid://92006056658480"
-SkipImg.AnchorPoint = Vector2.new(0, 1)
-SkipImg.BackgroundColor3 = Color3.fromRGB(50, 100, 150)
-SkipImg.BackgroundTransparency = 0
-SkipImg.BorderColor3 = Color3.fromRGB(0, 0, 0)
+AccoutTimeElapsed.Parent = FieldsFrame
+
+-- Footer
+Footer.Font = Enum.Font.Gotham
+Footer.Text = "By Lo Hub Emorima"
+Footer.TextColor3 = Color3.fromRGB(140, 140, 140)
+Footer.TextSize = 11
+Footer.TextXAlignment = Enum.TextXAlignment.Left
+Footer.BackgroundTransparency = 1
+Footer.Position = UDim2.new(0, 20, 1, -25)
+Footer.Size = UDim2.new(0, 200, 0, 16)
+Footer.Parent = MainFrame
+
+-- Buttons Frame (Skip & Hop)
+SkipImg.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
 SkipImg.BorderSizePixel = 0
-SkipImg.Position = UDim2.new(0, 12, 1, -8)
-SkipImg.Size = UDim2.new(0, 80, 0, 25)
+SkipImg.Position = UDim2.new(1, -200, 1, -35)
+SkipImg.Size = UDim2.new(0, 90, 0, 28)
 SkipImg.Name = "SkipImg"
 SkipImg.Parent = MainFrame
-UICorner_Skip.CornerRadius = UDim.new(0, 8)
-UICorner_Skip.Parent = SkipImg
+local skipCorner = Instance.new("UICorner")
+skipCorner.CornerRadius = UDim.new(0, 4)
+skipCorner.Parent = SkipImg
+
 SkipButton.Font = Enum.Font.GothamBold
 SkipButton.Text = "Next Player"
 SkipButton.TextColor3 = Color3.fromRGB(170, 230, 73)
 SkipButton.TextSize = 12
-SkipButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 SkipButton.BackgroundTransparency = 1
-SkipButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-SkipButton.BorderSizePixel = 0
 SkipButton.Size = UDim2.new(1, 0, 1, 0)
 SkipButton.Name = "SkipButton"
 SkipButton.Parent = SkipImg
-ServerImg.Image = "rbxassetid://71768682149411"
-ServerImg.AnchorPoint = Vector2.new(0, 1)
-ServerImg.BackgroundColor3 = Color3.fromRGB(150, 100, 50)
-ServerImg.BackgroundTransparency = 0
-ServerImg.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
+ServerImg.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
 ServerImg.BorderSizePixel = 0
-ServerImg.Position = UDim2.new(0, 99, 1, -8)
-ServerImg.Size = UDim2.new(0, 80, 0, 25)
+ServerImg.Position = UDim2.new(1, -100, 1, -35)
+ServerImg.Size = UDim2.new(0, 90, 0, 28)
 ServerImg.Name = "ServerImg"
 ServerImg.Parent = MainFrame
-UICorner_Server.CornerRadius = UDim.new(0, 8)
-UICorner_Server.Parent = ServerImg
+local serverCorner = Instance.new("UICorner")
+serverCorner.CornerRadius = UDim.new(0, 4)
+serverCorner.Parent = ServerImg
+
 ServerButton.Font = Enum.Font.GothamBold
 ServerButton.Text = "Hop Server"
 ServerButton.TextColor3 = Color3.fromRGB(170, 230, 73)
 ServerButton.TextSize = 12
-ServerButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 ServerButton.BackgroundTransparency = 1
-ServerButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-ServerButton.BorderSizePixel = 0
 ServerButton.Size = UDim2.new(1, 0, 1, 0)
 ServerButton.Name = "ServerButton"
 ServerButton.Parent = ServerImg
+
+-- Toggle button (same as before)
 ToggleButton.Parent = MainGui
 ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -328,15 +353,18 @@ ToggleButton.Position = UDim2.new(0.120833337 - 0.10, 0, 0.0952890813 + 0.01, 0)
 ToggleButton.Size = UDim2.new(0, 25, 0, 25)
 ToggleButton.Draggable = true
 ToggleButton.Image = "rbxassetid://100666805146072"
-UICorner_Toggle.CornerRadius = UDim.new(1, 0)
-UICorner_Toggle.Parent = ToggleButton
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = ToggleButton
 
+-- Visibility toggle
 local UIVisible = true
 ToggleButton.MouseButton1Click:Connect(function()
     UIVisible = not UIVisible
     MainFrame.Visible = UIVisible    
 end)
 
+-- Dragging for MainFrame
 local UserInputService = game:GetService("UserInputService")
 local dragging
 local dragInput
@@ -369,6 +397,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Dragging for ToggleButton
 local toggleDragging = false
 local toggleDragInput
 local toggleDragStart
@@ -400,6 +429,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Button functionality
 ServerButton.MouseButton1Click:Connect(function()
     print("Hop Server button clicked!")
     getgenv().hopserver = true
@@ -421,6 +451,7 @@ SkipButton.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Time and bounty update
 local startTime = os.time()
 local accountStartTime = os.time()
 local totalBountyEarned = 0
@@ -438,12 +469,12 @@ local function updateUI()
     local p = game.Players.LocalPlayer
     if p and p:FindFirstChild("leaderstats") then
         local bounty = p.leaderstats["Bounty/Honor"] and p.leaderstats["Bounty/Honor"].Value or 0
-        CrentBounty.Text = "Current Bounty: " .. tostring(bounty)
+        CrentBounty.Text = tostring(bounty)
     end    
-    CilentTimeElapsed.Text = "Client Time Elapsed: " .. formatTime(clientElapsed)
-    AccoutTimeElapsed.Text = "Account Time Elapsed: " .. formatTime(accountElapsed)    
-    BountyEarned.Text = "Bounty Earned: " .. tostring(sessionBountyEarned) .. "$"
-    TotalBountyEarned.Text = "Total Bounty Earned: " .. tostring(totalBountyEarned) .. "$"
+    CilentTimeElapsed.Text = formatTime(clientElapsed)
+    AccoutTimeElapsed.Text = formatTime(accountElapsed)    
+    BountyEarned.Text = tostring(sessionBountyEarned) .. "$"
+    TotalBountyEarned.Text = tostring(totalBountyEarned) .. "$"
 end
 
 local lastBounty = 0
@@ -471,7 +502,7 @@ spawn(function()
 end)
 
 -- =============================================
--- WORLD / ISLAND SETUP
+-- WORLD / ISLAND SETUP (giữ nguyên)
 -- =============================================
 local placeId = game.PlaceId
 local worldMap = {[2753915549]="World1",[85211729168715]="World1",[4442272183]="World2",[79091703265657]="World2",[7449423635]="World3",[100117331123089]="World3"}
