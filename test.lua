@@ -22,16 +22,13 @@ getgenv().checked = {}
 getgenv().pl = game.Players:GetPlayers()
 getgenv().killed = nil
 
--- FIX #4: Khai báo biến global đúng chỗ
 local tween = nil
 local stopbypass = false
 
 -- =============================================
--- FIX HOP: Tự động bấm OK khi Roblox hiện popup xác nhận teleport
--- Xử lý cả TeleportGui lẫn PromptOverlay
+-- AUTO CONFIRM TELEPORT POPUP
 -- =============================================
 spawn(function()
-    -- Tự động confirm popup teleport của Roblox (nút "Teleport" / "OK" / "Yes")
     local function autoConfirmTeleport(gui)
         for _, btn in pairs(gui:GetDescendants()) do
             if (btn:IsA("TextButton") or btn:IsA("ImageButton")) then
@@ -43,8 +40,6 @@ spawn(function()
             end
         end
     end
-
-    -- Theo dõi CoreGui → RobloxPromptGui (popup hệ thống)
     local promptGui = game:GetService("CoreGui"):WaitForChild("RobloxPromptGui", 10)
     if promptGui then
         local overlay = promptGui:FindFirstChild("promptOverlay")
@@ -53,40 +48,27 @@ spawn(function()
                 task.wait(0.1)
                 autoConfirmTeleport(overlay)
             end)
-            -- Xử lý nếu đã có sẵn child
             for _, child in pairs(overlay:GetChildren()) do
                 autoConfirmTeleport(overlay)
             end
         end
     end
-
-    -- Theo dõi toàn bộ CoreGui phòng trường hợp gui khác
     game:GetService("CoreGui").ChildAdded:Connect(function(child)
         task.wait(0.2)
         autoConfirmTeleport(child)
     end)
-
-    -- Theo dõi PlayerGui (một số executor inject popup vào đây)
     game.Players.LocalPlayer.PlayerGui.ChildAdded:Connect(function(child)
         task.wait(0.2)
         autoConfirmTeleport(child)
     end)
-
-    -- Loop quét liên tục mỗi 0.5s phòng popup load chậm
     while task.wait(0.5) do
-        pcall(function()
-            local cg = game:GetService("CoreGui")
-            autoConfirmTeleport(cg)
-        end)
-        pcall(function()
-            local pg = game.Players.LocalPlayer.PlayerGui
-            autoConfirmTeleport(pg)
-        end)
+        pcall(function() autoConfirmTeleport(game:GetService("CoreGui")) end)
+        pcall(function() autoConfirmTeleport(game.Players.LocalPlayer.PlayerGui) end)
     end
 end)
 
 -- =============================================
--- TÍNH NĂNG: Danger Blacklist
+-- DANGER BLACKLIST
 -- =============================================
 getgenv().dangerCount = {}
 getgenv().dangerBlacklist = {}
@@ -108,10 +90,8 @@ local function checkDangerAndBlacklist()
         if not dangerCooldown[targName] then
             dangerCooldown[targName] = true
             getgenv().dangerCount[targName] = (getgenv().dangerCount[targName] or 0) + 1
-            print("⚠️ [DangerBlacklist] Bị " .. targName .. " đánh nguy hiểm lần " .. getgenv().dangerCount[targName] .. "/" .. cfg.MaxAttempts)
             if getgenv().dangerCount[targName] >= cfg.MaxAttempts then
                 getgenv().dangerBlacklist[targName] = true
-                print("🚫 [DangerBlacklist] Blacklist: " .. targName .. " - bỏ qua vĩnh viễn trong session này!")
                 if getgenv().SkipPlayer then getgenv().SkipPlayer() end
             end
         end
@@ -121,268 +101,62 @@ local function checkDangerAndBlacklist()
 end
 
 -- =============================================
--- GUI (REDESIGNED - DISCORD EMBED STYLE)
+-- GUI (DARKNESS X STYLE - TỪ AUTOBOUNTY__1_.TXT)
 -- =============================================
-local MainGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local LeftBorder = Instance.new("Frame")
-local AuthorIcon = Instance.new("ImageLabel")
-local AuthorName = Instance.new("TextLabel")
-local FieldsFrame = Instance.new("Frame")
-local DescrCurrent = Instance.new("TextLabel")
-local DescrSession = Instance.new("TextLabel")
-local DescrTotal = Instance.new("TextLabel")
-local DescrClient = Instance.new("TextLabel")
-local DescrAccount = Instance.new("TextLabel")
-local CrentBounty = Instance.new("TextLabel")
-local BountyEarned = Instance.new("TextLabel")
-local TotalBountyEarned = Instance.new("TextLabel")
-local CilentTimeElapsed = Instance.new("TextLabel")
-local AccoutTimeElapsed = Instance.new("TextLabel")
-local Footer = Instance.new("TextLabel")
-local SkipImg = Instance.new("Frame")
-local SkipButton = Instance.new("TextButton")
-local ServerImg = Instance.new("Frame")
-local ServerButton = Instance.new("TextButton")
-local ToggleButton = Instance.new("ImageButton")
-
-MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-MainGui.Name = "MainGui"
-MainGui.Parent = game:GetService("CoreGui")
-
--- Main Frame
-MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(47, 49, 54)  -- Discord dark
-MainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-MainFrame.Size = UDim2.new(0, 450, 0, 280)
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = MainGui
-
--- Left accent border (Discord embed color)
-LeftBorder.BackgroundColor3 = Color3.fromRGB(103, 235, 52)  -- Green from embed
-LeftBorder.BorderSizePixel = 0
-LeftBorder.Size = UDim2.new(0, 4, 1, 0)
-LeftBorder.Name = "LeftBorder"
-LeftBorder.Parent = MainFrame
-
--- Author Icon (using existing CharacterIcon asset)
-AuthorIcon.Image = "rbxassetid://128160729162320"
-AuthorIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-AuthorIcon.BackgroundTransparency = 1
-AuthorIcon.BorderColor3 = Color3.fromRGB(0, 0, 0)
-AuthorIcon.BorderSizePixel = 0
-AuthorIcon.Position = UDim2.new(0, 20, 0, 15)
-AuthorIcon.Size = UDim2.new(0, 30, 0, 30)
-AuthorIcon.Name = "AuthorIcon"
-AuthorIcon.Parent = MainFrame
-local iconCorner = Instance.new("UICorner")
-iconCorner.CornerRadius = UDim.new(1, 0)
-iconCorner.Parent = AuthorIcon
-
--- Author Name
-AuthorName.Font = Enum.Font.GothamBold
-AuthorName.Text = "Lo Hub"
-AuthorName.TextColor3 = Color3.fromRGB(255, 255, 255)
-AuthorName.TextSize = 16
-AuthorName.TextXAlignment = Enum.TextXAlignment.Left
-AuthorName.BackgroundTransparency = 1
-AuthorName.Position = UDim2.new(0, 60, 0, 18)
-AuthorName.Size = UDim2.new(0, 150, 0, 24)
-AuthorName.Parent = MainFrame
-
--- Fields Frame (holds all stat rows)
-FieldsFrame.BackgroundTransparency = 1
-FieldsFrame.Position = UDim2.new(0, 20, 0, 55)
-FieldsFrame.Size = UDim2.new(1, -40, 0, 150)
-FieldsFrame.Parent = MainFrame
-
--- Left column descriptors
-local function createDescriptor(name, posY)
-    local desc = Instance.new("TextLabel")
-    desc.Font = Enum.Font.Gotham
-    desc.Text = name
-    desc.TextColor3 = Color3.fromRGB(160, 160, 160)
-    desc.TextSize = 12
-    desc.TextXAlignment = Enum.TextXAlignment.Left
-    desc.BackgroundTransparency = 1
-    desc.Position = UDim2.new(0, 0, 0, posY)
-    desc.Size = UDim2.new(0, 150, 0, 20)
-    desc.Parent = FieldsFrame
-    return desc
-end
-
--- Right column descriptors
-local function createRightDescriptor(name, posY)
-    local desc = Instance.new("TextLabel")
-    desc.Font = Enum.Font.Gotham
-    desc.Text = name
-    desc.TextColor3 = Color3.fromRGB(160, 160, 160)
-    desc.TextSize = 12
-    desc.TextXAlignment = Enum.TextXAlignment.Left
-    desc.BackgroundTransparency = 1
-    desc.Position = UDim2.new(0, 210, 0, posY)
-    desc.Size = UDim2.new(0, 150, 0, 20)
-    desc.Parent = FieldsFrame
-    return desc
-end
-
--- Left column descriptors
-DescrCurrent = createDescriptor("Current Bounty", 0)
-DescrSession = createDescriptor("Bounty Earned (session)", 25)
-DescrTotal = createDescriptor("Total Bounty", 50)
-
--- Right column descriptors
-DescrClient = createRightDescriptor("Client Time", 0)
-DescrAccount = createRightDescriptor("Account Time", 25)
-
--- Value labels (left column)
-CrentBounty.Font = Enum.Font.GothamBold
-CrentBounty.Text = "0"
-CrentBounty.TextColor3 = Color3.fromRGB(255, 255, 255)
-CrentBounty.TextSize = 14
-CrentBounty.TextXAlignment = Enum.TextXAlignment.Right
-CrentBounty.BackgroundTransparency = 1
-CrentBounty.Position = UDim2.new(0, 140, 0, 0)
-CrentBounty.Size = UDim2.new(0, 60, 0, 20)
-CrentBounty.Name = "CrentBounty"
-CrentBounty.Parent = FieldsFrame
-
-BountyEarned.Font = Enum.Font.GothamBold
-BountyEarned.Text = "0$"
-BountyEarned.TextColor3 = Color3.fromRGB(255, 255, 255)
-BountyEarned.TextSize = 14
-BountyEarned.TextXAlignment = Enum.TextXAlignment.Right
-BountyEarned.BackgroundTransparency = 1
-BountyEarned.Position = UDim2.new(0, 140, 0, 25)
-BountyEarned.Size = UDim2.new(0, 60, 0, 20)
-BountyEarned.Name = "BountyEarned"
-BountyEarned.Parent = FieldsFrame
-
-TotalBountyEarned.Font = Enum.Font.GothamBold
-TotalBountyEarned.Text = "0$"
-TotalBountyEarned.TextColor3 = Color3.fromRGB(255, 255, 255)
-TotalBountyEarned.TextSize = 14
-TotalBountyEarned.TextXAlignment = Enum.TextXAlignment.Right
-TotalBountyEarned.BackgroundTransparency = 1
-TotalBountyEarned.Position = UDim2.new(0, 140, 0, 50)
-TotalBountyEarned.Size = UDim2.new(0, 60, 0, 20)
-TotalBountyEarned.Name = "TotalBountyEarned"
-TotalBountyEarned.Parent = FieldsFrame
-
--- Value labels (right column)
-CilentTimeElapsed.Font = Enum.Font.GothamBold
-CilentTimeElapsed.Text = "0h:0m:00s"
-CilentTimeElapsed.TextColor3 = Color3.fromRGB(255, 255, 255)
-CilentTimeElapsed.TextSize = 14
-CilentTimeElapsed.TextXAlignment = Enum.TextXAlignment.Right
-CilentTimeElapsed.BackgroundTransparency = 1
-CilentTimeElapsed.Position = UDim2.new(0, 350, 0, 0)
-CilentTimeElapsed.Size = UDim2.new(0, 80, 0, 20)
-CilentTimeElapsed.Name = "CilentTimeElapsed"
-CilentTimeElapsed.Parent = FieldsFrame
-
-AccoutTimeElapsed.Font = Enum.Font.GothamBold
-AccoutTimeElapsed.Text = "0h:0m:00s"
-AccoutTimeElapsed.TextColor3 = Color3.fromRGB(255, 255, 255)
-AccoutTimeElapsed.TextSize = 14
-AccoutTimeElapsed.TextXAlignment = Enum.TextXAlignment.Right
-AccoutTimeElapsed.BackgroundTransparency = 1
-AccoutTimeElapsed.Position = UDim2.new(0, 350, 0, 25)
-AccoutTimeElapsed.Size = UDim2.new(0, 80, 0, 20)
-AccoutTimeElapsed.Name = "AccoutTimeElapsed"
-AccoutTimeElapsed.Parent = FieldsFrame
-
--- Footer
-Footer.Font = Enum.Font.Gotham
-Footer.Text = "By Lo Hub Emorima"
-Footer.TextColor3 = Color3.fromRGB(140, 140, 140)
-Footer.TextSize = 11
-Footer.TextXAlignment = Enum.TextXAlignment.Left
-Footer.BackgroundTransparency = 1
-Footer.Position = UDim2.new(0, 20, 1, -25)
-Footer.Size = UDim2.new(0, 200, 0, 16)
-Footer.Parent = MainFrame
-
--- Buttons Frame (Skip & Hop)
-SkipImg.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
-SkipImg.BorderSizePixel = 0
-SkipImg.Position = UDim2.new(1, -200, 1, -35)
-SkipImg.Size = UDim2.new(0, 90, 0, 28)
-SkipImg.Name = "SkipImg"
-SkipImg.Parent = MainFrame
-local skipCorner = Instance.new("UICorner")
-skipCorner.CornerRadius = UDim.new(0, 4)
-skipCorner.Parent = SkipImg
-
-SkipButton.Font = Enum.Font.GothamBold
-SkipButton.Text = "Next Player"
-SkipButton.TextColor3 = Color3.fromRGB(170, 230, 73)
-SkipButton.TextSize = 12
-SkipButton.BackgroundTransparency = 1
-SkipButton.Size = UDim2.new(1, 0, 1, 0)
-SkipButton.Name = "SkipButton"
-SkipButton.Parent = SkipImg
-
-ServerImg.BackgroundColor3 = Color3.fromRGB(32, 34, 37)
-ServerImg.BorderSizePixel = 0
-ServerImg.Position = UDim2.new(1, -100, 1, -35)
-ServerImg.Size = UDim2.new(0, 90, 0, 28)
-ServerImg.Name = "ServerImg"
-ServerImg.Parent = MainFrame
-local serverCorner = Instance.new("UICorner")
-serverCorner.CornerRadius = UDim.new(0, 4)
-serverCorner.Parent = ServerImg
-
-ServerButton.Font = Enum.Font.GothamBold
-ServerButton.Text = "Hop Server"
-ServerButton.TextColor3 = Color3.fromRGB(170, 230, 73)
-ServerButton.TextSize = 12
-ServerButton.BackgroundTransparency = 1
-ServerButton.Size = UDim2.new(1, 0, 1, 0)
-ServerButton.Name = "ServerButton"
-ServerButton.Parent = ServerImg
-
--- Toggle button (same as before)
-ToggleButton.Parent = MainGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-ToggleButton.BorderSizePixel = 0
-ToggleButton.Position = UDim2.new(0.120833337 - 0.10, 0, 0.0952890813 + 0.01, 0)
-ToggleButton.Size = UDim2.new(0, 25, 0, 25)
-ToggleButton.Draggable = true
-ToggleButton.Image = "rbxassetid://100666805146072"
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(1, 0)
-toggleCorner.Parent = ToggleButton
-
--- Visibility toggle
-local UIVisible = true
-ToggleButton.MouseButton1Click:Connect(function()
-    UIVisible = not UIVisible
-    MainFrame.Visible = UIVisible    
-end)
-
--- Dragging for MainFrame
 local UserInputService = game:GetService("UserInputService")
-local dragging
-local dragInput
-local dragStart
-local startPos
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DarknessX_AutoBounty"
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Nút Toggle
+local ToggleBtn = Instance.new("ImageButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleBtn.BackgroundTransparency = 0.2
+ToggleBtn.Position = UDim2.new(0, 30, 0, 30)
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Image = "rbxassetid://101138166721164"
+ToggleBtn.Draggable = true
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 4)
+local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+ToggleStroke.Color = Color3.fromRGB(255, 255, 255)
+ToggleStroke.Thickness = 2
+
+-- Khung chính
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BackgroundTransparency = 0.3
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Visible = true
+MainFrame.ClipsDescendants = true
+
+local BgImage = Instance.new("ImageLabel", MainFrame)
+BgImage.Size = UDim2.new(1, 0, 1, 0)
+BgImage.BackgroundTransparency = 1
+BgImage.Image = "rbxassetid://101138166721164"
+BgImage.ImageTransparency = 0.6
+BgImage.ScaleType = Enum.ScaleType.Slice
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(255, 255, 255)
+MainStroke.Thickness = 2
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
+
+-- Kéo thả MainFrame
+local dragging, dragInput, dragStart, startPos
 local function update(input)
     local delta = input.Position - dragStart
     MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
+        dragging = true; dragStart = input.Position; startPos = MainFrame.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
@@ -392,46 +166,79 @@ MainFrame.InputChanged:Connect(function(input)
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
+    if input == dragInput and dragging then update(input) end
 end)
 
--- Dragging for ToggleButton
-local toggleDragging = false
-local toggleDragInput
-local toggleDragStart
-local toggleStartPos
+-- Kéo thả ToggleBtn
+local toggleDragging, toggleDragInput, toggleDragStart, toggleStartPos
 local function updateToggle(input)
     local delta = input.Position - toggleDragStart
-    ToggleButton.Position = UDim2.new(toggleStartPos.X.Scale, toggleStartPos.X.Offset + delta.X, toggleStartPos.Y.Scale, toggleStartPos.Y.Offset + delta.Y)
+    ToggleBtn.Position = UDim2.new(toggleStartPos.X.Scale, toggleStartPos.X.Offset + delta.X, toggleStartPos.Y.Scale, toggleStartPos.Y.Offset + delta.Y)
 end
-ToggleButton.InputBegan:Connect(function(input)
+ToggleBtn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        toggleDragging = true
-        toggleDragStart = input.Position
-        toggleStartPos = ToggleButton.Position
+        toggleDragging = true; toggleDragStart = input.Position; toggleStartPos = ToggleBtn.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                toggleDragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then toggleDragging = false end
         end)
     end
 end)
-ToggleButton.InputChanged:Connect(function(input)
+ToggleBtn.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         toggleDragInput = input
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if input == toggleDragInput and toggleDragging then
-        updateToggle(input)
-    end
+    if input == toggleDragInput and toggleDragging then updateToggle(input) end
 end)
 
--- Button functionality
-ServerButton.MouseButton1Click:Connect(function()
-    print("Hop Server button clicked!")
+-- TextLabels
+local function CreateText(text, yPos)
+    local lbl = Instance.new("TextLabel", MainFrame)
+    lbl.BackgroundTransparency = 1
+    lbl.Position = UDim2.new(0, 25, 0, yPos)
+    lbl.Size = UDim2.new(1, -50, 0, 30)
+    lbl.Font = Enum.Font.RobotoMono
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 18
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    return lbl
+end
+
+local Title    = CreateText("DARKNESS X \xe2\x80\xa2 AUTO BOUNTY", 15)
+Title.TextSize = 22; Title.Font = Enum.Font.RobotoMono
+
+local BountyLbl = CreateText("Bounty Earn: 0",       60)
+local ExecLbl   = CreateText("Executor: Check...",   95)
+local TimeLbl   = CreateText("Time Player: 00:00:00",130)
+local TargetLbl = CreateText("Target: Searching...", 175)
+local DistLbl   = CreateText("Distance: 0m",         210)
+
+-- Buttons
+local function CreateBtn(text, xPos)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0.9
+    btn.Position = UDim2.new(xPos, 0, 0.83, 0)
+    btn.Size = UDim2.new(0.4, 0, 0, 40)
+    btn.Font = Enum.Font.RobotoMono
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 16
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = 1.5
+    return btn
+end
+
+local SkipBtn = CreateBtn("SKIP PLAYER", 0.07)
+local HopBtn  = CreateBtn("HOP SERVER",  0.53)
+
+-- Sự kiện nút
+HopBtn.MouseButton1Click:Connect(function()
+    HopBtn.Text = "HOPPING..."
     getgenv().hopserver = true
     getgenv().autoHopLoop = true
     spawn(function()
@@ -442,67 +249,67 @@ ServerButton.MouseButton1Click:Connect(function()
             task.wait(3)
         end
     end)
+    task.delay(3, function() HopBtn.Text = "HOP SERVER" end)
 end)
 
-SkipButton.MouseButton1Click:Connect(function()
-    print("Next Player button clicked!")
+SkipBtn.MouseButton1Click:Connect(function()
+    SkipBtn.Text = "SKIPPING..."
     if getgenv().SkipPlayer then
         getgenv().SkipPlayer()
     end
+    task.delay(0.5, function() SkipBtn.Text = "SKIP PLAYER" end)
 end)
 
--- Time and bounty update
-local startTime = os.time()
-local accountStartTime = os.time()
-local totalBountyEarned = 0
-local sessionBountyEarned = 0
-local function updateUI()
-    local currentTime = os.time()
-    local clientElapsed = currentTime - startTime
-    local accountElapsed = currentTime - accountStartTime
-    local function formatTime(seconds)
-        local hours = math.floor(seconds / 3600)
-        local minutes = math.floor((seconds % 3600) / 60)
-        local secs = seconds % 60
-        return string.format("%dh:%dm:%02ds", hours, minutes, secs)
-    end   
-    local p = game.Players.LocalPlayer
-    if p and p:FindFirstChild("leaderstats") then
-        local bounty = p.leaderstats["Bounty/Honor"] and p.leaderstats["Bounty/Honor"].Value or 0
-        CrentBounty.Text = tostring(bounty)
-    end    
-    CilentTimeElapsed.Text = formatTime(clientElapsed)
-    AccoutTimeElapsed.Text = formatTime(accountElapsed)    
-    BountyEarned.Text = tostring(sessionBountyEarned) .. "$"
-    TotalBountyEarned.Text = tostring(totalBountyEarned) .. "$"
-end
-
-local lastBounty = 0
-spawn(function()
-    while task.wait(1) do
-        local p = game.Players.LocalPlayer
-        if p and p:FindFirstChild("leaderstats") then
-            local currentBounty = p.leaderstats["Bounty/Honor"] and p.leaderstats["Bounty/Honor"].Value or 0
-            if currentBounty > lastBounty and lastBounty > 0 then
-                local bountyIncrease = currentBounty - lastBounty
-                sessionBountyEarned = sessionBountyEarned + bountyIncrease
-                totalBountyEarned = totalBountyEarned + bountyIncrease
-            end
-            lastBounty = currentBounty
-        end
-        updateUI()
-    end
+-- Toggle ẩn/hiện
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
 end)
+
+-- Update loop (RenderStepped)
+local uiStartTime = os.time()
+local initialBounty = nil
 spawn(function()
     task.wait(3)
     local p = game.Players.LocalPlayer
-    if p and p:FindFirstChild("leaderstats") then
-        lastBounty = p.leaderstats["Bounty/Honor"] and p.leaderstats["Bounty/Honor"].Value or 0
+    if p and p:FindFirstChild("leaderstats") and p.leaderstats:FindFirstChild("Bounty/Honor") then
+        initialBounty = p.leaderstats["Bounty/Honor"].Value
+    end
+    ExecLbl.Text = "Executor: " .. ((identifyexecutor and identifyexecutor()) or "Unknown")
+end)
+
+RunService.RenderStepped:Connect(function()
+    -- Bounty earn
+    local p = game.Players.LocalPlayer
+    if p and p:FindFirstChild("leaderstats") and p.leaderstats:FindFirstChild("Bounty/Honor") and initialBounty then
+        local earned = p.leaderstats["Bounty/Honor"].Value - initialBounty
+        BountyLbl.Text = "Bounty Earn: " .. tostring(earned)
+    end
+    -- Timer
+    local diff = os.time() - uiStartTime
+    local h = math.floor(diff / 3600)
+    local m = math.floor((diff % 3600) / 60)
+    local s = diff % 60
+    TimeLbl.Text = string.format("Time Player: %02d:%02d:%02d", h, m, s)
+    -- Target & Distance
+    local targ = getgenv().targ
+    if targ and targ.Character and targ.Character:FindFirstChild("HumanoidRootPart") then
+        TargetLbl.Text = "Target: " .. targ.Name
+        local myChar = game.Players.LocalPlayer.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        if myRoot then
+            local dist = (myRoot.Position - targ.Character.HumanoidRootPart.Position).Magnitude
+            DistLbl.Text = "Distance: " .. math.floor(dist) .. " m"
+            DistLbl.TextColor3 = dist < 50 and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(255, 255, 255)
+        end
+    else
+        TargetLbl.Text = "Target: Searching..."
+        DistLbl.Text = "Distance: 0 m"
+        DistLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
     end
 end)
 
 -- =============================================
--- WORLD / ISLAND SETUP (giữ nguyên)
+-- WORLD / ISLAND SETUP
 -- =============================================
 local placeId = game.PlaceId
 local worldMap = {[2753915549]="World1",[85211729168715]="World1",[4442272183]="World2",[79091703265657]="World2",[7449423635]="World3",[100117331123089]="World3"}
@@ -531,7 +338,7 @@ if World3 then
         ["Loaf Island"] = CFrame.new(-889.8325805664062, 64.72842407226562, -10895.8876953125),
         ["Peanut Island"] = CFrame.new(-1943.59716796875, 37.012996673583984, -10288.01171875),
         ["Cocoa Island"] = CFrame.new(147.35205078125, 23.642955780029297, -12030.5498046875),
-        ["Tiki Outpost"] = CFrame.new(-16234,9,416)
+        ["Tiki Outpost"] = CFrame.new(-16218.6826, 9.08636189, 445.618408, -0.0610186495, 0.00000000110512588, -0.99813664, -0.0000000183458475, 1, 0.00000000222871765, 0.99813664, 0.0000000184476558, -0.0610186495)
     } 
 elseif World2 then 
     distbyp = 3500
