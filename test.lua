@@ -907,12 +907,12 @@ task.spawn(function()
 end)
 
 -- =============================================
--- FLY TO TARGET
+-- FLY TO TARGET + BÁM SÁT (cải tiến)
 -- =============================================
 task.spawn(function()
-    while task.wait() do
+    while task.wait(0) do
         pcall(function()
-            if getgenv().hopserver or safehealth then return end
+            if getgenv().hopserver or safehealth or getgenv().fruitBlocked then return end
             local targ = getgenv().targ
             if not targ or not targ.Character then return end
             local targRoot = getRoot(targ.Character)
@@ -921,16 +921,31 @@ task.spawn(function()
             if not myRoot then return end
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
-            if dist > 12 then
+
+            if dist > 5 then
+                -- Tính điểm đứng sát target (offset 4 stud), cùng độ cao với target
                 local dir = (targRoot.Position - myRoot.Position).Unit
-                local goalCF = CFrame.new(targRoot.Position - dir * 10)
-                if dist <= 300 then
-                    myRoot.CFrame = goalCF
+                local goalPos = targRoot.Position - dir * 4
+                goalPos = Vector3.new(goalPos.X, targRoot.Position.Y, goalPos.Z)
+
+                if dist <= 500 then
+                    -- Teleport thẳng không tween: bám sát tức thì từng frame
+                    myRoot.CFrame = CFrame.new(goalPos, targRoot.Position)
                 else
+                    -- Xa hơn 500: tween tốc độ cao
                     if currentTween then currentTween:Cancel() end
-                    currentTween = TweenService:Create(myRoot, TweenInfo.new(dist / 400, Enum.EasingStyle.Linear), {CFrame = goalCF})
+                    currentTween = TweenService:Create(myRoot,
+                        TweenInfo.new(dist / 600, Enum.EasingStyle.Linear),
+                        {CFrame = CFrame.new(goalPos, targRoot.Position)}
+                    )
                     currentTween:Play()
                 end
+            else
+                -- Đã sát: luôn xoay nhìn thẳng vào target để M1 không trượt
+                myRoot.CFrame = CFrame.lookAt(
+                    myRoot.Position,
+                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z)
+                )
             end
         end)
     end
@@ -1026,10 +1041,34 @@ pcall(function()
 end)
 
 -- =============================================
--- M1 AUTO ATTACK
+-- M1 AUTO ATTACK (aim cải tiến)
 -- =============================================
+-- Mở rộng hitbox M1 phía server bằng cách weld fake part vào HRP
+local function expandHitbox(size)
+    pcall(function()
+        local char = player.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        if hrp:FindFirstChild("_HitboxExpand") then return end
+        local fake = Instance.new("Part")
+        fake.Name = "_HitboxExpand"
+        fake.Size = Vector3.new(size, size, size)
+        fake.Transparency = 1
+        fake.CanCollide = false
+        fake.Anchored = false
+        fake.Parent = char
+        local weld = Instance.new("WeldConstraint")
+        weld.Part0 = hrp
+        weld.Part1 = fake
+        weld.Parent = fake
+        fake.CFrame = hrp.CFrame
+    end)
+end
+expandHitbox(12) -- hitbox M1 rộng 12 stud xung quanh người chơi
+
 task.spawn(function()
-    while task.wait() do
+    while task.wait(0) do
         pcall(function()
             if not m1Enabled or getgenv().hopserver or safehealth or getgenv().fruitBlocked then return end
 
@@ -1043,15 +1082,22 @@ task.spawn(function()
             if not myRoot then return end
             local hum = char:FindFirstChild("Humanoid")
             if not hum or hum.Health <= 0 then return end
+            local targHum = targ.Character:FindFirstChild("Humanoid")
+            if not targHum or targHum.Health <= 0 then return end
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
-            if dist < 15 then
-                myRoot.CFrame = CFrame.lookAt(myRoot.Position, Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z))
+
+            -- Aim: xoay chính xác về phía target (cùng độ cao)
+            local aimTarget = Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z)
+            myRoot.CFrame = CFrame.lookAt(myRoot.Position, aimTarget)
+
+            -- Chỉ M1 khi đã đủ gần
+            if dist <= 12 then
                 if FastAttack then
                     FastAttack:M1()
                 else
                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-                    task.wait(0.05)
+                    task.wait(0.04)
                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
                 end
             end
