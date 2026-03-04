@@ -780,36 +780,57 @@ end
 -- HÀM KIỂM TRA target hợp lệ
 -- =============================================
 local function isValidBountyTarget(v)
+    -- Cơ bản
     if not v or v == lp then return false end
-    if not v.Character or not v.Character:FindFirstChild("HumanoidRootPart") then return false end
-    if not v:FindFirstChild("Data") or not v.Data:FindFirstChild("Level") then return false end
-    if not v:FindFirstChild("leaderstats") or not v.leaderstats:FindFirstChild("Bounty/Honor") then return false end
+    if not v.Character then return false end
+    local vHRP = v.Character:FindFirstChild("HumanoidRootPart")
+    if not vHRP then return false end
+    local vHum = v.Character:FindFirstChild("Humanoid")
+    if not vHum or vHum.Health <= 0 then return false end
 
+    -- Cần có Data và leaderstats
+    if not v:FindFirstChild("Data") then return false end
+    if not v:FindFirstChild("leaderstats") then return false end
+    if not v.leaderstats:FindFirstChild("Bounty/Honor") then return false end
+
+    -- Bounty range
     local bounty = v.leaderstats["Bounty/Honor"].Value
-    if bounty < (CFG.Hunt and CFG.Hunt.Min or 0) or bounty > (CFG.Hunt and CFG.Hunt.Max or 1e9) then return false end
+    local minB = CFG.Hunt and CFG.Hunt.Min or 0
+    local maxB = CFG.Hunt and CFG.Hunt.Max or math.huge
+    if bounty < minB or bounty > maxB then return false end
 
-    if lp.Data and lp.Data.Level then
-        if (tonumber(lp.Data.Level.Value) - 250) >= v.Data.Level.Value then return false end
+    -- Level check: không đánh target thấp hơn mình quá 250 level
+    if lp:FindFirstChild("Data") and lp.Data:FindFirstChild("Level") and v.Data:FindFirstChild("Level") then
+        if (tonumber(lp.Data.Level.Value) - 250) >= tonumber(v.Data.Level.Value) then return false end
     end
 
-    if v.Team == nil then return false end
-    if not (tostring(lp.Team) == (CFG.Team or "") or (tostring(v.Team) == (CFG.Team or "") and tostring(lp.Team) ~= (CFG.Team or ""))) then return false end
+    -- Team check: target phải KHÁC team với mình
+    -- Trong Blox Fruits: tostring(player.Team) trả về tên team
+    local myTeam = tostring(lp.Team)
+    local vTeam  = tostring(v.Team)
+    -- Nếu cùng team thì skip (friendly)
+    if myTeam == vTeam then return false end
 
-    if CFG.Skip and CFG.Skip.Fruit and hasValue(CFG.Skip.FruitList, v.Data.DevilFruit and v.Data.DevilFruit.Value or "") then return false end
-    if CFG.Skip and CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
-    if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then return false end
-
-    if CFG.Skip and CFG.Skip.SafeZone then
-        local inSafe = false
-        pcall(function()
-            inSafe = CheckSafeZone(v.Character.HumanoidRootPart)
-        end)
-        if inSafe then return false end
+    -- Skip theo config
+    if CFG.Skip then
+        if CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
+        if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then return false end
+        if CFG.Skip.Fruit and v.Data:FindFirstChild("DevilFruit") then
+            if hasValue(CFG.Skip.FruitList or {}, v.Data.DevilFruit.Value) then return false end
+        end
+        if CFG.Skip.SafeZone then
+            local inSafe = false
+            pcall(function() inSafe = CheckSafeZone(vHRP) end)
+            if inSafe then return false end
+        end
     end
 
+    -- Blacklist / checked
     if getgenv().dangerBlacklist[v.Name] then return false end
     if hasValue(getgenv().checked, v) then return false end
-    if v.Character.HumanoidRootPart.CFrame.Y > 12000 then return false end
+
+    -- Không đánh target đang bay quá cao (đang thoát)
+    if vHRP.Position.Y > 12000 then return false end
 
     return true
 end
@@ -822,12 +843,28 @@ function target()
         local p = nil
         getgenv().targ = nil
 
-        for _, v in pairs(Players:GetPlayers()) do
-            if isValidBountyTarget(v) then
-                local dist = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
-                if dist < d and not getgenv().hopserver then
-                    p = v
-                    d = dist
+        local allPlayers = Players:GetPlayers()
+        print("🔍 Scanning " .. #allPlayers .. " players | MyTeam: " .. tostring(lp.Team))
+
+        for _, v in pairs(allPlayers) do
+            if v ~= lp then
+                local ok = isValidBountyTarget(v)
+                if not ok then
+                    -- Debug: in lý do fail cho từng player
+                    local reason = "unknown"
+                    if not v.Character then reason = "no character"
+                    elseif not v:FindFirstChild("leaderstats") then reason = "no leaderstats"
+                    elseif not v.leaderstats:FindFirstChild("Bounty/Honor") then reason = "no bounty stat"
+                    elseif tostring(lp.Team) == tostring(v.Team) then reason = "same team (" .. tostring(v.Team) .. ")"
+                    elseif hasValue(getgenv().checked, v) then reason = "already checked"
+                    end
+                    print("  ❌ " .. v.Name .. " → " .. reason)
+                else
+                    local dist = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                    if dist < d and not getgenv().hopserver then
+                        p = v
+                        d = dist
+                    end
                 end
             end
         end
