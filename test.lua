@@ -1,7 +1,6 @@
 -- =============================================
--- AUTO BOUNTY HUNTER - DARKNESS X STYLE (FIXED)
+-- AUTO BOUNTY HUNTER - DARKNESS X STYLE
 -- =============================================
--- Fix: sửa lỗi biến safehealth, thêm kiểm tra Level trong Data, pcall cho Tween
 
 if not getgenv then return warn("Executor không hỗ trợ getgenv!") end
 
@@ -15,7 +14,6 @@ local TweenService    = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService     = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
-local VirtualUser     = game:GetService("VirtualUser")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local CoreGui         = game:GetService("CoreGui")
 local Workspace       = game:GetService("Workspace")
@@ -56,8 +54,30 @@ getgenv().dangerBlacklist = {}
 getgenv().ServerBlacklist = {}
 getgenv().fruitBlocked = false
 
--- Set team ngay khi load
-pcall(function() CommF_:InvokeServer("SetTeam", CFG.Team or "Pirates") end)
+-- Set team: retry cho đến khi join được
+task.spawn(function()
+    local targetTeam = CFG.Team or "Pirates"
+    local joined = false
+    for i = 1, 20 do -- thử tối đa 20 lần (10 giây)
+        pcall(function()
+            CommF_:InvokeServer("SetTeam", targetTeam)
+        end)
+        task.wait(0.5)
+        -- Kiểm tra đã vào đúng team chưa
+        pcall(function()
+            if player.Team and string.lower(player.Team.Name):find(string.lower(targetTeam):sub(1,4)) then
+                joined = true
+                print("✅ Đã join team: " .. player.Team.Name)
+            end
+        end)
+        if joined then break end
+    end
+    if not joined then
+        -- Thử lần cuối
+        pcall(function() CommF_:InvokeServer("SetTeam", targetTeam) end)
+        print("⚠️ SetTeam xong (chưa verify)")
+    end
+end)
 
 -- =============================================
 -- LOAD FASTATTACK
@@ -213,6 +233,21 @@ end)
 
 task.delay(3, checkFruit)
 
+-- Giữ team: tự join lại nếu bị kick ra khỏi team
+task.spawn(function()
+    local targetTeam = CFG.Team or "Pirates"
+    while task.wait(10) do
+        pcall(function()
+            local currentTeam = player.Team and player.Team.Name or ""
+            -- Nếu chưa có team hoặc team là Spectator/None thì join lại
+            if currentTeam == "" or string.lower(currentTeam):find("spec") or string.lower(currentTeam):find("none") then
+                CommF_:InvokeServer("SetTeam", targetTeam)
+                print("🔄 Re-join team: " .. targetTeam)
+            end
+        end)
+    end
+end)
+
 -- =============================================
 -- GUI CHÍNH (DARKNESS X STYLE)
 -- =============================================
@@ -361,7 +396,7 @@ end)
 RunService.RenderStepped:Connect(function()
     pcall(function()
         local d = os.time()-startTime
-        TimeLbl.Text = string.format("Time: %02d:%02d:%02d", d/3600, (d%3600)/60, d%60)
+        TimeLbl.Text = string.format("Time: %02d:%02d:%02d", math.floor(d/3600), math.floor((d%3600)/60), d%60)
         local ls = player:FindFirstChild("leaderstats")
         if ls and ls:FindFirstChild("Bounty/Honor") and initBounty then
             BountyLbl.Text = "Bounty Earn: " .. tostring(ls["Bounty/Honor"].Value - initBounty)
@@ -493,7 +528,6 @@ local function isValidTarget(v)
     if not isAlive(v.Character) then return false end
     local vRoot = getRoot(v.Character)
     if not vRoot then return false end
-    if not v:FindFirstChild("Data") then return false end
     if not v:FindFirstChild("leaderstats") then return false end
     local bountyStat = v.leaderstats:FindFirstChild("Bounty/Honor")
     if not bountyStat then return false end
@@ -508,16 +542,20 @@ local function isValidTarget(v)
     local vTeamName  = v.Team and v.Team.Name or ""
     if myTeamName ~= "" and vTeamName ~= "" and myTeamName == vTeamName then return false end
 
-    -- Level check (có kiểm tra tồn tại)
-    local myLv  = player.Data and player.Data:FindFirstChild("Level") and tonumber(player.Data.Level.Value)
-    local vLv   = v.Data and v.Data:FindFirstChild("Level") and tonumber(v.Data.Level.Value)
+    -- Level check (safe)
+    local myLv, vLv
+    pcall(function()
+        myLv = player.Data and player.Data:FindFirstChild("Level") and tonumber(player.Data.Level.Value)
+        vLv  = v:FindFirstChild("Data") and v.Data:FindFirstChild("Level") and tonumber(v.Data.Level.Value)
+    end)
     if myLv and vLv and (myLv - 250) >= vLv then return false end
 
     -- Skip config
     if CFG.Skip then
         if CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
         if CFG.Skip.Fruit and CFG.Skip.FruitList then
-            local df = v.Data:FindFirstChild("DevilFruit")
+            local data = v:FindFirstChild("Data")
+            local df = data and data:FindFirstChild("DevilFruit")
             if df and hasValue(CFG.Skip.FruitList, df.Value) then return false end
         end
         if CFG.Skip.SafeZone and inSafeZone(vRoot.Position) then return false end
@@ -540,7 +578,6 @@ local function findTarget()
 
     local bestDist = math.huge
     local best = nil
-    getgenv().targ = nil
 
     for _, v in pairs(Players:GetPlayers()) do
         if isValidTarget(v) then
@@ -556,24 +593,34 @@ local function findTarget()
     end
 
     if best then
-        getgenv().targ = best
-        print("🎯 Target: " .. best.Name)
-        -- Chat
-        pcall(function()
-            local chat = CFG.Chat
-            if chat and chat.Enabled and chat.Messages and #chat.Messages > 0 then
-                local msg = chat.Messages[math.random(1, #chat.Messages)]
-                ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(msg, "All")
-            end
-        end)
+        if getgenv().targ ~= best then
+            getgenv().targ = best
+            print("🎯 Target: " .. best.Name)
+            -- Chat khi target mới
+            pcall(function()
+                local chat = CFG.Chat
+                if chat and chat.Enabled and chat.Messages and #chat.Messages > 0 then
+                    local msg = chat.Messages[math.random(1, #chat.Messages)]
+                    ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(msg, "All")
+                end
+            end)
+        end
     else
+        getgenv().targ = nil
         print("❌ No target found")
         -- Reset checked rồi mới hop
         if #getgenv().checked > 0 then
             getgenv().checked = {}
-            print("🔄 Reset checked list")
+            getgenv().dangerBlacklist = {}  -- reset danger blacklist cùng lúc
+            getgenv().dangerCount = {}
+            print("🔄 Reset checked + blacklist")
         else
-            getgenv().hopserver = true
+            -- Đợi 2s trước khi hop phòng server chưa load xong
+            task.delay(2, function()
+                if not getgenv().targ then
+                    getgenv().hopserver = true
+                end
+            end)
         end
     end
 end
@@ -620,6 +667,7 @@ local function hopServer()
         end
     end)
     if not ok then TeleportService:Teleport(game.PlaceId) end
+    task.wait(5) -- đợi teleport xử lý trước khi reset
     hopping = false
 end
 getgenv().HopServer = hopServer
@@ -651,7 +699,7 @@ end)
 -- FLY + BÁM SÁT TARGET (mỗi frame)
 -- =============================================
 task.spawn(function()
-    while task.wait(0) do
+    while task.wait(0.016) do  -- ~60fps
         pcall(function()
             if getgenv().hopserver or safehealth or fruitBlocked then return end
             local targ = getgenv().targ
@@ -773,7 +821,8 @@ end)
 local function expandHitbox()
     pcall(function()
         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if not hrp or hrp:FindFirstChild("_HB") then return end
+        if not hrp then return end
+        if player.Character:FindFirstChild("_HB") then return end
         local p = Instance.new("Part")
         p.Name = "_HB"
         p.Size = Vector3.new(12,12,12)
@@ -793,7 +842,7 @@ player.CharacterAdded:Connect(function() task.wait(1) expandHitbox() end)
 -- M1 AUTO ATTACK
 -- =============================================
 task.spawn(function()
-    while task.wait(0) do
+    while task.wait(0.05) do  -- 0.05s = ~20 hits/s, đủ nhanh mà không spike CPU
         pcall(function()
             if not m1Enabled or getgenv().hopserver or safehealth or fruitBlocked then return end
             local targ = getgenv().targ
@@ -809,11 +858,10 @@ task.spawn(function()
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
 
-            -- Aim chính xác
-            myRoot.CFrame = CFrame.lookAt(myRoot.Position,
-                Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z))
-
             if dist <= 12 then
+                -- Aim chính xác trước khi M1
+                myRoot.CFrame = CFrame.lookAt(myRoot.Position,
+                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z))
                 if FastAttack then
                     FastAttack:M1()
                 else
@@ -827,7 +875,7 @@ task.spawn(function()
 end)
 
 -- =============================================
--- SAFE HEALTH (ĐÃ SỬA LỖI TÊN BIẾN)
+-- SAFE HEALTH
 -- =============================================
 local function getHPct()
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
@@ -841,16 +889,25 @@ end
 
 task.spawn(function()
     while task.wait(0.1) do
-        pcall(function()
-            if getHPct() <= safeThreshold() then
-                safehealth = true   -- ĐÃ SỬA: saf ehealth -> safehealth
-                checkDanger()
+        local ok, hpct = pcall(getHPct)
+        if ok and hpct <= safeThreshold() and not safehealth then
+            safehealth = true
+            pcall(checkDanger)
+            pcall(function()
+                if currentTween then currentTween:Cancel() currentTween = nil end
                 local hrp = getRoot(player.Character)
                 if hrp then hrp.CFrame = hrp.CFrame * CFrame.new(0, math.random(8000,15000), 0) end
-                repeat task.wait(0.5) until getHPct() > safeThreshold() or not player.Character
-                safehealth = false  -- ĐÃ SỬA
+            end)
+            -- Đợi hồi máu
+            local timeout = 60 -- tối đa 60s
+            while timeout > 0 do
+                task.wait(0.5)
+                timeout = timeout - 0.5
+                local ok2, pct = pcall(getHPct)
+                if (ok2 and pct > safeThreshold()) or not player.Character then break end
             end
-        end)
+            safehealth = false
+        end
     end
 end)
 
@@ -863,7 +920,9 @@ task.spawn(function()
             getgenv().targ = nil
         else
             pcall(function()
-                if not getgenv().targ or not getgenv().targ.Character then
+                local curTarg = getgenv().targ
+                if not curTarg or not curTarg.Character or not isAlive(curTarg.Character) then
+                    getgenv().targ = nil
                     findTarget()
                 end
                 -- Skip nếu target trong safe zone hoặc ngồi
@@ -878,13 +937,11 @@ task.spawn(function()
                     end
                 end
             end)
-            -- Auto hop nếu cần
-            pcall(function()
-                if getgenv().hopserver then
-                    hopServer()
-                    getgenv().hopserver = false
-                end
-            end)
+            -- Auto hop nếu cần (spawn riêng để không block main loop)
+            if getgenv().hopserver then
+                getgenv().hopserver = false
+                task.spawn(hopServer)
+            end
         end
     end
 end)
@@ -945,11 +1002,15 @@ task.spawn(function()
             if not targ or not targ.Character then return end
             local h = targ.Character:FindFirstChild("Humanoid")
             if h and h.Health <= 0 and lastKilled ~= targ.Name then
-                local wh = CFG.Webhook
-                if wh and wh.Enable and wh.Url and wh.Url ~= "" then
-                    task.wait(2)
-                    local cur = player.leaderstats and player.leaderstats["Bounty/Honor"] and player.leaderstats["Bounty/Honor"].Value or 0
-                    local earned = math.max(0, cur - lastBounty)
+                lastKilled = targ.Name
+                task.wait(2)
+                local cur = player.leaderstats and player.leaderstats["Bounty/Honor"] and player.leaderstats["Bounty/Honor"].Value or 0
+                local earned = math.max(0, cur - lastBounty)
+                lastBounty = cur
+                -- Gửi webhook nếu bật
+                pcall(function()
+                    local wh = CFG.Webhook
+                    if not wh or not wh.Enable or not wh.Url or wh.Url == "" then return end
                     local function fmt(b)
                         if b>=1e6 then return ("%.1fM"):format(b/1e6)
                         elseif b>=1e3 then return ("%.1fK"):format(b/1e3)
@@ -965,10 +1026,8 @@ task.spawn(function()
                         },
                         footer={text="Auto Bounty"},
                     }}})
-                    lastKilled = targ.Name
-                    lastBounty = cur
-                end
-                task.wait(3)
+                end)
+                task.wait(2)
                 skipPlayer()
             end
         end)
