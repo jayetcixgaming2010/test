@@ -682,13 +682,16 @@ local function isValidTarget(v)
     local maxB = CFG.Hunt and CFG.Hunt.Max or math.huge
     if bounty < minB or bounty > maxB then return false end
 
-    -- Level check
-    local myLevel = player.Data and player.Data:FindFirstChild("Level") and player.Data.Level.Value
-    local targetLevel = v.Data and v.Data:FindFirstChild("Level") and v.Data.Level.Value
+    -- Level check (chỉ filter nếu cả hai đều có level)
+    local myLevel = player.Data and player.Data:FindFirstChild("Level") and tonumber(player.Data.Level.Value)
+    local targetLevel = v.Data and v.Data:FindFirstChild("Level") and tonumber(v.Data.Level.Value)
     if myLevel and targetLevel and (myLevel - 250) >= targetLevel then return false end
 
-    -- Team check (khác team)
-    if player.Team == v.Team then return false end
+    -- Team check (khác team) — so sánh tên team để tránh nil
+    local myTeam = player.Team and player.Team.Name or ""
+    local vTeam = v.Team and v.Team.Name or ""
+    -- Nếu cùng team thì bỏ qua (nhưng nếu 1 trong 2 chưa có team thì vẫn cho qua)
+    if myTeam ~= "" and vTeam ~= "" and myTeam == vTeam then return false end
 
     -- Skip config
     if CFG.Skip then
@@ -705,8 +708,14 @@ local function isValidTarget(v)
     end
 
     -- Blacklist / checked
-    if getgenv().dangerBlacklist[v.Name] then return false end
-    if hasValue(getgenv().checked, v) then return false end
+    if getgenv().dangerBlacklist[v.Name] then
+        print("⛔ Skip (dangerBlacklist): " .. v.Name)
+        return false
+    end
+    if hasValue(getgenv().checked, v) then
+        print("⛔ Skip (checked): " .. v.Name)
+        return false
+    end
 
     -- Quá cao (thoát)
     if vRoot.Position.Y > 12000 then return false end
@@ -741,13 +750,25 @@ function target()
         end
 
         -- Chat nếu có target
-        if bestTarget and CFG.Chat and #CFG.Chat > 0 then
-            local chatMsg = CFG.Chat[math.random(1, #CFG.Chat)]
-            if chatMsg then
-                pcall(function()
-                    ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
-                end)
-            end
+        if bestTarget then
+            pcall(function()
+                local chatCfg = CFG.Chat
+                if not chatCfg then return end
+                local enabled = chatCfg.Enabled
+                local msgs = chatCfg.Messages
+                -- Hỗ trợ cả 2 dạng: array thẳng hoặc {Enabled, Messages}
+                if type(chatCfg) == "table" and enabled ~= false and msgs and #msgs > 0 then
+                    local chatMsg = msgs[math.random(1, #msgs)]
+                    if chatMsg then
+                        ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
+                    end
+                elseif type(chatCfg) == "table" and type(chatCfg[1]) == "string" and #chatCfg > 0 then
+                    local chatMsg = chatCfg[math.random(1, #chatCfg)]
+                    if chatMsg then
+                        ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
+                    end
+                end
+            end)
         end
 
         if bestTarget then
@@ -781,7 +802,13 @@ function target()
                     getgenv().hopserver = true
                 end
             else
-                getgenv().hopserver = true
+                -- Reset checked list trước, thử lại 1 lần nữa rồi mới hop
+                if #getgenv().checked > 0 then
+                    print("🔄 Reset checked list, thử lại...")
+                    getgenv().checked = {}
+                else
+                    getgenv().hopserver = true
+                end
             end
         end
     end)
