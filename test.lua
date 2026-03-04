@@ -89,61 +89,65 @@ m1NotifGui.Name = "M1FruitNotif"
 m1NotifGui.ResetOnSpawn = false
 m1NotifGui.Parent = CoreGui
 
+-- GUI thông báo fruit không hỗ trợ M1 — góc phải bên dưới màn hình
 local m1NotifFrame = Instance.new("Frame", m1NotifGui)
-m1NotifFrame.Size = UDim2.new(0, 320, 0, 60)
-m1NotifFrame.Position = UDim2.new(0.5, -160, 0, 80)
-m1NotifFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
-m1NotifFrame.BackgroundTransparency = 0.25
+m1NotifFrame.Size = UDim2.new(0, 340, 0, 70)
+m1NotifFrame.Position = UDim2.new(1, -360, 1, -90) -- góc phải bên dưới
+m1NotifFrame.AnchorPoint = Vector2.new(0, 0)
+m1NotifFrame.BackgroundColor3 = Color3.fromRGB(15,10,10)
+m1NotifFrame.BackgroundTransparency = 0.1
 m1NotifFrame.BorderSizePixel = 0
 m1NotifFrame.Visible = false
-Instance.new("UICorner", m1NotifFrame).CornerRadius = UDim.new(0,8)
+Instance.new("UICorner", m1NotifFrame).CornerRadius = UDim.new(0,10)
 local m1NotifStroke = Instance.new("UIStroke", m1NotifFrame)
-m1NotifStroke.Color = Color3.fromRGB(255,80,80)
+m1NotifStroke.Color = Color3.fromRGB(255,60,60)
 m1NotifStroke.Thickness = 2
 
 local m1NotifIcon = Instance.new("TextLabel", m1NotifFrame)
-m1NotifIcon.Size = UDim2.new(0,40,1,0)
+m1NotifIcon.Size = UDim2.new(0,45,1,0)
 m1NotifIcon.Position = UDim2.new(0,8,0,0)
 m1NotifIcon.BackgroundTransparency = 1
 m1NotifIcon.Text = "🚫"
-m1NotifIcon.TextSize = 26
+m1NotifIcon.TextSize = 28
 m1NotifIcon.Font = Enum.Font.RobotoMono
 m1NotifIcon.TextColor3 = Color3.fromRGB(255,255,255)
 
 local m1NotifTitle = Instance.new("TextLabel", m1NotifFrame)
-m1NotifTitle.Size = UDim2.new(1,-60,0,28)
-m1NotifTitle.Position = UDim2.new(0,52,0,6)
+m1NotifTitle.Size = UDim2.new(1,-65,0,30)
+m1NotifTitle.Position = UDim2.new(0,58,0,8)
 m1NotifTitle.BackgroundTransparency = 1
-m1NotifTitle.Text = "Fruit No Support M1"
+m1NotifTitle.Text = "⛔ Fruit Không Hỗ Trợ M1"
 m1NotifTitle.TextSize = 15
 m1NotifTitle.Font = Enum.Font.RobotoMono
 m1NotifTitle.TextColor3 = Color3.fromRGB(255,80,80)
 m1NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
 
 local m1NotifSub = Instance.new("TextLabel", m1NotifFrame)
-m1NotifSub.Size = UDim2.new(1,-60,0,22)
-m1NotifSub.Position = UDim2.new(0,52,0,32)
+m1NotifSub.Size = UDim2.new(1,-65,0,22)
+m1NotifSub.Position = UDim2.new(0,58,0,38)
 m1NotifSub.BackgroundTransparency = 1
-m1NotifSub.Text = "..."
+m1NotifSub.Text = "Auto Bounty đã bị dừng lại"
 m1NotifSub.TextSize = 12
 m1NotifSub.Font = Enum.Font.RobotoMono
-m1NotifSub.TextColor3 = Color3.fromRGB(200,200,200)
+m1NotifSub.TextColor3 = Color3.fromRGB(220,180,180)
 m1NotifSub.TextXAlignment = Enum.TextXAlignment.Left
 
-local m1NotifShowing = false
+-- Biến kiểm soát bounty bị chặn do fruit
+getgenv().fruitBlocked = false
 local lastNoM1Fruit = ""
 
 local function showM1Notif(fruitName)
-    if m1NotifShowing and lastNoM1Fruit == fruitName then return end
+    if lastNoM1Fruit == fruitName and m1NotifFrame.Visible then return end
     lastNoM1Fruit = fruitName
-    m1NotifShowing = true
-    m1NotifSub.Text = "[ " .. fruitName .. " ] is Elemental type"
+    m1NotifSub.Text = "[ " .. fruitName .. " ] là loại Elemental — Dừng săn bounty"
     m1NotifFrame.Visible = true
-    task.delay(3, function()
-        m1NotifFrame.Visible = false
-        m1NotifShowing = false
-        lastNoM1Fruit = ""
-    end)
+    -- Không tự ẩn: thông báo giữ nguyên cho đến khi fruit thay đổi
+end
+
+local function hideM1Notif()
+    m1NotifFrame.Visible = false
+    lastNoM1Fruit = ""
+    getgenv().fruitBlocked = false
 end
 
 -- =============================================
@@ -382,34 +386,8 @@ end
 local SkipBtn = CreateBtn("SKIP PLAYER", 0.07)
 local HopBtn = CreateBtn("HOP SERVER", 0.53)
 
--- Nút M1 Toggle
-local M1Btn = Instance.new("TextButton", MainFrame)
-M1Btn.BackgroundColor3 = Color3.fromRGB(0,200,80)
-M1Btn.BackgroundTransparency = 0.3
-M1Btn.Position = UDim2.new(0.3,0,0.65,0)
-M1Btn.Size = UDim2.new(0.4,0,0,35)
-M1Btn.Font = Enum.Font.RobotoMono
-M1Btn.Text = "M1: ON"
-M1Btn.TextColor3 = Color3.fromRGB(255,255,255)
-M1Btn.TextSize = 16
-Instance.new("UICorner", M1Btn).CornerRadius = UDim.new(0,6)
-local m1Stroke = Instance.new("UIStroke", M1Btn)
-m1Stroke.Color = Color3.fromRGB(0,255,100)
-m1Stroke.Thickness = 1.5
-
+-- M1 luôn bật, không có nút toggle nữa
 local m1Enabled = true
-M1Btn.MouseButton1Click:Connect(function()
-    m1Enabled = not m1Enabled
-    if m1Enabled then
-        M1Btn.Text = "M1: ON"
-        M1Btn.BackgroundColor3 = Color3.fromRGB(0,200,80)
-        m1Stroke.Color = Color3.fromRGB(0,255,100)
-    else
-        M1Btn.Text = "M1: OFF"
-        M1Btn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-        m1Stroke.Color = Color3.fromRGB(255,80,80)
-    end
-end)
 
 -- Sự kiện nút Hop
 local autoHopActive = false
@@ -486,8 +464,74 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =============================================
--- TỐI ƯU HÓA
+-- CHECK FRUIT KHI JOIN TEAM (Hải tặc / Hải quân)
 -- =============================================
+local function checkFruitOnTeam()
+    task.spawn(function()
+        task.wait(2) -- đợi data load
+        local char = player.Character
+        if not char then return end
+
+        -- Lấy fruit từ Data hoặc từ tool đang cầm
+        local fruitName = nil
+
+        -- Ưu tiên kiểm tra Data.DevilFruit
+        pcall(function()
+            if player:FindFirstChild("Data") and player.Data:FindFirstChild("DevilFruit") then
+                fruitName = player.Data.DevilFruit.Value
+            end
+        end)
+
+        -- Nếu không có trong Data thì check tool trong character
+        if not fruitName or fruitName == "" then
+            for _, tool in pairs(char:GetChildren()) do
+                if tool:IsA("Tool") and tool.ToolTip == "Blox Fruit" then
+                    fruitName = tool.Name
+                    break
+                end
+            end
+        end
+        -- Cũng check Backpack
+        if not fruitName or fruitName == "" then
+            for _, tool in pairs(player.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool.ToolTip == "Blox Fruit" then
+                    fruitName = tool.Name
+                    break
+                end
+            end
+        end
+
+        if fruitName and fruitName ~= "" and NO_M1_FRUITS[fruitName] then
+            getgenv().fruitBlocked = true
+            showM1Notif(fruitName)
+            print("⛔ Fruit [" .. fruitName .. "] không hỗ trợ M1 — Auto Bounty dừng lại")
+        else
+            hideM1Notif()
+            print("✅ Fruit hợp lệ — Auto Bounty chạy bình thường" .. (fruitName and (" [" .. fruitName .. "]") or ""))
+        end
+    end)
+end
+
+-- Hook khi team thay đổi
+player:GetPropertyChangedSignal("Team"):Connect(function()
+    local team = player.Team
+    if team then
+        local teamName = team.Name
+        -- Chỉ kích hoạt khi vào Hải tặc hoặc Hải quân
+        if string.find(string.lower(teamName), "pirate") or string.find(string.lower(teamName), "marine")
+        or string.find(string.lower(teamName), "hai tac") or string.find(string.lower(teamName), "hai quan")
+        or string.find(string.lower(teamName), "hải tặc") or string.find(string.lower(teamName), "hải quân") then
+            print("⚓ Vừa join team: " .. teamName .. " — Đang kiểm tra fruit...")
+            checkFruitOnTeam()
+        end
+    end
+end)
+
+-- Cũng check ngay khi script load (nếu đã có team rồi)
+task.spawn(function()
+    task.wait(3)
+    checkFruitOnTeam()
+end)
 if CFG.Another and CFG.Another.FPSBoost then
     pcall(function()
         local terrain = Workspace.Terrain
@@ -987,24 +1031,14 @@ end)
 task.spawn(function()
     while task.wait() do
         pcall(function()
-            if not m1Enabled or getgenv().hopserver or safehealth then return end
-            -- Kiểm tra fruit có M1 không
-            local char = player.Character
-            if not char then return end
-            local canM1 = true
-            for _, tool in pairs(char:GetChildren()) do
-                if tool:IsA("Tool") and tool.ToolTip == "Blox Fruit" and NO_M1_FRUITS[tool.Name] then
-                    showM1Notif(tool.Name)
-                    canM1 = false
-                    break
-                end
-            end
-            if not canM1 then return end
+            if not m1Enabled or getgenv().hopserver or safehealth or getgenv().fruitBlocked then return end
 
             local targ = getgenv().targ
             if not targ or not targ.Character then return end
             local targRoot = getRoot(targ.Character)
             if not targRoot then return end
+            local char = player.Character
+            if not char then return end
             local myRoot = getRoot(char)
             if not myRoot then return end
             local hum = char:FindFirstChild("Humanoid")
@@ -1031,7 +1065,11 @@ end)
 local safehealth = false
 task.spawn(function()
     while task.wait(0.1) do
-        if safehealth then
+        -- Dừng hoàn toàn nếu fruit không hỗ trợ
+        if getgenv().fruitBlocked then
+            -- Giữ targ = nil để không làm gì
+            getgenv().targ = nil
+        elseif safehealth then
             -- đang hồi máu, không làm gì
         else
             pcall(function()
