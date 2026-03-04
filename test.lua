@@ -1,6 +1,6 @@
 -- =============================================
 -- AUTO BOUNTY HUNTER - DARKNESS X STYLE
--- Fruit M1 Only | Fixed Version
+-- Fruit M1 Only | Fixed Version (Team Join)
 -- =============================================
 
 if not getgenv then return warn("Executor không hỗ trợ getgenv!") end
@@ -96,17 +96,62 @@ local NO_M1_FRUITS = {
 }
 
 -- =============================================
--- TEAM
+-- TEAM (FIX: Tìm NPC Recruiter và teleport tới trước khi join)
 -- =============================================
 local targetTeam = CFG.Team or "Pirates"
 
--- FIX: tryJoinTeam không dùng task.wait() bên trong vì sẽ block caller
--- Tách thành các pcall riêng lẻ, không chờ giữa các lần
+-- Hàm tìm NPC Recruiter theo tên team
+local function findRecruiter(teamName)
+    local keyword = teamName:lower():gsub("s$", "") -- "pirate" hoặc "marine"
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find(keyword .. " recruiter") then
+            local primary = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso") or obj:FindFirstChild("UpperTorso")
+            if primary then
+                return primary
+            end
+        end
+    end
+    return nil
+end
+
+-- Hàm kiểm tra khoảng cách đến NPC
+local function isNearRecruiter(teamName)
+    local npcPart = findRecruiter(teamName)
+    if not npcPart then return false end
+    local char = player.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    return (hrp.Position - npcPart.Position).Magnitude <= 50
+end
+
+-- Hàm teleport đến NPC Recruiter
+local function teleportToRecruiter(teamName)
+    local npcPart = findRecruiter(teamName)
+    if not npcPart then
+        print("⚠️ Không tìm thấy NPC Recruiter, thử join team trực tiếp...")
+        return false
+    end
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    hrp.CFrame = CFrame.new(npcPart.Position + Vector3.new(0, 5, 0)) -- đứng cách 5 block
+    task.wait(0.5)
+    return true
+end
+
+-- Hàm join team cải tiến
 local function tryJoinTeam()
+    -- Nếu chưa ở gần NPC, teleport tới
+    if not isNearRecruiter(targetTeam) then
+        teleportToRecruiter(targetTeam)
+        task.wait(1)
+    end
+
+    -- Gọi các remote join team
     pcall(function() CommF_:InvokeServer("SetTeam", targetTeam) end)
     pcall(function()
         for _, t in pairs(game:GetService("Teams"):GetTeams()) do
-            local tLower      = string.lower(t.Name)
+            local tLower = string.lower(t.Name)
             local targetLower = string.lower(targetTeam)
             if tLower:find(targetLower:sub(1, 4)) then
                 player.Team = t
@@ -114,7 +159,7 @@ local function tryJoinTeam()
             end
         end
     end)
-    -- Thử thêm các variant tên
+    -- Thử thêm các biến thể tên
     local variants = {"Pirates","pirates","Marine","Marines"}
     for _, v in ipairs(variants) do
         pcall(function() CommF_:InvokeServer("SetTeam", v) end)
@@ -125,11 +170,44 @@ local function tryJoinTeam()
     end
 end
 
+-- Kiểm tra team hiện tại
 local function isInCorrectTeam()
     local t = player.Team
     if not t then return false end
     return string.lower(t.Name):find(string.lower(targetTeam):sub(1, 4)) ~= nil
 end
+
+-- Tiến hành join team khi script chạy
+task.spawn(function()
+    task.wait(2)
+    local attempts = 0
+    while not isInCorrectTeam() and attempts < 50 do  -- tăng số lần thử
+        attempts = attempts + 1
+        print("🔄 Thử join team [" .. targetTeam .. "] lần " .. attempts)
+        tryJoinTeam()
+        task.wait(2)  -- chờ lâu hơn một chút
+    end
+    if isInCorrectTeam() then
+        print("✅ Đã join team: " .. (player.Team and player.Team.Name or "?"))
+        task.delay(3, checkFruit)
+    else
+        print("⚠️ Không join được team sau " .. attempts .. " lần! Kiểm tra lại tên team hoặc thủ công.")
+        -- Vẫn check fruit dù không join được team (có thể bạn ở chế độ không cần team?)
+        task.delay(3, checkFruit)
+    end
+end)
+
+-- Giữ team mỗi 15s (đã cải tiến)
+task.spawn(function()
+    while task.wait(15) do
+        pcall(function()
+            if not isInCorrectTeam() then
+                print("🔄 Mất team, đang join lại: " .. targetTeam)
+                tryJoinTeam()
+            end
+        end)
+    end
+end)
 
 -- =============================================
 -- LOAD FASTATTACK
@@ -229,8 +307,6 @@ end
 
 -- =============================================
 -- CHECK FRUIT
--- FIX: định nghĩa trước team join spawn để không bị nil
--- FIX: thêm trim/normalize tên fruit
 -- =============================================
 local function checkFruit()
     task.spawn(function()
@@ -273,9 +349,9 @@ local function checkFruit()
             end)
         end
 
-        -- FIX: normalize tên (bỏ khoảng trắng thừa, capitalize first letter)
+        -- Normalize tên (bỏ khoảng trắng thừa)
         if fname and fname ~= "" then
-            fname = fname:match("^%s*(.-)%s*$")  -- trim whitespace
+            fname = fname:match("^%s*(.-)%s*$")
         end
 
         if fname and fname ~= "" and NO_M1_FRUITS[fname] then
@@ -304,39 +380,6 @@ player:GetPropertyChangedSignal("Team"):Connect(function()
         if n:find("pirate") or n:find("marine") then
             checkFruit()
         end
-    end
-end)
-
--- Join team và check fruit sau khi join thành công
--- FIX: checkFruit gọi sau khi đã định nghĩa (không còn bị nil)
-task.spawn(function()
-    task.wait(2)
-    local attempts = 0
-    while not isInCorrectTeam() and attempts < 30 do
-        attempts = attempts + 1
-        print("🔄 Thử join team [" .. targetTeam .. "] lần " .. attempts)
-        tryJoinTeam()
-        task.wait(1)
-    end
-    if isInCorrectTeam() then
-        print("✅ Đã join team: " .. (player.Team and player.Team.Name or "?"))
-        task.delay(3, checkFruit)  -- FIX: truyền trực tiếp, không wrap if checkFruit
-    else
-        print("⚠️ Không join được team sau " .. attempts .. " lần!")
-        -- Vẫn check fruit dù không join được team
-        task.delay(3, checkFruit)
-    end
-end)
-
--- Giữ team mỗi 15s
-task.spawn(function()
-    while task.wait(15) do
-        pcall(function()
-            if not isInCorrectTeam() then
-                print("🔄 Mất team, đang join lại: " .. targetTeam)
-                tryJoinTeam()
-            end
-        end)
     end
 end)
 
@@ -385,7 +428,6 @@ BgImg.ImageTransparency = 0.6
 BgImg.ScaleType        = Enum.ScaleType.Slice
 
 -- Drag MainFrame
--- FIX: mỗi câu lệnh trên một dòng riêng, không gộp trên một dòng
 do
     local drag, dInput, dStart, sPos
     MainFrame.InputBegan:Connect(function(i)
@@ -450,7 +492,6 @@ local function MkBtn(txt, xScale)
     b.TextColor3            = Color3.fromRGB(255, 255, 255)
     b.TextSize              = 16
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    -- FIX: tách riêng hai thuộc tính UIStroke
     local s = Instance.new("UIStroke", b)
     s.Color     = Color3.fromRGB(255, 255, 255)
     s.Thickness = 1.5
@@ -788,8 +829,6 @@ getgenv().SkipPlayer = skipPlayer
 
 -- =============================================
 -- HOP SERVER
--- FIX: bỏ task.wait(5) cuối — nếu teleport thành công thì không cần
--- nếu thất bại thì reset hopping sau 3s để có thể thử lại nhanh hơn
 -- =============================================
 local hopping = false
 local function hopServer()
@@ -824,12 +863,10 @@ local function hopServer()
         end
     end)
 
-    -- Nếu lỗi (không fetch được server list), hop trực tiếp
     if not ok then
         pcall(function() TeleportService:Teleport(game.PlaceId) end)
     end
 
-    -- FIX: reset sau 3s thay vì 5s để thử lại nhanh hơn nếu teleport thất bại
     task.delay(3, function() hopping = false end)
 end
 getgenv().HopServer = hopServer
