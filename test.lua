@@ -1,5 +1,6 @@
 -- =============================================
 -- AUTO BOUNTY HUNTER - DARKNESS X STYLE
+-- Fruit M1 Only | Fixed Version
 -- =============================================
 
 if not getgenv then return warn("Executor không hỗ trợ getgenv!") end
@@ -7,31 +8,31 @@ if not getgenv then return warn("Executor không hỗ trợ getgenv!") end
 -- =============================================
 -- SERVICES
 -- =============================================
-local Players         = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService      = game:GetService("RunService")
-local TweenService    = game:GetService("TweenService")
-local TeleportService = game:GetService("TeleportService")
-local HttpService     = game:GetService("HttpService")
-local UserInputService = game:GetService("UserInputService")
+local Players             = game:GetService("Players")
+local ReplicatedStorage   = game:GetService("ReplicatedStorage")
+local RunService          = game:GetService("RunService")
+local TweenService        = game:GetService("TweenService")
+local TeleportService     = game:GetService("TeleportService")
+local HttpService         = game:GetService("HttpService")
+local UserInputService    = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local CoreGui         = game:GetService("CoreGui")
-local Workspace       = game:GetService("Workspace")
+local CoreGui             = game:GetService("CoreGui")
+local Workspace           = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local CFG    = getgenv().Setting or {}
 local CommF_ = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 
--- Đợi character
+-- Đợi character load xong
 repeat task.wait() until player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 
 -- =============================================
 -- KIỂM TRA WORLD
 -- =============================================
 local validPlaces = {
-    [2753915549]=true,[85211729168715]=true,
-    [4442272183]=true,[79091703265657]=true,
-    [7449423635]=true,[100117331123089]=true,
+    [2753915549]  = true, [85211729168715] = true,  -- World 1
+    [4442272183]  = true, [79091703265657]  = true,  -- World 2
+    [7449423635]  = true, [100117331123089] = true,  -- World 3
 }
 if not validPlaces[game.PlaceId] then
     player:Kick("❌ Not Support Game ❌")
@@ -46,75 +47,92 @@ local m1Enabled    = true
 local fruitBlocked = false
 local currentTween = nil
 
-getgenv().targ         = nil
-getgenv().checked      = {}
-getgenv().hopserver    = false
-getgenv().dangerCount  = {}
+getgenv().targ            = nil
+getgenv().checked         = {}
+getgenv().hopserver       = false
+getgenv().dangerCount     = {}
 getgenv().dangerBlacklist = {}
 getgenv().ServerBlacklist = {}
-getgenv().fruitBlocked = false
+getgenv().fruitBlocked    = false
 
--- Set team: thử tất cả cách có thể
+-- =============================================
+-- TIỆN ÍCH (khai báo sớm để dùng ở khắp nơi)
+-- =============================================
+local function isAlive(char)
+    return char
+        and char:FindFirstChild("Humanoid")
+        and char.Humanoid.Health > 0
+end
+
+local function getRoot(char)
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function hasValue(tbl, val)
+    for _, v in ipairs(tbl) do
+        if v == val then return true end
+    end
+    return false
+end
+
+-- =============================================
+-- DANH SÁCH FRUIT KHÔNG HỖ TRỢ M1
+-- =============================================
+local NO_M1_FRUITS = {
+    -- Elemental / Logia không có hitbox M1
+    Smoke    = true,
+    Sand     = true,
+    Dark     = true,
+    Light    = true,
+    Magma    = true,
+    Ice      = true,
+    Diamond  = true,
+    Rumble   = true,
+    Gravity  = true,
+    Flame    = true,
+    Quake    = true,
+    Blizzard = true,
+    Spider   = true,
+}
+
+-- =============================================
+-- TEAM
+-- =============================================
 local targetTeam = CFG.Team or "Pirates"
 
+-- FIX: tryJoinTeam không dùng task.wait() bên trong vì sẽ block caller
+-- Tách thành các pcall riêng lẻ, không chờ giữa các lần
 local function tryJoinTeam()
-    -- Cách 1: CommF_ SetTeam (chuẩn)
     pcall(function() CommF_:InvokeServer("SetTeam", targetTeam) end)
-    task.wait(0.3)
-    -- Cách 2: Tìm đúng object Team trong game.Teams rồi set
     pcall(function()
         for _, t in pairs(game:GetService("Teams"):GetTeams()) do
-            if string.lower(t.Name):find(string.lower(targetTeam):sub(1,4)) then
+            local tLower      = string.lower(t.Name)
+            local targetLower = string.lower(targetTeam)
+            if tLower:find(targetLower:sub(1, 4)) then
                 player.Team = t
                 break
             end
         end
     end)
-    task.wait(0.3)
-    -- Cách 3: Thử tên viết hoa thường khác nhau
-    pcall(function() CommF_:InvokeServer("SetTeam", "Pirates") end)
-    pcall(function() CommF_:InvokeServer("SetTeam", "pirates") end)
-    pcall(function() CommF_:InvokeServer("SetTeam", "Marine") end)
-    pcall(function() CommF_:InvokeServer("SetTeam", "Marines") end)
-    if targetTeam == "Pirates" then
-        pcall(function() CommF_:InvokeServer("ChooseTeam", "Pirates") end)
-        pcall(function() CommF_:InvokeServer("JoinTeam", "Pirates") end)
-        pcall(function() CommF_:InvokeServer("SelectTeam", "Pirates") end)
-    elseif targetTeam == "Marines" then
-        pcall(function() CommF_:InvokeServer("ChooseTeam", "Marines") end)
-        pcall(function() CommF_:InvokeServer("JoinTeam", "Marines") end)
-        pcall(function() CommF_:InvokeServer("SelectTeam", "Marines") end)
+    -- Thử thêm các variant tên
+    local variants = {"Pirates","pirates","Marine","Marines"}
+    for _, v in ipairs(variants) do
+        pcall(function() CommF_:InvokeServer("SetTeam", v) end)
+    end
+    local actions = {"ChooseTeam","JoinTeam","SelectTeam"}
+    for _, action in ipairs(actions) do
+        pcall(function() CommF_:InvokeServer(action, targetTeam) end)
     end
 end
 
 local function isInCorrectTeam()
     local t = player.Team
     if not t then return false end
-    local n = string.lower(t.Name)
-    local target_n = string.lower(targetTeam)
-    return n:find(target_n:sub(1,4)) ~= nil
+    return string.lower(t.Name):find(string.lower(targetTeam):sub(1, 4)) ~= nil
 end
 
-task.spawn(function()
-    -- Đợi game load xong
-    task.wait(2)
-    local attempts = 0
-    while not isInCorrectTeam() and attempts < 30 do
-        attempts = attempts + 1
-        print("🔄 Thử join team [" .. targetTeam .. "] lần " .. attempts)
-        tryJoinTeam()
-        task.wait(1)
-    end
-    if isInCorrectTeam() then
-        print("✅ Đã join team: " .. (player.Team and player.Team.Name or "?"))
-        task.delay(3, function() if checkFruit then checkFruit() end end)
-    else
-        print("⚠️ Không join được team sau " .. attempts .. " lần, kiểm tra tên team trong config!")
-    end
-end)
-
 -- =============================================
--- LOAD FASTATTACK
+-- LOAD FASTATTACK (optional fallback)
 -- =============================================
 local FastAttack = nil
 pcall(function()
@@ -131,88 +149,61 @@ pcall(function()
 end)
 
 -- =============================================
--- DANH SÁCH FRUIT KHÔNG CÓ M1
--- =============================================
-local NO_M1_FRUITS = {
-    Smoke=true, Sand=true, Dark=true, Light=true,
-    Magma=true, Ice=true, Diamond=true, Rumble=true,
-    Gravity=true, Flame=true, Quake=true, Blizzard=true,
-    Spider=true,
-}
-
--- =============================================
--- TIỆN ÍCH
--- =============================================
-local function isAlive(char)
-    return char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0
-end
-
-local function getRoot(char)
-    return char and char:FindFirstChild("HumanoidRootPart")
-end
-
-local function hasValue(tbl, val)
-    for _, v in ipairs(tbl) do if v == val then return true end end
-    return false
-end
-
--- =============================================
--- GUI THÔNG BÁO FRUIT BLOCKED (góc phải dưới)
+-- GUI THÔNG BÁO FRUIT BLOCKED
 -- =============================================
 pcall(function()
-    if CoreGui:FindFirstChild("M1FruitNotif") then
-        CoreGui:FindFirstChild("M1FruitNotif"):Destroy()
-    end
+    local old = CoreGui:FindFirstChild("M1FruitNotif")
+    if old then old:Destroy() end
 end)
 
 local notifGui = Instance.new("ScreenGui")
-notifGui.Name = "M1FruitNotif"
+notifGui.Name         = "M1FruitNotif"
 notifGui.ResetOnSpawn = false
-notifGui.Parent = CoreGui
+notifGui.Parent       = CoreGui
 
 local notifFrame = Instance.new("Frame", notifGui)
-notifFrame.Size = UDim2.new(0, 340, 0, 65)
-notifFrame.Position = UDim2.new(1, -355, 1, -85)
-notifFrame.BackgroundColor3 = Color3.fromRGB(15, 5, 5)
+notifFrame.Size                  = UDim2.new(0, 340, 0, 65)
+notifFrame.Position              = UDim2.new(1, -355, 1, -85)
+notifFrame.BackgroundColor3      = Color3.fromRGB(15, 5, 5)
 notifFrame.BackgroundTransparency = 0.05
-notifFrame.BorderSizePixel = 0
-notifFrame.Visible = false
+notifFrame.BorderSizePixel       = 0
+notifFrame.Visible               = false
 Instance.new("UICorner", notifFrame).CornerRadius = UDim.new(0, 10)
 local nStroke = Instance.new("UIStroke", notifFrame)
-nStroke.Color = Color3.fromRGB(255, 50, 50)
+nStroke.Color     = Color3.fromRGB(255, 50, 50)
 nStroke.Thickness = 2
 
 local nIcon = Instance.new("TextLabel", notifFrame)
-nIcon.Size = UDim2.new(0, 45, 1, 0)
-nIcon.Position = UDim2.new(0, 6, 0, 0)
+nIcon.Size               = UDim2.new(0, 45, 1, 0)
+nIcon.Position           = UDim2.new(0, 6, 0, 0)
 nIcon.BackgroundTransparency = 1
-nIcon.Text = "🚫"
-nIcon.TextSize = 28
-nIcon.Font = Enum.Font.RobotoMono
-nIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+nIcon.Text               = "🚫"
+nIcon.TextSize           = 28
+nIcon.Font               = Enum.Font.RobotoMono
+nIcon.TextColor3         = Color3.fromRGB(255, 255, 255)
 
 local nTitle = Instance.new("TextLabel", notifFrame)
-nTitle.Size = UDim2.new(1, -58, 0, 28)
-nTitle.Position = UDim2.new(0, 55, 0, 6)
+nTitle.Size               = UDim2.new(1, -58, 0, 28)
+nTitle.Position           = UDim2.new(0, 55, 0, 6)
 nTitle.BackgroundTransparency = 1
-nTitle.Text = "⛔ Fruit Không Hỗ Trợ M1"
-nTitle.TextSize = 14
-nTitle.Font = Enum.Font.RobotoMono
-nTitle.TextColor3 = Color3.fromRGB(255, 70, 70)
-nTitle.TextXAlignment = Enum.TextXAlignment.Left
+nTitle.Text               = "⛔ Fruit Không Hỗ Trợ M1"
+nTitle.TextSize           = 14
+nTitle.Font               = Enum.Font.RobotoMono
+nTitle.TextColor3         = Color3.fromRGB(255, 70, 70)
+nTitle.TextXAlignment     = Enum.TextXAlignment.Left
 
 local nSub = Instance.new("TextLabel", notifFrame)
-nSub.Size = UDim2.new(1, -58, 0, 22)
-nSub.Position = UDim2.new(0, 55, 0, 36)
+nSub.Size               = UDim2.new(1, -58, 0, 22)
+nSub.Position           = UDim2.new(0, 55, 0, 36)
 nSub.BackgroundTransparency = 1
-nSub.Text = "Auto Bounty đã dừng"
-nSub.TextSize = 12
-nSub.Font = Enum.Font.RobotoMono
-nSub.TextColor3 = Color3.fromRGB(200, 160, 160)
-nSub.TextXAlignment = Enum.TextXAlignment.Left
+nSub.Text               = "Auto Bounty đã dừng"
+nSub.TextSize           = 12
+nSub.Font               = Enum.Font.RobotoMono
+nSub.TextColor3         = Color3.fromRGB(200, 160, 160)
+nSub.TextXAlignment     = Enum.TextXAlignment.Left
 
 local function showFruitNotif(name)
-    nSub.Text = "[ " .. name .. " ] — Elemental, không dùng M1 được"
+    nSub.Text          = "[ " .. (name or "?") .. " ] — không dùng M1 được"
     notifFrame.Visible = true
 end
 
@@ -221,40 +212,75 @@ local function hideFruitNotif()
 end
 
 -- =============================================
--- CHECK FRUIT KHI JOIN TEAM
+-- CHECK FRUIT
+-- FIX: định nghĩa trước team join spawn để không bị nil
+-- FIX: thêm trim/normalize tên fruit
 -- =============================================
 local function checkFruit()
     task.spawn(function()
         task.wait(2)
         local fname = nil
+
+        -- Ưu tiên đọc từ Data.DevilFruit
         pcall(function()
-            if player:FindFirstChild("Data") and player.Data:FindFirstChild("DevilFruit") then
-                fname = player.Data.DevilFruit.Value
+            local data = player:FindFirstChild("Data")
+            if data and data:FindFirstChild("DevilFruit") then
+                local v = data.DevilFruit.Value
+                if v and v ~= "" then fname = v end
             end
         end)
-        if not fname or fname == "" then
-            for _, t in pairs(player.Character and player.Character:GetChildren() or {}) do
-                if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then fname = t.Name break end
-            end
+
+        -- Fallback: tìm tool Blox Fruit đang cầm
+        if not fname then
+            pcall(function()
+                local char = player.Character
+                if char then
+                    for _, t in pairs(char:GetChildren()) do
+                        if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
+                            fname = t.Name
+                            break
+                        end
+                    end
+                end
+            end)
         end
-        if not fname or fname == "" then
-            for _, t in pairs(player.Backpack:GetChildren()) do
-                if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then fname = t.Name break end
-            end
+
+        -- Fallback: tìm trong Backpack
+        if not fname then
+            pcall(function()
+                for _, t in pairs(player.Backpack:GetChildren()) do
+                    if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
+                        fname = t.Name
+                        break
+                    end
+                end
+            end)
+        end
+
+        -- FIX: normalize tên (bỏ khoảng trắng thừa, capitalize first letter)
+        if fname and fname ~= "" then
+            fname = fname:match("^%s*(.-)%s*$")  -- trim whitespace
         end
 
         if fname and fname ~= "" and NO_M1_FRUITS[fname] then
-            fruitBlocked = true
+            fruitBlocked          = true
             getgenv().fruitBlocked = true
             showFruitNotif(fname)
+            print("🚫 Fruit [" .. fname .. "] không hỗ trợ M1 — Auto Bounty dừng")
         else
-            fruitBlocked = false
+            fruitBlocked          = false
             getgenv().fruitBlocked = false
             hideFruitNotif()
+            if fname and fname ~= "" then
+                print("✅ Fruit [" .. fname .. "] hỗ trợ M1 — tiếp tục")
+            else
+                print("⚠️ Không tìm thấy fruit — tiếp tục mặc định")
+            end
         end
     end)
 end
 
+-- Gọi checkFruit khi đổi team
 player:GetPropertyChangedSignal("Team"):Connect(function()
     local t = player.Team
     if t then
@@ -265,7 +291,28 @@ player:GetPropertyChangedSignal("Team"):Connect(function()
     end
 end)
 
--- Giữ team: tự join lại nếu bị kick ra khỏi team
+-- Join team và check fruit sau khi join thành công
+-- FIX: checkFruit gọi sau khi đã định nghĩa (không còn bị nil)
+task.spawn(function()
+    task.wait(2)
+    local attempts = 0
+    while not isInCorrectTeam() and attempts < 30 do
+        attempts = attempts + 1
+        print("🔄 Thử join team [" .. targetTeam .. "] lần " .. attempts)
+        tryJoinTeam()
+        task.wait(1)
+    end
+    if isInCorrectTeam() then
+        print("✅ Đã join team: " .. (player.Team and player.Team.Name or "?"))
+        task.delay(3, checkFruit)  -- FIX: truyền trực tiếp, không wrap if checkFruit
+    else
+        print("⚠️ Không join được team sau " .. attempts .. " lần!")
+        -- Vẫn check fruit dù không join được team
+        task.delay(3, checkFruit)
+    end
+end)
+
+-- Giữ team mỗi 15s
 task.spawn(function()
     while task.wait(15) do
         pcall(function()
@@ -281,81 +328,94 @@ end)
 -- GUI CHÍNH (DARKNESS X STYLE)
 -- =============================================
 pcall(function()
-    if CoreGui:FindFirstChild("DarknessX_AutoBounty") then
-        CoreGui:FindFirstChild("DarknessX_AutoBounty"):Destroy()
-    end
+    local old = CoreGui:FindFirstChild("DarknessX_AutoBounty")
+    if old then old:Destroy() end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DarknessX_AutoBounty"
+ScreenGui.Name         = "DarknessX_AutoBounty"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = CoreGui
+ScreenGui.Parent       = CoreGui
 
 local ToggleBtn = Instance.new("ImageButton", ScreenGui)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(10,10,10)
+ToggleBtn.BackgroundColor3      = Color3.fromRGB(10, 10, 10)
 ToggleBtn.BackgroundTransparency = 0.2
-ToggleBtn.Position = UDim2.new(0,30,0,30)
-ToggleBtn.Size = UDim2.new(0,45,0,45)
-ToggleBtn.Image = "rbxassetid://101138166721164"
-ToggleBtn.Draggable = true
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,4)
+ToggleBtn.Position              = UDim2.new(0, 30, 0, 30)
+ToggleBtn.Size                  = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Image                 = "rbxassetid://101138166721164"
+ToggleBtn.Draggable             = true
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 4)
 local tgStroke = Instance.new("UIStroke", ToggleBtn)
-tgStroke.Color = Color3.fromRGB(255,255,255)
+tgStroke.Color     = Color3.fromRGB(255, 255, 255)
 tgStroke.Thickness = 2
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+MainFrame.BackgroundColor3      = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.3
-MainFrame.Position = UDim2.new(0.5,-200,0.5,-150)
-MainFrame.Size = UDim2.new(0,400,0,300)
-MainFrame.ClipsDescendants = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,6)
+MainFrame.Position              = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.Size                  = UDim2.new(0, 400, 0, 300)
+MainFrame.ClipsDescendants      = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 local mfStroke = Instance.new("UIStroke", MainFrame)
-mfStroke.Color = Color3.fromRGB(255,255,255)
+mfStroke.Color     = Color3.fromRGB(255, 255, 255)
 mfStroke.Thickness = 2
 
 local BgImg = Instance.new("ImageLabel", MainFrame)
-BgImg.Size = UDim2.new(1,0,1,0)
+BgImg.Size             = UDim2.new(1, 0, 1, 0)
 BgImg.BackgroundTransparency = 1
-BgImg.Image = "rbxassetid://101138166721164"
+BgImg.Image            = "rbxassetid://101138166721164"
 BgImg.ImageTransparency = 0.6
-BgImg.ScaleType = Enum.ScaleType.Slice
+BgImg.ScaleType        = Enum.ScaleType.Slice
 
 -- Drag MainFrame
+-- FIX: mỗi câu lệnh trên một dòng riêng, không gộp trên một dòng
 do
     local drag, dInput, dStart, sPos
     MainFrame.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            drag=true dStart=i.Position sPos=MainFrame.Position
-            i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then drag=false end end)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            drag   = true
+            dStart = i.Position
+            sPos   = MainFrame.Position
+            i.Changed:Connect(function()
+                if i.UserInputState == Enum.UserInputState.End then
+                    drag = false
+                end
+            end)
         end
     end)
     MainFrame.InputChanged:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then dInput=i end
+        if i.UserInputType == Enum.UserInputType.MouseMovement
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dInput = i
+        end
     end)
     UserInputService.InputChanged:Connect(function(i)
-        if i==dInput and drag then
-            local d=i.Position-dStart
-            MainFrame.Position=UDim2.new(sPos.X.Scale,sPos.X.Offset+d.X,sPos.Y.Scale,sPos.Y.Offset+d.Y)
+        if i == dInput and drag then
+            local d = i.Position - dStart
+            MainFrame.Position = UDim2.new(
+                sPos.X.Scale, sPos.X.Offset + d.X,
+                sPos.Y.Scale, sPos.Y.Offset + d.Y
+            )
         end
     end)
 end
 
 local function MkLabel(txt, y)
     local l = Instance.new("TextLabel", MainFrame)
-    l.BackgroundTransparency=1
-    l.Position=UDim2.new(0,25,0,y)
-    l.Size=UDim2.new(1,-50,0,30)
-    l.Font=Enum.Font.RobotoMono
-    l.Text=txt
-    l.TextColor3=Color3.fromRGB(255,255,255)
-    l.TextSize=18
-    l.TextXAlignment=Enum.TextXAlignment.Left
+    l.BackgroundTransparency = 1
+    l.Position               = UDim2.new(0, 25, 0, y)
+    l.Size                   = UDim2.new(1, -50, 0, 30)
+    l.Font                   = Enum.Font.RobotoMono
+    l.Text                   = txt
+    l.TextColor3             = Color3.fromRGB(255, 255, 255)
+    l.TextSize               = 18
+    l.TextXAlignment         = Enum.TextXAlignment.Left
     return l
 end
 
-local Title     = MkLabel("DARKNESS X • AUTO BOUNTY", 15)
+local Title     = MkLabel("DARKNESS X • FRUIT M1 BOUNTY", 15)
 Title.TextSize  = 22
 local BountyLbl = MkLabel("Bounty Earn: 0", 60)
 local ExecLbl   = MkLabel("Executor: ...", 95)
@@ -365,24 +425,29 @@ local DistLbl   = MkLabel("Distance: 0 m", 210)
 
 local function MkBtn(txt, xScale)
     local b = Instance.new("TextButton", MainFrame)
-    b.BackgroundColor3=Color3.fromRGB(255,255,255)
-    b.BackgroundTransparency=0.9
-    b.Position=UDim2.new(xScale,0,0.83,0)
-    b.Size=UDim2.new(0.4,0,0,40)
-    b.Font=Enum.Font.RobotoMono
-    b.Text=txt
-    b.TextColor3=Color3.fromRGB(255,255,255)
-    b.TextSize=16
-    Instance.new("UICorner",b).CornerRadius=UDim.new(0,6)
-    local s=Instance.new("UIStroke",b)
-    s.Color=Color3.fromRGB(255,255,255) s.Thickness=1.5
+    b.BackgroundColor3      = Color3.fromRGB(255, 255, 255)
+    b.BackgroundTransparency = 0.9
+    b.Position              = UDim2.new(xScale, 0, 0.83, 0)
+    b.Size                  = UDim2.new(0.4, 0, 0, 40)
+    b.Font                  = Enum.Font.RobotoMono
+    b.Text                  = txt
+    b.TextColor3            = Color3.fromRGB(255, 255, 255)
+    b.TextSize              = 16
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    -- FIX: tách riêng hai thuộc tính UIStroke
+    local s = Instance.new("UIStroke", b)
+    s.Color     = Color3.fromRGB(255, 255, 255)
+    s.Thickness = 1.5
     return b
 end
 
 local SkipBtn = MkBtn("SKIP PLAYER", 0.07)
 local HopBtn  = MkBtn("HOP SERVER",  0.53)
 
-ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
 SkipBtn.MouseButton1Click:Connect(function()
     SkipBtn.Text = "SKIPPING..."
     if getgenv().SkipPlayer then getgenv().SkipPlayer() end
@@ -393,22 +458,24 @@ local autoHopActive = false
 HopBtn.MouseButton1Click:Connect(function()
     autoHopActive = not autoHopActive
     if autoHopActive then
-        HopBtn.Text = "STOP HOP"
-        getgenv().hopserver = true
+        HopBtn.Text          = "STOP HOP"
+        getgenv().hopserver  = true
         task.spawn(function()
             while autoHopActive do
-                pcall(function() if getgenv().HopServer then getgenv().HopServer() end end)
+                pcall(function()
+                    if getgenv().HopServer then getgenv().HopServer() end
+                end)
                 task.wait(5)
             end
         end)
     else
-        HopBtn.Text = "HOP SERVER"
+        HopBtn.Text         = "HOP SERVER"
         getgenv().hopserver = false
     end
 end)
 
--- Update UI
-local startTime = os.time()
+-- Update UI mỗi frame
+local startTime  = os.time()
 local initBounty = nil
 task.delay(3, function()
     pcall(function()
@@ -424,8 +491,12 @@ end)
 
 RunService.RenderStepped:Connect(function()
     pcall(function()
-        local d = os.time()-startTime
-        TimeLbl.Text = string.format("Time: %02d:%02d:%02d", math.floor(d/3600), math.floor((d%3600)/60), d%60)
+        local d = os.time() - startTime
+        TimeLbl.Text = string.format("Time: %02d:%02d:%02d",
+            math.floor(d / 3600),
+            math.floor((d % 3600) / 60),
+            d % 60
+        )
         local ls = player:FindFirstChild("leaderstats")
         if ls and ls:FindFirstChild("Bounty/Honor") and initBounty then
             BountyLbl.Text = "Bounty Earn: " .. tostring(ls["Bounty/Honor"].Value - initBounty)
@@ -433,30 +504,33 @@ RunService.RenderStepped:Connect(function()
         local targ = getgenv().targ
         if targ and targ.Character and getRoot(targ.Character) then
             TargetLbl.Text = "Target: " .. targ.Name
-            local myRoot = getRoot(player.Character)
+            local myRoot   = getRoot(player.Character)
             if myRoot then
                 local dist = (myRoot.Position - getRoot(targ.Character).Position).Magnitude
-                DistLbl.Text = "Distance: " .. math.floor(dist) .. " m"
-                DistLbl.TextColor3 = dist < 50 and Color3.fromRGB(255,50,50) or Color3.fromRGB(255,255,255)
+                DistLbl.Text      = "Distance: " .. math.floor(dist) .. " m"
+                DistLbl.TextColor3 = dist < 50
+                    and Color3.fromRGB(255, 50, 50)
+                    or  Color3.fromRGB(255, 255, 255)
             end
         else
-            TargetLbl.Text = "Target: Searching..."
-            DistLbl.Text = "Distance: 0 m"
-            DistLbl.TextColor3 = Color3.fromRGB(255,255,255)
+            TargetLbl.Text     = "Target: Searching..."
+            DistLbl.Text       = "Distance: 0 m"
+            DistLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
         end
     end)
 end)
 
 -- =============================================
--- AUTO CONFIRM TELEPORT
+-- AUTO CONFIRM TELEPORT POPUP
 -- =============================================
 task.spawn(function()
     local function autoConfirm(gui)
         if not gui then return end
         for _, btn in pairs(gui:GetDescendants()) do
-            if (btn:IsA("TextButton") or btn:IsA("ImageButton")) then
+            if btn:IsA("TextButton") or btn:IsA("ImageButton") then
                 local t = string.lower(btn.Text or "")
-                if t=="ok" or t=="yes" or t=="teleport" or t=="confirm" or t=="leave" then
+                if t == "ok" or t == "yes" or t == "teleport"
+                or t == "confirm" or t == "leave" then
                     pcall(function() btn:activate() end)
                 end
             end
@@ -466,7 +540,10 @@ task.spawn(function()
     if prompt then
         local overlay = prompt:FindFirstChild("promptOverlay")
         if overlay then
-            overlay.ChildAdded:Connect(function() task.wait(0.1) autoConfirm(overlay) end)
+            overlay.ChildAdded:Connect(function()
+                task.wait(0.1)
+                autoConfirm(overlay)
+            end)
         end
     end
     while task.wait(0.5) do
@@ -480,16 +557,16 @@ end)
 -- =============================================
 if CFG.Another and CFG.Another.FPSBoost then
     pcall(function()
-        Workspace.Terrain.WaterWaveSize = 0
-        Workspace.Terrain.WaterWaveSpeed = 0
-        Workspace.Terrain.WaterReflectance = 0
-        game.Lighting.GlobalShadows = false
-        game.Lighting.FogEnd = 9e9
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level10
+        Workspace.Terrain.WaterWaveSize     = 0
+        Workspace.Terrain.WaterWaveSpeed    = 0
+        Workspace.Terrain.WaterReflectance  = 0
+        game.Lighting.GlobalShadows         = false
+        game.Lighting.FogEnd                = 9e9
+        settings().Rendering.QualityLevel   = Enum.QualityLevel.Level10
     end)
 end
 
--- Tắt collision
+-- Tắt collision cho character
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -535,14 +612,22 @@ end
 -- =============================================
 local function inSafeZone(pos)
     local ok, result = pcall(function()
-        local zones = Workspace:FindFirstChild("_WorldOrigin") and Workspace._WorldOrigin:FindFirstChild("SafeZones")
+        -- Kiểm tra SafeZones object trong Workspace
+        local origin = Workspace:FindFirstChild("_WorldOrigin")
+        local zones  = origin and origin:FindFirstChild("SafeZones")
         if zones then
             for _, z in pairs(zones:GetChildren()) do
-                if z:IsA("Part") and (z.Position-pos).Magnitude <= 400 then return true end
+                if z:IsA("Part") and (z.Position - pos).Magnitude <= 400 then
+                    return true
+                end
             end
         end
+        -- Kiểm tra UI safe zone cũ
         local main = player.PlayerGui:FindFirstChild("Main")
-        if main and main:FindFirstChild("[OLD]SafeZone") and main["[OLD]SafeZone"].Visible then return true end
+        if main then
+            local oldSZ = main:FindFirstChild("[OLD]SafeZone")
+            if oldSZ and oldSZ.Visible then return true end
+        end
         return false
     end)
     return ok and result or false
@@ -557,41 +642,53 @@ local function isValidTarget(v)
     if not isAlive(v.Character) then return false end
     local vRoot = getRoot(v.Character)
     if not vRoot then return false end
+
+    -- Phải có leaderstats và Bounty/Honor
     if not v:FindFirstChild("leaderstats") then return false end
     local bountyStat = v.leaderstats:FindFirstChild("Bounty/Honor")
     if not bountyStat then return false end
 
+    -- Kiểm tra range bounty
     local bounty = bountyStat.Value
-    local minB = (CFG.Hunt and CFG.Hunt.Min) or 0
-    local maxB = (CFG.Hunt and CFG.Hunt.Max) or math.huge
+    local minB   = (CFG.Hunt and CFG.Hunt.Min) or 0
+    local maxB   = (CFG.Hunt and CFG.Hunt.Max) or math.huge
     if bounty < minB or bounty > maxB then return false end
 
-    -- Team check: phải khác team, so sánh tên
+    -- Phải khác team
     local myTeamName = player.Team and player.Team.Name or ""
     local vTeamName  = v.Team and v.Team.Name or ""
-    if myTeamName ~= "" and vTeamName ~= "" and myTeamName == vTeamName then return false end
+    if myTeamName ~= "" and vTeamName ~= "" and myTeamName == vTeamName then
+        return false
+    end
 
-    -- Level check (safe)
+    -- Kiểm tra level (safe pcall)
     local myLv, vLv
     pcall(function()
-        myLv = player.Data and player.Data:FindFirstChild("Level") and tonumber(player.Data.Level.Value)
-        vLv  = v:FindFirstChild("Data") and v.Data:FindFirstChild("Level") and tonumber(v.Data.Level.Value)
+        myLv = player.Data and player.Data:FindFirstChild("Level")
+            and tonumber(player.Data.Level.Value)
+        vLv  = v:FindFirstChild("Data") and v.Data:FindFirstChild("Level")
+            and tonumber(v.Data.Level.Value)
     end)
     if myLv and vLv and (myLv - 250) >= vLv then return false end
 
-    -- Skip config
+    -- Kiểm tra skip config
     if CFG.Skip then
-        if CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
+        if CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then
+            return false
+        end
         if CFG.Skip.Fruit and CFG.Skip.FruitList then
             local data = v:FindFirstChild("Data")
-            local df = data and data:FindFirstChild("DevilFruit")
+            local df   = data and data:FindFirstChild("DevilFruit")
             if df and hasValue(CFG.Skip.FruitList, df.Value) then return false end
         end
         if CFG.Skip.SafeZone and inSafeZone(vRoot.Position) then return false end
     end
 
+    -- Kiểm tra các blacklist
     if getgenv().dangerBlacklist[v.Name] then return false end
     if hasValue(getgenv().checked, v) then return false end
+
+    -- Bỏ target đang bay quá cao (đã chết / safe health)
     if vRoot.Position.Y > 12000 then return false end
 
     return true
@@ -606,7 +703,7 @@ local function findTarget()
     if not myRoot then return end
 
     local bestDist = math.huge
-    local best = nil
+    local best     = nil
 
     for _, v in pairs(Players:GetPlayers()) do
         if isValidTarget(v) then
@@ -615,7 +712,7 @@ local function findTarget()
                 local d = (vRoot.Position - myRoot.Position).Magnitude
                 if d < bestDist then
                     bestDist = d
-                    best = v
+                    best     = v
                 end
             end
         end
@@ -625,26 +722,29 @@ local function findTarget()
         if getgenv().targ ~= best then
             getgenv().targ = best
             print("🎯 Target: " .. best.Name)
-            -- Chat khi target mới
+            -- Chat khi tìm được target mới
             pcall(function()
                 local chat = CFG.Chat
                 if chat and chat.Enabled and chat.Messages and #chat.Messages > 0 then
                     local msg = chat.Messages[math.random(1, #chat.Messages)]
-                    ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents"):FindFirstChild("SayMessageRequest"):FireServer(msg, "All")
+                    ReplicatedStorage
+                        :FindFirstChild("DefaultChatSystemChatEvents")
+                        :FindFirstChild("SayMessageRequest")
+                        :FireServer(msg, "All")
                 end
             end)
         end
     else
         getgenv().targ = nil
         print("❌ No target found")
-        -- Reset checked rồi mới hop
+        -- Reset checked list trước khi hop
         if #getgenv().checked > 0 then
-            getgenv().checked = {}
-            getgenv().dangerBlacklist = {}  -- reset danger blacklist cùng lúc
-            getgenv().dangerCount = {}
-            print("🔄 Reset checked + blacklist")
+            getgenv().checked         = {}
+            getgenv().dangerBlacklist = {}
+            getgenv().dangerCount     = {}
+            print("🔄 Reset checked + blacklist, thử lại...")
         else
-            -- Đợi 2s trước khi hop phòng server chưa load xong
+            -- Không còn ai trong server → hop sau 2s
             task.delay(2, function()
                 if not getgenv().targ then
                     getgenv().hopserver = true
@@ -672,51 +772,75 @@ getgenv().SkipPlayer = skipPlayer
 
 -- =============================================
 -- HOP SERVER
+-- FIX: bỏ task.wait(5) cuối — nếu teleport thành công thì không cần
+-- nếu thất bại thì reset hopping sau 3s để có thể thử lại nhanh hơn
 -- =============================================
 local hopping = false
 local function hopServer()
     if hopping then return end
     hopping = true
     table.insert(getgenv().ServerBlacklist, game.JobId)
-    local ok, _ = pcall(function()
-        local url = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100"):format(game.PlaceId)
+
+    local ok = pcall(function()
+        local url  = ("https://games.roblox.com/v1/games/%d/servers/Public?limit=100"):format(game.PlaceId)
         local data = HttpService:JSONDecode(game:HttpGet(url))
-        local sel = nil
+        local sel  = nil
+
+        -- Tìm server có người chơi vừa đủ
         for _, s in ipairs(data.data or {}) do
-            if s.playing and s.maxPlayers and s.playing > 5 and s.playing < s.maxPlayers - 1 then
-                local bl = false
-                for _, b in ipairs(getgenv().ServerBlacklist) do if b==s.id then bl=true break end end
-                if not bl then sel=s break end
+            if s.playing and s.maxPlayers
+            and s.playing > 5 and s.playing < s.maxPlayers - 1 then
+                local blacklisted = false
+                for _, b in ipairs(getgenv().ServerBlacklist) do
+                    if b == s.id then blacklisted = true break end
+                end
+                if not blacklisted then
+                    sel = s
+                    break
+                end
             end
         end
-        if sel then
+
+        if sel and sel.id then
             TeleportService:TeleportToPlaceInstance(game.PlaceId, sel.id)
         else
             TeleportService:Teleport(game.PlaceId)
         end
     end)
-    if not ok then TeleportService:Teleport(game.PlaceId) end
-    task.wait(5) -- đợi teleport xử lý trước khi reset
-    hopping = false
+
+    -- Nếu lỗi (không fetch được server list), hop trực tiếp
+    if not ok then
+        pcall(function() TeleportService:Teleport(game.PlaceId) end)
+    end
+
+    -- FIX: reset sau 3s thay vì 5s để thử lại nhanh hơn nếu teleport thất bại
+    task.delay(3, function() hopping = false end)
 end
 getgenv().HopServer = hopServer
 
 -- =============================================
--- EQUIP FRUIT
+-- EQUIP FRUIT (giữ fruit luôn trong tay)
 -- =============================================
 task.spawn(function()
     while task.wait(0.5) do
         pcall(function()
-            if not player.Character then return end
+            -- Không equip nếu fruit bị block
+            if not player.Character or fruitBlocked then return end
             local hasFruit = false
             for _, t in pairs(player.Character:GetChildren()) do
-                if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then hasFruit=true break end
+                if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
+                    hasFruit = true
+                    break
+                end
             end
             if not hasFruit then
                 local hum = player.Character:FindFirstChildOfClass("Humanoid")
                 if hum then
                     for _, t in pairs(player.Backpack:GetChildren()) do
-                        if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then hum:EquipTool(t) break end
+                        if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
+                            hum:EquipTool(t)
+                            break
+                        end
                     end
                 end
             end
@@ -725,10 +849,10 @@ task.spawn(function()
 end)
 
 -- =============================================
--- FLY + BÁM SÁT TARGET (mỗi frame)
+-- FLY + BÁM SÁT TARGET (~60fps)
 -- =============================================
 task.spawn(function()
-    while task.wait(0.016) do  -- ~60fps
+    while task.wait(0.016) do
         pcall(function()
             if getgenv().hopserver or safehealth or fruitBlocked then return end
             local targ = getgenv().targ
@@ -740,29 +864,37 @@ task.spawn(function()
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
             if dist > 5 then
-                local dir = (targRoot.Position - myRoot.Position).Unit
+                local dir     = (targRoot.Position - myRoot.Position).Unit
                 local goalPos = targRoot.Position - dir * 4
+                -- Giữ cùng độ cao với target
                 goalPos = Vector3.new(goalPos.X, targRoot.Position.Y, goalPos.Z)
+
                 if dist <= 500 then
+                    -- Teleport trực tiếp nếu đủ gần
                     myRoot.CFrame = CFrame.new(goalPos, targRoot.Position)
                 else
+                    -- Tween nếu quá xa
                     if currentTween then currentTween:Cancel() end
-                    currentTween = TweenService:Create(myRoot,
-                        TweenInfo.new(dist/600, Enum.EasingStyle.Linear),
+                    currentTween = TweenService:Create(
+                        myRoot,
+                        TweenInfo.new(dist / 600, Enum.EasingStyle.Linear),
                         {CFrame = CFrame.new(goalPos, targRoot.Position)}
                     )
                     currentTween:Play()
                 end
             else
-                myRoot.CFrame = CFrame.lookAt(myRoot.Position,
-                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z))
+                -- Đã đến nơi, quay mặt về target
+                myRoot.CFrame = CFrame.lookAt(
+                    myRoot.Position,
+                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z)
+                )
             end
         end)
     end
 end)
 
 -- =============================================
--- BUSO + KEN
+-- BUSO (Haki áo giáp)
 -- =============================================
 task.spawn(function()
     while task.wait(0.5) do
@@ -784,10 +916,11 @@ task.spawn(function()
             CommF_:InvokeServer("EnablePvp")
             local targ = getgenv().targ
             if not targ or not targ.Character or not player.Character then return end
-            local myRoot  = getRoot(player.Character)
-            local tRoot   = getRoot(targ.Character)
+            local myRoot = getRoot(player.Character)
+            local tRoot  = getRoot(targ.Character)
             if not myRoot or not tRoot then return end
             if (tRoot.Position - myRoot.Position).Magnitude > 50 then return end
+
             local transformed = player.Character:FindFirstChild("RaceTransformed")
             if CFG.Another then
                 if CFG.Another.V3 and not transformed then
@@ -797,15 +930,15 @@ task.spawn(function()
                         shouldV3 = hum and hum.Health <= (CFG.Another.Health or 4700)
                     end
                     if shouldV3 then
-                        VirtualInputManager:SendKeyEvent(true,"T",false,nil)
+                        VirtualInputManager:SendKeyEvent(true,  "T", false, nil)
                         task.wait(0.1)
-                        VirtualInputManager:SendKeyEvent(false,"T",false,nil)
+                        VirtualInputManager:SendKeyEvent(false, "T", false, nil)
                     end
                 end
                 if CFG.Another.V4 and not transformed then
-                    VirtualInputManager:SendKeyEvent(true,"Y",false,nil)
+                    VirtualInputManager:SendKeyEvent(true,  "Y", false, nil)
                     task.wait(0.1)
-                    VirtualInputManager:SendKeyEvent(false,"Y",false,nil)
+                    VirtualInputManager:SendKeyEvent(false, "Y", false, nil)
                 end
             end
         end)
@@ -813,7 +946,7 @@ task.spawn(function()
 end)
 
 -- =============================================
--- REMOTE HOOK (aim skill về target)
+-- REMOTE HOOK (aim skill/M1 về vị trí target)
 -- =============================================
 local oldNamecall
 pcall(function()
@@ -829,11 +962,15 @@ pcall(function()
                 local args = {...}
                 local name = tostring(self)
                 local tPos = getRoot(targ.Character).Position
-                if name:find("UpdateMousePos") or name:find("MousePos") or name:find("Click")
-                or name:find("Skill") or name:find("Activate") or name:find("Ability") then
-                    for i=1,#args do
-                        if type(args[i])=="Vector3" then args[i]=tPos
-                        elseif type(args[i])=="CFrame" then args[i]=CFrame.new(tPos)*(args[i]-args[i].Position) end
+                if name:find("UpdateMousePos") or name:find("MousePos")
+                or name:find("Click") or name:find("Skill")
+                or name:find("Activate") or name:find("Ability") then
+                    for i = 1, #args do
+                        if type(args[i]) == "Vector3" then
+                            args[i] = tPos
+                        elseif type(args[i]) == "CFrame" then
+                            args[i] = CFrame.new(tPos) * (args[i] - args[i].Position)
+                        end
                     end
                     return oldNamecall(self, unpack(args))
                 end
@@ -853,25 +990,33 @@ local function expandHitbox()
         if not hrp then return end
         if player.Character:FindFirstChild("_HB") then return end
         local p = Instance.new("Part")
-        p.Name = "_HB"
-        p.Size = Vector3.new(12,12,12)
+        p.Name        = "_HB"
+        p.Size        = Vector3.new(12, 12, 12)
         p.Transparency = 1
-        p.CanCollide = false
-        p.Anchored = false
-        p.Parent = player.Character
+        p.CanCollide  = false
+        p.Anchored    = false
+        p.Parent      = player.Character
         local w = Instance.new("WeldConstraint")
-        w.Part0 = hrp w.Part1 = p w.Parent = p
+        w.Part0  = hrp
+        w.Part1  = p
+        w.Parent = p
         p.CFrame = hrp.CFrame
     end)
 end
 expandHitbox()
-player.CharacterAdded:Connect(function() task.wait(1) expandHitbox() end)
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    expandHitbox()
+    -- Re-check fruit khi respawn (phòng trường hợp fruit thay đổi)
+    checkFruit()
+end)
 
 -- =============================================
--- M1 AUTO ATTACK
+-- FRUIT M1 AUTO ATTACK
+-- FIX: ưu tiên fruitTool:Activate(), fallback FastAttack, fallback VIM click
 -- =============================================
 task.spawn(function()
-    while task.wait(0.05) do  -- 0.05s = ~20 hits/s, đủ nhanh mà không spike CPU
+    while task.wait(0.05) do
         pcall(function()
             if not m1Enabled or getgenv().hopserver or safehealth or fruitBlocked then return end
             local targ = getgenv().targ
@@ -880,23 +1025,41 @@ task.spawn(function()
             if not targRoot then return end
             local myRoot = getRoot(player.Character)
             if not myRoot then return end
-            local hum = player.Character:FindFirstChild("Humanoid")
-            if not hum or hum.Health <= 0 then return end
+
+            -- Kiểm tra cả hai bên còn sống
+            local myHum = player.Character:FindFirstChild("Humanoid")
+            if not myHum or myHum.Health <= 0 then return end
             local tHum = targ.Character:FindFirstChild("Humanoid")
             if not tHum or tHum.Health <= 0 then return end
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
-
             if dist <= 12 then
-                -- Aim chính xác trước khi M1
-                myRoot.CFrame = CFrame.lookAt(myRoot.Position,
-                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z))
-                if FastAttack then
-                    FastAttack:M1()
+                -- Aim về target trước khi đánh
+                myRoot.CFrame = CFrame.lookAt(
+                    myRoot.Position,
+                    Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z)
+                )
+
+                -- Tìm fruit tool đang cầm trong tay
+                local fruitTool = nil
+                for _, t in pairs(player.Character:GetChildren()) do
+                    if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
+                        fruitTool = t
+                        break
+                    end
+                end
+
+                if fruitTool then
+                    -- M1 của Fruit (chuẩn nhất)
+                    pcall(function() fruitTool:Activate() end)
+                elseif FastAttack then
+                    -- Fallback: FastAttack module
+                    pcall(function() FastAttack:M1() end)
                 else
-                    VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,1)
+                    -- Fallback cuối: giả lập click chuột
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true,  game, 1)
                     task.wait(0.04)
-                    VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,1)
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
                 end
             end
         end)
@@ -904,16 +1067,18 @@ task.spawn(function()
 end)
 
 -- =============================================
--- SAFE HEALTH
+-- SAFE HEALTH (bay lên trốn khi máu thấp)
 -- =============================================
 local function getHPct()
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
     if not hum or hum.MaxHealth <= 0 then return 1 end
     return hum.Health / hum.MaxHealth
 end
+
 local function safeThreshold()
     local v = CFG.SafeHealth and CFG.SafeHealth.Health or 0.3
-    return v <= 1 and v or v/100
+    -- Hỗ trợ cả dạng 0.3 (30%) và 30 (30%)
+    return v <= 1 and v or (v / 100)
 end
 
 task.spawn(function()
@@ -923,12 +1088,17 @@ task.spawn(function()
             safehealth = true
             pcall(checkDanger)
             pcall(function()
-                if currentTween then currentTween:Cancel() currentTween = nil end
+                if currentTween then
+                    currentTween:Cancel()
+                    currentTween = nil
+                end
                 local hrp = getRoot(player.Character)
-                if hrp then hrp.CFrame = hrp.CFrame * CFrame.new(0, math.random(8000,15000), 0) end
+                if hrp then
+                    hrp.CFrame = hrp.CFrame * CFrame.new(0, math.random(8000, 15000), 0)
+                end
             end)
-            -- Đợi hồi máu
-            local timeout = 60 -- tối đa 60s
+            -- Chờ hồi máu (tối đa 60s)
+            local timeout = 60
             while timeout > 0 do
                 task.wait(0.5)
                 timeout = timeout - 0.5
@@ -936,6 +1106,7 @@ task.spawn(function()
                 if (ok2 and pct > safeThreshold()) or not player.Character then break end
             end
             safehealth = false
+            print("💚 Máu hồi đủ, tiếp tục hunt!")
         end
     end
 end)
@@ -946,27 +1117,40 @@ end)
 task.spawn(function()
     while task.wait(0.1) do
         if fruitBlocked or safehealth then
+            -- Dừng hẳn khi fruit bị block hoặc đang hồi máu
             getgenv().targ = nil
         else
             pcall(function()
+                -- Kiểm tra target hiện tại còn hợp lệ không
                 local curTarg = getgenv().targ
-                if not curTarg or not curTarg.Character or not isAlive(curTarg.Character) then
+                if not curTarg
+                or not curTarg.Character
+                or not isAlive(curTarg.Character) then
                     getgenv().targ = nil
                     findTarget()
                 end
-                -- Skip nếu target trong safe zone hoặc ngồi
+
+                -- Skip nếu target vào safe zone hoặc đang ngồi
                 local targ = getgenv().targ
                 if targ and targ.Character and player.Character then
                     local myRoot = getRoot(player.Character)
                     local tRoot  = getRoot(targ.Character)
-                    if myRoot and tRoot and (tRoot.Position-myRoot.Position).Magnitude < 40 then
-                        if inSafeZone(tRoot.Position) then skipPlayer() return end
+                    if myRoot and tRoot
+                    and (tRoot.Position - myRoot.Position).Magnitude < 40 then
+                        if inSafeZone(tRoot.Position) then
+                            skipPlayer()
+                            return
+                        end
                         local th = targ.Character:FindFirstChild("Humanoid")
-                        if th and th.Sit then skipPlayer() return end
+                        if th and th.Sit then
+                            skipPlayer()
+                            return
+                        end
                     end
                 end
             end)
-            -- Auto hop nếu cần (spawn riêng để không block main loop)
+
+            -- Hop server nếu cần (spawn riêng để không block loop)
             if getgenv().hopserver then
                 getgenv().hopserver = false
                 task.spawn(hopServer)
@@ -976,7 +1160,7 @@ task.spawn(function()
 end)
 
 -- =============================================
--- AUTO SKIP THÔNG BÁO "PLAYER DIED RECENTLY"
+-- AUTO SKIP khi có thông báo "player died recently"
 -- =============================================
 task.spawn(function()
     while task.wait(0.5) do
@@ -987,7 +1171,14 @@ task.spawn(function()
             for _, v in pairs(notifs:GetChildren()) do
                 if v:IsA("TextLabel") then
                     local txt = string.lower(v.Text)
-                    for _, kw in ipairs({"player died recently","you can't attack them yet","cannot attack","died recently","can't attack them"}) do
+                    local keywords = {
+                        "player died recently",
+                        "you can't attack them yet",
+                        "cannot attack",
+                        "died recently",
+                        "can't attack them",
+                    }
+                    for _, kw in ipairs(keywords) do
                         if txt:find(kw) then
                             skipPlayer()
                             pcall(function() v:Destroy() end)
@@ -1004,13 +1195,23 @@ end)
 -- WEBHOOK
 -- =============================================
 local function sendWebhook(url, data)
-    if not url or url=="" then return end
+    if not url or url == "" then return end
     pcall(function()
         local body = HttpService:JSONEncode(data)
         if syn and syn.request then
-            syn.request({Url=url,Method="POST",Headers={["Content-Type"]="application/json"},Body=body})
+            syn.request({
+                Url     = url,
+                Method  = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body    = body,
+            })
         elseif request then
-            request({Url=url,Method="POST",Headers={["Content-Type"]="application/json"},Body=body})
+            request({
+                Url     = url,
+                Method  = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body    = body,
+            })
         end
     end)
 end
@@ -1020,10 +1221,13 @@ local lastKilled = nil
 task.delay(3, function()
     pcall(function()
         local ls = player:FindFirstChild("leaderstats")
-        if ls and ls:FindFirstChild("Bounty/Honor") then lastBounty = ls["Bounty/Honor"].Value end
+        if ls and ls:FindFirstChild("Bounty/Honor") then
+            lastBounty = ls["Bounty/Honor"].Value
+        end
     end)
 end)
 
+-- Webhook khi kill
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -1033,27 +1237,28 @@ task.spawn(function()
             if h and h.Health <= 0 and lastKilled ~= targ.Name then
                 lastKilled = targ.Name
                 task.wait(2)
-                local cur = player.leaderstats and player.leaderstats["Bounty/Honor"] and player.leaderstats["Bounty/Honor"].Value or 0
+                local cur    = (player.leaderstats and player.leaderstats["Bounty/Honor"]
+                    and player.leaderstats["Bounty/Honor"].Value) or 0
                 local earned = math.max(0, cur - lastBounty)
-                lastBounty = cur
-                -- Gửi webhook nếu bật
+                lastBounty   = cur
                 pcall(function()
                     local wh = CFG.Webhook
                     if not wh or not wh.Enable or not wh.Url or wh.Url == "" then return end
                     local function fmt(b)
-                        if b>=1e6 then return ("%.1fM"):format(b/1e6)
-                        elseif b>=1e3 then return ("%.1fK"):format(b/1e3)
+                        if b >= 1e6 then return ("%.1fM"):format(b / 1e6)
+                        elseif b >= 1e3 then return ("%.1fK"):format(b / 1e3)
                         else return tostring(b) end
                     end
-                    sendWebhook(wh.Url, {embeds={{
-                        title="BOUNTY HUNTER",color=0x67eb34,
-                        fields={
-                            {name="Target",value="```"..targ.Name.."```",inline=true},
-                            {name="Earned",value="```"..fmt(earned).."```",inline=true},
-                            {name="Total",value="```"..fmt(cur).."```",inline=true},
-                            {name="Hunter",value="```"..player.Name.."```",inline=true},
+                    sendWebhook(wh.Url, {embeds = {{
+                        title  = "BOUNTY HUNTER",
+                        color  = 0x67eb34,
+                        fields = {
+                            {name="Target", value="```"..targ.Name.."```",  inline=true},
+                            {name="Earned", value="```"..fmt(earned).."```", inline=true},
+                            {name="Total",  value="```"..fmt(cur).."```",    inline=true},
+                            {name="Hunter", value="```"..player.Name.."```", inline=true},
                         },
-                        footer={text="Auto Bounty"},
+                        footer = {text = "Auto Bounty"},
                     }}})
                 end)
                 task.wait(2)
@@ -1063,31 +1268,33 @@ task.spawn(function()
     end
 end)
 
--- Startup webhook
+-- Webhook khi khởi động
 task.delay(8, function()
     pcall(function()
         local wh = CFG.Webhook
-        if not wh or not wh.Enable or not wh.Url or wh.Url=="" then return end
-        local cur = player.leaderstats and player.leaderstats["Bounty/Honor"] and player.leaderstats["Bounty/Honor"].Value or 0
-        sendWebhook(wh.Url, {embeds={{
-            title="Auto Bounty Started",color=16753920,
-            fields={
-                {name="Player",value="```"..player.Name.."```",inline=true},
-                {name="Team",value="```"..(CFG.Team or "?").."```",inline=true},
-                {name="Bounty",value="```"..tostring(cur).."```",inline=true},
+        if not wh or not wh.Enable or not wh.Url or wh.Url == "" then return end
+        local cur = (player.leaderstats and player.leaderstats["Bounty/Honor"]
+            and player.leaderstats["Bounty/Honor"].Value) or 0
+        sendWebhook(wh.Url, {embeds = {{
+            title  = "Auto Bounty Started",
+            color  = 16753920,
+            fields = {
+                {name="Player", value="```"..player.Name.."```",      inline=true},
+                {name="Team",   value="```"..(CFG.Team or "?").."```", inline=true},
+                {name="Bounty", value="```"..tostring(cur).."```",     inline=true},
             },
-            footer={text=os.date("%H:%M %d/%m/%Y")},
+            footer = {text = os.date("%H:%M %d/%m/%Y")},
         }}})
     end)
 end)
 
--- Error auto rejoin
+-- Auto rejoin nếu có ErrorPrompt
 pcall(function()
     CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-        if not getgenv().hopserver and child.Name=="ErrorPrompt" then
+        if not getgenv().hopserver and child.Name == "ErrorPrompt" then
             TeleportService:Teleport(game.PlaceId)
         end
     end)
 end)
 
-print("✅ Auto Bounty đã sẵn sàng!")
+print("✅ Auto Bounty [Fruit M1] đã sẵn sàng!")
