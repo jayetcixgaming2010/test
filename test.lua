@@ -54,28 +54,62 @@ getgenv().dangerBlacklist = {}
 getgenv().ServerBlacklist = {}
 getgenv().fruitBlocked = false
 
--- Set team: retry cho đến khi join được
-task.spawn(function()
-    local targetTeam = CFG.Team or "Pirates"
-    local joined = false
-    for i = 1, 20 do -- thử tối đa 20 lần (10 giây)
-        pcall(function()
-            CommF_:InvokeServer("SetTeam", targetTeam)
-        end)
-        task.wait(0.5)
-        -- Kiểm tra đã vào đúng team chưa
-        pcall(function()
-            if player.Team and string.lower(player.Team.Name):find(string.lower(targetTeam):sub(1,4)) then
-                joined = true
-                print("✅ Đã join team: " .. player.Team.Name)
+-- Set team: thử tất cả cách có thể
+local targetTeam = CFG.Team or "Pirates"
+
+local function tryJoinTeam()
+    -- Cách 1: CommF_ SetTeam (chuẩn)
+    pcall(function() CommF_:InvokeServer("SetTeam", targetTeam) end)
+    task.wait(0.3)
+    -- Cách 2: Tìm đúng object Team trong game.Teams rồi set
+    pcall(function()
+        for _, t in pairs(game:GetService("Teams"):GetTeams()) do
+            if string.lower(t.Name):find(string.lower(targetTeam):sub(1,4)) then
+                player.Team = t
+                break
             end
-        end)
-        if joined then break end
+        end
+    end)
+    task.wait(0.3)
+    -- Cách 3: Thử tên viết hoa thường khác nhau
+    pcall(function() CommF_:InvokeServer("SetTeam", "Pirates") end)
+    pcall(function() CommF_:InvokeServer("SetTeam", "pirates") end)
+    pcall(function() CommF_:InvokeServer("SetTeam", "Marine") end)
+    pcall(function() CommF_:InvokeServer("SetTeam", "Marines") end)
+    if targetTeam == "Pirates" then
+        pcall(function() CommF_:InvokeServer("ChooseTeam", "Pirates") end)
+        pcall(function() CommF_:InvokeServer("JoinTeam", "Pirates") end)
+        pcall(function() CommF_:InvokeServer("SelectTeam", "Pirates") end)
+    elseif targetTeam == "Marines" then
+        pcall(function() CommF_:InvokeServer("ChooseTeam", "Marines") end)
+        pcall(function() CommF_:InvokeServer("JoinTeam", "Marines") end)
+        pcall(function() CommF_:InvokeServer("SelectTeam", "Marines") end)
     end
-    if not joined then
-        -- Thử lần cuối
-        pcall(function() CommF_:InvokeServer("SetTeam", targetTeam) end)
-        print("⚠️ SetTeam xong (chưa verify)")
+end
+
+local function isInCorrectTeam()
+    local t = player.Team
+    if not t then return false end
+    local n = string.lower(t.Name)
+    local target_n = string.lower(targetTeam)
+    return n:find(target_n:sub(1,4)) ~= nil
+end
+
+task.spawn(function()
+    -- Đợi game load xong
+    task.wait(2)
+    local attempts = 0
+    while not isInCorrectTeam() and attempts < 30 do
+        attempts = attempts + 1
+        print("🔄 Thử join team [" .. targetTeam .. "] lần " .. attempts)
+        tryJoinTeam()
+        task.wait(1)
+    end
+    if isInCorrectTeam() then
+        print("✅ Đã join team: " .. (player.Team and player.Team.Name or "?"))
+        task.delay(3, function() if checkFruit then checkFruit() end end)
+    else
+        print("⚠️ Không join được team sau " .. attempts .. " lần, kiểm tra tên team trong config!")
     end
 end)
 
@@ -231,18 +265,13 @@ player:GetPropertyChangedSignal("Team"):Connect(function()
     end
 end)
 
-task.delay(3, checkFruit)
-
 -- Giữ team: tự join lại nếu bị kick ra khỏi team
 task.spawn(function()
-    local targetTeam = CFG.Team or "Pirates"
-    while task.wait(10) do
+    while task.wait(15) do
         pcall(function()
-            local currentTeam = player.Team and player.Team.Name or ""
-            -- Nếu chưa có team hoặc team là Spectator/None thì join lại
-            if currentTeam == "" or string.lower(currentTeam):find("spec") or string.lower(currentTeam):find("none") then
-                CommF_:InvokeServer("SetTeam", targetTeam)
-                print("🔄 Re-join team: " .. targetTeam)
+            if not isInCorrectTeam() then
+                print("🔄 Mất team, đang join lại: " .. targetTeam)
+                tryJoinTeam()
             end
         end)
     end
