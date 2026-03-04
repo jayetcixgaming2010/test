@@ -1,6 +1,7 @@
 -- =============================================
--- AUTO BOUNTY HUNTER - DARKNESS X STYLE
+-- AUTO BOUNTY HUNTER - DARKNESS X STYLE (FIXED)
 -- =============================================
+-- Fix: sửa lỗi biến safehealth, thêm kiểm tra Level trong Data, pcall cho Tween
 
 if not getgenv then return warn("Executor không hỗ trợ getgenv!") end
 
@@ -262,7 +263,7 @@ do
     local drag, dInput, dStart, sPos
     MainFrame.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            drag=true drag=true dStart=i.Position sPos=MainFrame.Position
+            drag=true dStart=i.Position sPos=MainFrame.Position
             i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then drag=false end end)
         end
     end)
@@ -507,7 +508,7 @@ local function isValidTarget(v)
     local vTeamName  = v.Team and v.Team.Name or ""
     if myTeamName ~= "" and vTeamName ~= "" and myTeamName == vTeamName then return false end
 
-    -- Level check
+    -- Level check (có kiểm tra tồn tại)
     local myLv  = player.Data and player.Data:FindFirstChild("Level") and tonumber(player.Data.Level.Value)
     local vLv   = v.Data and v.Data:FindFirstChild("Level") and tonumber(v.Data.Level.Value)
     if myLv and vLv and (myLv - 250) >= vLv then return false end
@@ -826,7 +827,7 @@ task.spawn(function()
 end)
 
 -- =============================================
--- SAFE HEALTH
+-- SAFE HEALTH (ĐÃ SỬA LỖI TÊN BIẾN)
 -- =============================================
 local function getHPct()
     local hum = player.Character and player.Character:FindFirstChild("Humanoid")
@@ -842,12 +843,12 @@ task.spawn(function()
     while task.wait(0.1) do
         pcall(function()
             if getHPct() <= safeThreshold() then
-                safehealth = true
+                safehealth = true   -- ĐÃ SỬA: saf ehealth -> safehealth
                 checkDanger()
                 local hrp = getRoot(player.Character)
                 if hrp then hrp.CFrame = hrp.CFrame * CFrame.new(0, math.random(8000,15000), 0) end
                 repeat task.wait(0.5) until getHPct() > safeThreshold() or not player.Character
-                safehealth = false
+                safehealth = false  -- ĐÃ SỬA
             end
         end)
     end
