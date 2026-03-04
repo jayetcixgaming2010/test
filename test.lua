@@ -132,19 +132,35 @@ local function isInCorrectTeam()
 end
 
 -- =============================================
--- LOAD FASTATTACK (optional fallback)
+-- LOAD FASTATTACK
+-- Phải set _G.FastAttack = true TRƯỚC khi loadstring
+-- FastAttack:Attack() tự xử lý combo + LeftClickRemote cho fruit
 -- =============================================
+_G.FastAttack = true  -- kích hoạt FastAttack bên trong UI.lua
+
 local FastAttack = nil
 pcall(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/UI.lua"))()
     FastAttack = getgenv().rz_FastAttack
     if FastAttack then
-        FastAttack.GetClosestEnemy = function(self)
+        -- Override Process: chỉ tấn công getgenv().targ, bỏ qua tất cả mob/player khác
+        FastAttack.Process = function(self, flag, container, hits, pos, range)
+            if not flag then return end
             local t = getgenv().targ
-            if t and t.Character and t.Character:FindFirstChild("HumanoidRootPart") then
-                return t.Character.HumanoidRootPart
+            if not t or not t.Character then return end
+            local hrp = t.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            if (hrp.Position - pos).Magnitude <= range then
+                if not self.EnemyRootPart then
+                    self.EnemyRootPart = hrp
+                else
+                    table.insert(hits, {t.Character, hrp})
+                end
             end
         end
+        print("✅ FastAttack loaded & patched")
+    else
+        warn("⚠️ FastAttack không load được, dùng fallback")
     end
 end)
 
@@ -1013,10 +1029,11 @@ end)
 
 -- =============================================
 -- FRUIT M1 AUTO ATTACK
--- FIX: ưu tiên fruitTool:Activate(), fallback FastAttack, fallback VIM click
+-- Dùng FastAttack:Attack() — tự xử lý combo, LeftClickRemote, cooldown
+-- FastAttack đã được patch ở trên để chỉ tấn công getgenv().targ
 -- =============================================
 task.spawn(function()
-    while task.wait(0.05) do
+    while task.wait(0) do  -- RunService.Stepped đã có trong FastAttack, đây chỉ để aim + guard check
         pcall(function()
             if not m1Enabled or getgenv().hopserver or safehealth or fruitBlocked then return end
             local targ = getgenv().targ
@@ -1033,30 +1050,19 @@ task.spawn(function()
             if not tHum or tHum.Health <= 0 then return end
 
             local dist = (targRoot.Position - myRoot.Position).Magnitude
-            if dist <= 12 then
+            if dist <= 15 then
                 -- Aim về target trước khi đánh
                 myRoot.CFrame = CFrame.lookAt(
                     myRoot.Position,
                     Vector3.new(targRoot.Position.X, myRoot.Position.Y, targRoot.Position.Z)
                 )
 
-                -- Tìm fruit tool đang cầm trong tay
-                local fruitTool = nil
-                for _, t in pairs(player.Character:GetChildren()) do
-                    if t:IsA("Tool") and t.ToolTip == "Blox Fruit" then
-                        fruitTool = t
-                        break
-                    end
-                end
-
-                if fruitTool then
-                    -- M1 của Fruit (chuẩn nhất)
-                    pcall(function() fruitTool:Activate() end)
-                elseif FastAttack then
-                    -- Fallback: FastAttack module
-                    pcall(function() FastAttack:M1() end)
+                if FastAttack then
+                    -- Dùng FastAttack:Attack() — đây là cách chuẩn nhất:
+                    -- tự kiểm tra tool, tính combo, gọi LeftClickRemote:FireServer cho fruit
+                    pcall(function() FastAttack:Attack() end)
                 else
-                    -- Fallback cuối: giả lập click chuột
+                    -- Fallback nếu FastAttack không load được: giả lập click chuột
                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true,  game, 1)
                     task.wait(0.04)
                     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
