@@ -21,35 +21,20 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local character = player.Character or player.CharacterAdded:Wait()
 
 -- =============================================
--- TẮT HOÀN TOÀN FASTATTACK MODULE (KHÔNG DÙNG)
+-- TẢI VÀ CẤU HÌNH FASTATTACK MODULE
 -- =============================================
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/UI.lua"))()
--- local FastAttack = getgenv().rz_FastAttack
--- if FastAttack then
---     FastAttack.GetClosestEnemy = function(self, ...)
---         local targ = getgenv().targ
---         if targ and targ.Character and targ.Character:FindFirstChild("HumanoidRootPart") then
---             return targ.Character.HumanoidRootPart
---         end
---         return nil
---     end
---     print("✅ FastAttack loaded and configured")
--- end
-print("✅ FastAttack DISABLED - Using only Blox Fruit M1")
-
--- =============================================
--- HÀM CLICK M1 (ĐÁNH THƯỜNG)
--- =============================================
-local function clickM1()
-    pcall(function()
-        -- Cách 1: Dùng VirtualInputManager (hầu hết executor đều hỗ trợ)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
-        task.wait(0.05)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
-        
-        -- Cách 2: Dùng mouse1click (nếu executor hỗ trợ)
-        -- pcall(function() mouse1click() end)
-    end)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/UI.lua"))()
+local FastAttack = getgenv().rz_FastAttack
+if FastAttack then
+    -- Ghi đè hàm tìm kẻ địch gần nhất để chỉ tấn công target hiện tại
+    FastAttack.GetClosestEnemy = function(self, ...)
+        local targ = getgenv().targ
+        if targ and targ.Character and targ.Character:FindFirstChild("HumanoidRootPart") then
+            return targ.Character.HumanoidRootPart
+        end
+        return nil
+    end
+    print("✅ FastAttack loaded and configured")
 end
 
 -- =============================================
@@ -149,7 +134,7 @@ local function checkDangerAndBlacklist()
 end
 
 -- =============================================
--- GUI (DARKNESS X STYLE) - GIỮ NGUYÊN
+-- GUI (DARKNESS X STYLE)
 -- =============================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DarknessX_AutoBounty"
@@ -256,7 +241,7 @@ local function CreateText(text, yPos)
     return lbl
 end
 
-local Title = CreateText("DARKNESS X • AUTO BOUNTY (M1 ONLY)", 15)
+local Title = CreateText("DARKNESS X • AUTO BOUNTY", 15)
 Title.TextSize = 22
 Title.Font = Enum.Font.RobotoMono
 
@@ -360,7 +345,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =============================================
--- WORLD / ISLAND SETUP (GIỮ NGUYÊN)
+-- WORLD / ISLAND SETUP
 -- =============================================
 local placeId = game.PlaceId
 local worldMap = {
@@ -398,6 +383,7 @@ if World3 then
         ["Peanut Island"] = CFrame.new(-1943.59716796875, 37.012996673583984, -10288.01171875),
         ["Cocoa Island"] = CFrame.new(147.35205078125, 23.642955780029297, -12030.5498046875),
         ["Tiki Outpost"] = CFrame.new(-16218.6826, 9.08636189, 445.618408, -0.0610186495, 0.00000000110512588, -0.99813664, -0.0000000183458475, 1, 0.00000000222871765, 0.99813664, 0.0000000184476558, -0.0610186495),
+        -- ADDED FOR SUBMERGED ISLAND
         ["Submerged Island"] = CFrame.new(-16269.7041, 25.2288494, 1373.65955, 0.997390985, 1.47309942e-09, -0.0721890926, -4.00651912e-09, 0.99999994, -2.51183763e-09, 0.0721890852, 5.75363091e-10, 0.997390926)
     }
 elseif World2 then
@@ -463,6 +449,7 @@ function bypass(Pos)
             if tween then
                 pcall(function() tween:Destroy() end)
             end
+            -- ADDED SUBMERGED ISLAND CONDITION
             if (is.X == 61163.8515625 and is.Y == 11.6796875 and is.Z == 1819.7841796875) or
                is == CFrame.new(-12471.169921875 + 50, 374.94024658203, -7551.677734375) or
                is == CFrame.new(-5085.23681640625 + 50, 316.5072021484375, -3156.202880859375) or
@@ -612,7 +599,7 @@ function EquipWeapon(Tool)
 end
 
 -- =============================================
--- ĐÃ TẮT FASTATTACK - CHỈ DÙNG M1 BLOX FRUIT
+-- FASTATTACK ĐÃ ĐẢM NHIỆM ĐÒN ĐÁNH THƯỜNG
 -- =============================================
 
 -- Vòng lặp chống xuyên tường (giữ nguyên)
@@ -692,6 +679,10 @@ spawn(function()
         end
     end)
 end)
+
+-- =============================================
+-- ĐÃ LOẠI BỎ HOÀN TOÀN CÁC ĐOẠN MỞ RỘNG HITBOX
+-- =============================================
 
 -- Các biến hỗ trợ di chuyển vòng tròn (giữ nguyên)
 local radius = 25
@@ -951,26 +942,37 @@ spawn(function()
     end
 end)
 
--- =============================================
--- CHỈ EQUIP BLOX FRUIT - KHÔNG DÙNG VŨ KHÍ KHÁC
--- =============================================
+-- Luân phiên vũ khí (giữ nguyên)
+local gunmethod = CFG.Gun and CFG.Gun.GunMode or false
+
 spawn(function()
     while task.wait() do
         pcall(function()
             if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
                lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                 if (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude < 40 then
-                    -- CHỈ EQUIP BLOX FRUIT (nếu được bật trong config)
-                    if CFG.Fruit and CFG.Fruit.Enable then
-                        getgenv().weapon = "Blox Fruit"
-                        
-                        -- Equip Blox Fruit từ backpack
-                        for _, v in pairs(lp.Backpack:GetChildren()) do
-                            if v:IsA("Tool") and v.ToolTip == "Blox Fruit" then
-                                v.Parent = lp.Character
-                                break
-                            end
+                    if not gunmethod then
+                        if CFG.Melee and CFG.Melee.Enable then
+                            getgenv().weapon = "Melee"
+                            task.wait(CFG.Melee.Delay or 0.1)
                         end
+                        if CFG.Fruit and CFG.Fruit.Enable then
+                            getgenv().weapon = "Blox Fruit"
+                            task.wait(CFG.Fruit.Delay or 0.1)
+                        end
+                        if CFG.Sword and CFG.Sword.Enable then
+                            getgenv().weapon = "Sword"
+                            task.wait(CFG.Sword.Delay or 0.1)
+                        end
+                        if CFG.Gun and CFG.Gun.Enable then
+                            getgenv().weapon = "Gun"
+                            task.wait(CFG.Gun.Delay or 0.1)
+                        end
+                    else
+                        pcall(function()
+                            EquipWeapon("Melee")
+                            EquipWeapon("Gun")
+                        end)
                     end
                 end
             end
@@ -996,10 +998,12 @@ spawn(function()
                 if CFG.Another and CFG.Another.V3 then
                     local shouldV3 = false
                     if CFG.Another.CustomHealth then
+                        -- Chỉ bật V3 khi máu <= ngưỡng đã cấu hình
                         if myHum and myHum.Health <= (CFG.Another.Health or 4700) then
                             shouldV3 = true
                         end
                     else
+                        -- CustomHealth tắt: luôn cố bật V3
                         shouldV3 = true
                     end
                     if shouldV3 and not alreadyTransformed then
@@ -1019,8 +1023,10 @@ spawn(function()
 end)
 
 -- =============================================
--- AIM: LUÔN QUAY MẶT VỀ TARGET
+-- NÂNG CẤP AIM CHO TẤT CẢ SKILL (MELEE, SWORD, GUN, FRUIT)
 -- =============================================
+
+-- Auto-rotate: luôn quay mặt về phía target
 spawn(function()
     while task.wait() do
         pcall(function()
@@ -1034,80 +1040,7 @@ spawn(function()
     end
 end)
 
--- =============================================
--- VÒNG LẶP CHÍNH: CHỈ DÙNG M1 BLOX FRUIT
--- =============================================
-spawn(function()
-    while task.wait() do
-        if not getgenv().targ or not getgenv().targ.Character then
-            getgenv().target()
-        end
-        if not getgenv().targ then
-            getgenv().hopserver = true
-        end
-        pcall(function()
-            if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
-               lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                local dist = (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
-                
-                -- Khoảng cách lý tưởng cho Blox Fruit M1
-                local idealDistance = 25
-                
-                -- Di chuyển đến vị trí thích hợp
-                if dist > idealDistance + 5 then
-                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
-                    local direction = (targetPos - lp.Character.HumanoidRootPart.Position).Unit
-                    local goalPos = targetPos - direction * idealDistance
-                    to(CFrame.new(goalPos))
-                elseif dist < idealDistance - 5 then
-                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
-                    local direction = (lp.Character.HumanoidRootPart.Position - targetPos).Unit
-                    local goalPos = targetPos + direction * idealDistance
-                    to(CFrame.new(goalPos))
-                end
-                
-                -- Khi ở trong khoảng cách, CHỈ CLICK M1
-                if dist < 40 then
-                    spawn(function()
-                        pcall(function()
-                            -- Đảm bảo đang equip Blox Fruit
-                            local hasFruit = false
-                            for _, v in pairs(lp.Character:GetChildren()) do
-                                if v:IsA("Tool") and v.ToolTip == "Blox Fruit" then
-                                    hasFruit = true
-                                    break
-                                end
-                            end
-                            
-                            -- Nếu chưa equip fruit, lấy từ backpack
-                            if not hasFruit and CFG.Fruit and CFG.Fruit.Enable then
-                                for _, v in pairs(lp.Backpack:GetChildren()) do
-                                    if v:IsA("Tool") and v.ToolTip == "Blox Fruit" then
-                                        v.Parent = lp.Character
-                                        break
-                                    end
-                                end
-                            end
-                            
-                            -- CLICK M1 LIÊN TỤC
-                            clickM1()
-                            task.wait(0.15) -- Delay giữa các M1
-                        end)
-                        
-                        -- Kiểm tra safezone
-                        if CheckSafeZone(getgenv().targ.Character.HumanoidRootPart) or 
-                           (lp.PlayerGui.Main and lp.PlayerGui.Main["[OLD]SafeZone"] and lp.PlayerGui.Main["[OLD]SafeZone"].Visible) or 
-                           getgenv().targ.Character.Humanoid.Sit == true then
-                            SkipPlayer()
-                        end
-                    end)
-                end
-            end
-        end)
-    end
-end)
-
--- Hook namecall để sửa vị trí skill (giữ nguyên nhưng không dùng skill)
+-- Hook mở rộng: bắt tất cả các remote liên quan đến tấn công và sửa vị trí thành vị trí của target
 local oldNamecall
 pcall(function()
     local mt = getrawmetatable(game)
@@ -1118,21 +1051,26 @@ pcall(function()
         local method = getnamecallmethod()
         local args = {...}
 
+        -- Nếu là FireServer và có target, thử sửa vị trí
         if method == "FireServer" and getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") then
+            -- Danh sách các remote thường chứa vị trí (có thể mở rộng)
             local remoteNames = {
                 "UpdateMousePos", "MousePos", "Click", "LeftClick", "RightClick",
                 "Activate", "Deactivate", "Skill", "SkillActivate", "Ability",
-                "Z", "X", "C", "V", "F",
+                "Z", "X", "C", "V", "F", -- các phím skill
                 "RemoteEvent", "RemoteFunction"
             }
             local remoteName = tostring(self)
             for _, name in ipairs(remoteNames) do
                 if remoteName:find(name) then
+                    -- Thử tìm argument là Vector3 và thay bằng vị trí target
                     for i = 1, #args do
                         if type(args[i]) == "Vector3" then
                             args[i] = getgenv().targ.Character.HumanoidRootPart.Position
                         elseif type(args[i]) == "CFrame" then
                             args[i] = CFrame.new(getgenv().targ.Character.HumanoidRootPart.Position) * (args[i] - args[i].Position)
+                        elseif type(args[i]) == "table" then
+                            -- Có thể đệ quy nếu cần, nhưng tạm thời bỏ qua
                         end
                     end
                     break
@@ -1145,11 +1083,157 @@ pcall(function()
     setreadonly(mt, true)
 end)
 
--- =============================================
--- CÁC PHẦN CÒN LẠI (GIỮ NGUYÊN)
--- =============================================
+-- Điều chỉnh vị trí đứng dựa trên loại vũ khí (cải thiện aim)
+-- Thêm vào trong vòng lặp chính (phần di chuyển đến target)
+-- Đoạn này sẽ thay thế cách tính CFrame trong phần "to" hiện tại? Không, ta sẽ chỉnh sửa trong vòng lặp chính dưới đây.
 
--- Safe Health
+-- Vòng lặp chính: di chuyển và sử dụng kỹ năng (đã được sửa để có vị trí đứng thông minh hơn)
+spawn(function()
+    while task.wait() do
+        if not getgenv().targ or not getgenv().targ.Character then
+            getgenv().target()
+        end
+        if not getgenv().targ then
+            getgenv().hopserver = true
+        end
+        pcall(function()
+            if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
+               lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                local weaponType = getgenv().weapon or "Melee" -- mặc định nếu chưa có
+
+                -- Xác định khoảng cách lý tưởng dựa trên vũ khí
+                local idealDistance = 3 -- melee
+                if weaponType == "Gun" then
+                    idealDistance = 10
+                elseif weaponType == "Blox Fruit" then
+                    idealDistance = 8
+                elseif weaponType == "Sword" then
+                    idealDistance = 3
+                end
+
+                -- Nếu khoảng cách quá xa, di chuyển đến vị trí lý tưởng
+                if dist > idealDistance + 5 then
+                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
+                    local direction = (targetPos - lp.Character.HumanoidRootPart.Position).Unit
+                    local goalPos = targetPos - direction * idealDistance
+                    to(CFrame.new(goalPos))
+                elseif dist < idealDistance - 5 then
+                    -- Nếu quá gần, lùi ra
+                    local targetPos = getgenv().targ.Character.HumanoidRootPart.Position
+                    local direction = (lp.Character.HumanoidRootPart.Position - targetPos).Unit
+                    local goalPos = targetPos + direction * idealDistance
+                    to(CFrame.new(goalPos))
+                end
+
+                -- Sau khi đã ở vị trí tốt, tiếp tục xử lý kỹ năng như cũ
+                if dist < 40 then
+                    spawn(function()
+                        if not gunmethod then
+                            pcall(function() EquipWeapon("Summon Sea Beast") end)
+                            equip(getgenv().weapon)
+                            for _, v in pairs(lp.Character:GetChildren()) do
+                                if v:IsA("Tool") then
+                                    if v.ToolTip == "Melee" then
+                                        if CFG.Melee and CFG.Melee.Enable then
+                                            if lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("Z") and lp.PlayerGui.Main.Skills[v.Name].Z.Cooldown.AbsoluteSize.X <= 0 and CFG.Melee.Z and CFG.Melee.Z.Enable then
+                                                down("Z", CFG.Melee.Z.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("X") and lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and CFG.Melee.X and CFG.Melee.X.Enable then
+                                                down("X", CFG.Melee.X.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("C") and lp.PlayerGui.Main.Skills[v.Name].C.Cooldown.AbsoluteSize.X <= 0 and CFG.Melee.C and CFG.Melee.C.Enable then
+                                                down("C", CFG.Melee.C.HoldTime or 0.1)
+                                            elseif CFG.Melee.V and CFG.Melee.V.Enable and lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("V") and lp.PlayerGui.Main.Skills[v.Name].V.Cooldown.AbsoluteSize.X <= 0 then
+                                                down("V", CFG.Melee.V.HoldTime or 0.1)
+                                            end
+                                        end
+                                    elseif v.ToolTip == "Gun" then
+                                        if CFG.Gun and CFG.Gun.Enable then
+                                            if lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("Z") and lp.PlayerGui.Main.Skills[v.Name].Z.Cooldown.AbsoluteSize.X <= 0 and CFG.Gun.Z and CFG.Gun.Z.Enable then
+                                                down("Z", CFG.Gun.Z.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("X") and lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and CFG.Gun.X and CFG.Gun.X.Enable then
+                                                down("X", CFG.Gun.X.HoldTime or 0.1)
+                                            end
+                                        end
+                                    elseif v.ToolTip == "Sword" then
+                                        if CFG.Sword and CFG.Sword.Enable then
+                                            if lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("Z") and lp.PlayerGui.Main.Skills[v.Name].Z.Cooldown.AbsoluteSize.X <= 0 and CFG.Sword.Z and CFG.Sword.Z.Enable then
+                                                down("Z", CFG.Sword.Z.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("X") and lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and CFG.Sword.X and CFG.Sword.X.Enable then
+                                                down("X", CFG.Sword.X.HoldTime or 0.1)
+                                            end
+                                        end
+                                    elseif v.ToolTip == "Blox Fruit" then
+                                        if CFG.Fruit and CFG.Fruit.Enable then
+                                            if lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("Z") and lp.PlayerGui.Main.Skills[v.Name].Z.Cooldown.AbsoluteSize.X <= 0 and CFG.Fruit.Z and CFG.Fruit.Z.Enable then
+                                                down("Z", CFG.Fruit.Z.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("X") and lp.PlayerGui.Main.Skills[v.Name].X.Cooldown.AbsoluteSize.X <= 0 and CFG.Fruit.X and CFG.Fruit.X.Enable then
+                                                down("X", CFG.Fruit.X.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("C") and lp.PlayerGui.Main.Skills[v.Name].C.Cooldown.AbsoluteSize.X <= 0 and CFG.Fruit.C and CFG.Fruit.C.Enable then
+                                                down("C", CFG.Fruit.C.HoldTime or 0.1)
+                                            elseif lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("V") and lp.PlayerGui.Main.Skills[v.Name].V.Cooldown.AbsoluteSize.X <= 0 and CFG.Fruit.V and CFG.Fruit.V.Enable then
+                                                down("V", CFG.Fruit.V.HoldTime or 0.1)
+                                            elseif CFG.Fruit.F and CFG.Fruit.F.Enable and lp.PlayerGui.Main.Skills[v.Name]:FindFirstChild("F") and lp.PlayerGui.Main.Skills[v.Name].F.Cooldown.AbsoluteSize.X <= 0 then
+                                                down("F", CFG.Fruit.F.HoldTime or 0.1)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        else
+                            if CFG.Melee and CFG.Melee.Enable then
+                                if CFG.Melee.Z and CFG.Melee.Z.Enable then
+                                    down("Z", CFG.Melee.Z.HoldTime or 0.1)
+                                elseif CFG.Melee.X and CFG.Melee.X.Enable then
+                                    down("X", CFG.Melee.X.HoldTime or 0.1)
+                                elseif CFG.Melee.C and CFG.Melee.C.Enable then
+                                    down("C", CFG.Melee.C.HoldTime or 0.1)
+                                elseif CFG.Melee.V and CFG.Melee.V.Enable then
+                                    down("V", CFG.Melee.V.HoldTime or 0.1)
+                                end
+                            end
+                        end
+
+                        -- Kiểm tra safezone
+                        if CheckSafeZone(getgenv().targ.Character.HumanoidRootPart) or (lp.PlayerGui.Main and lp.PlayerGui.Main["[OLD]SafeZone"] and lp.PlayerGui.Main["[OLD]SafeZone"].Visible) or getgenv().targ.Character.Humanoid.Sit == true then
+                            SkipPlayer()
+                        end
+
+                        -- Kiểm tra thông báo notifications
+                        for _, v in pairs(lp.PlayerGui.Notifications:GetChildren()) do
+                            if v:IsA("TextLabel") then
+                                local text = string.lower(v.Text)
+                                local combatSkipKeywords = {
+                                    "player died recently",
+                                    "you can't attack them yet",
+                                    "cannot attack",
+                                    "nguoi choi vua tu tran",
+                                    "người chơi vừa tử trận",
+                                    "died recently",
+                                    "can't attack them",
+                                    "cannot attack this player",
+                                    "skill locked",
+                                }
+                                for _, keyword in pairs(combatSkipKeywords) do
+                                    if string.find(text, keyword) then
+                                        print("🎯 PHÁT HIỆN THÔNG BÁO CẦN SKIP:", string.sub(v.Text, 1, 60))
+                                        SkipPlayer()
+                                        pcall(function() v:Destroy() end)
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+end)
+
+-- (Phần còn lại giữ nguyên: safe health, aim, namecall hook cũ, webhook...)
+-- =============================================
+-- SAFE HEALTH
+-- =============================================
 local function getHealthPct()
     local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
     if not hum or hum.MaxHealth <= 0 then return 1 end
@@ -1193,9 +1277,33 @@ spawn(function()
             print("💚 [SafeHealth] Máu đã hồi, tiếp tục hunt!")
         else
             safehealth = false
+            -- không cần làm gì thêm, phần còn lại đã xử lý trong vòng lặp chính
         end
     end
 end)
+
+-- Hook namecall cũ (giữ lại nhưng có thể không cần vì đã có hook mới, nhưng để an toàn ta giữ)
+local aim = false
+local CFrameHunt
+
+spawn(function()
+    while task.wait() do
+        if getgenv().targ and getgenv().targ.Character and
+           lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and
+           (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude < 40 then
+            aim = true
+            if (CFG.Gun and CFG.Gun.Enable and CFG.Gun.GunMode) then
+                CFrameHunt = CFrame.new(getgenv().targ.Character.HumanoidRootPart.Position + getgenv().targ.Character.HumanoidRootPart.CFrame.LookVector * 2, getgenv().targ.Character.HumanoidRootPart.Position)
+            else
+                CFrameHunt = CFrame.new(getgenv().targ.Character.HumanoidRootPart.Position + getgenv().targ.Character.HumanoidRootPart.CFrame.LookVector * 5, getgenv().targ.Character.HumanoidRootPart.Position)
+            end
+        else
+            aim = false
+        end
+    end
+end)
+
+-- (Hook namecall đã được xử lý đầy đủ ở trên, không hook lại lần 2)
 
 -- Xử lý lỗi prompt
 CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
