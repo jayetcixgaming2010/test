@@ -200,7 +200,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.3
 MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-MainFrame.Size = UDim2.new(0, 400, 0, 300)
+MainFrame.Size = UDim2.new(0, 400, 0, 320)
 MainFrame.Visible = true
 MainFrame.ClipsDescendants = true
 
@@ -293,7 +293,7 @@ local function CreateBtn(text, xPos)
     local btn = Instance.new("TextButton", MainFrame)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     btn.BackgroundTransparency = 0.9
-    btn.Position = UDim2.new(xPos, 0, 0.83, 0)
+    btn.Position = UDim2.new(xPos, 0, 0.84, 0)
     btn.Size = UDim2.new(0.4, 0, 0, 40)
     btn.Font = Enum.Font.RobotoMono
     btn.Text = text
@@ -1436,12 +1436,26 @@ local DEFAULT_WEAPON_CFG = { idealDist = 10, skillRange = 20 }
 local lastSkillTime  = 0
 local SKILL_INTERVAL = 0.15  -- giây giữa mỗi lần bấm skill
 
+-- Delay khởi động: chờ game load data xong mới bắt đầu hunt
+local STARTUP_DELAY  = 8     -- giây chờ sau khi load script
+local startupDone    = false
+
+spawn(function()
+    task.wait(STARTUP_DELAY)
+    startupDone = true
+    print("[Main] Startup delay xong, bat dau hunt!")
+    pcall(function() getgenv().target() end)
+end)
+
 spawn(function()
     while task.wait(0.05) do
+        if not startupDone then continue end
+
         if not getgenv().targ or not getgenv().targ.Character then
             getgenv().target()
         end
-        if not getgenv().targ then
+        -- Chi hop neu target() da chay xong ma van nil, va chua hop
+        if not getgenv().targ and not getgenv().hopserver and not isHopping then
             getgenv().hopserver = true
         end
 
@@ -1729,8 +1743,8 @@ end
 local ESPBtn = Instance.new("TextButton", MainFrame)
 ESPBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 ESPBtn.BackgroundTransparency = 0.9
-ESPBtn.Position = UDim2.new(0.07, 0, 0.71, 0)
-ESPBtn.Size = UDim2.new(0.86, 0, 0, 30)
+ESPBtn.Position = UDim2.new(0.07, 0, 0.68, 0)
+ESPBtn.Size = UDim2.new(0.86, 0, 0, 26)
 ESPBtn.Font = Enum.Font.RobotoMono
 ESPBtn.Text = "ESP: ON"
 ESPBtn.TextColor3 = Color3.fromRGB(80, 220, 80)
