@@ -50,15 +50,63 @@ getgenv().dangerBlacklist = {}
 getgenv().ServerBlacklist = getgenv().ServerBlacklist or {}
 
 -- =============================================
--- AUTO CONFIRM TELEPORT POPUP
+-- AUTO CONFIRM TELEPORT POPUP + XỬ LÝ SERVER ĐẦY
 -- =============================================
 spawn(function()
+    local FULL_KEYWORDS = {
+        "server is full", "this place is full", "no available servers",
+        "server full", "place is full", "không có chỗ", "máy chủ đầy",
+        "filled", "capacity"
+    }
+
+    local function isServerFullMsg(gui)
+        if not gui then return false end
+        for _, lbl in pairs(gui:GetDescendants()) do
+            if lbl:IsA("TextLabel") or lbl:IsA("TextButton") then
+                local t = string.lower(lbl.Text or "")
+                for _, kw in ipairs(FULL_KEYWORDS) do
+                    if string.find(t, kw) then return true end
+                end
+            end
+        end
+        return false
+    end
+
     local function autoConfirmTeleport(gui)
         if not gui then return end
+
+        -- Nếu là thông báo server đầy → đóng popup và thử server khác
+        if isServerFullMsg(gui) then
+            print("⚠️ [AutoConfirm] Server đầy! Thử server khác...")
+            -- Bấm nút đóng/ok trước
+            for _, btn in pairs(gui:GetDescendants()) do
+                if btn:IsA("TextButton") or btn:IsA("ImageButton") then
+                    local t = string.lower(btn.Text or "")
+                    if t == "ok" or t == "close" or t == "dismiss" or t == "" then
+                        pcall(function() btn:activate() end)
+                        pcall(function() btn.MouseButton1Click:Fire() end)
+                    end
+                end
+            end
+            -- Thêm server hiện tại vào blacklist và hop lại sau 2 giây
+            task.delay(2, function()
+                if getgenv().HopServer then
+                    getgenv().hopserver  = false  -- reset để không loop
+                    isHopping            = false   -- reset lock
+                    lastHopTime          = 0       -- reset cooldown
+                    print("🔄 [AutoConfirm] Hop lại sang server khác...")
+                    getgenv().HopServer()
+                end
+            end)
+            return
+        end
+
+        -- Confirm bình thường (teleport popup)
         for _, btn in pairs(gui:GetDescendants()) do
             if btn:IsA("TextButton") or btn:IsA("ImageButton") then
                 local t = string.lower(btn.Text or "")
-                if t == "ok" or t == "yes" or t == "teleport" or t == "confirm" or t == "leave" then
+                if t == "ok" or t == "yes" or t == "teleport"
+                   or t == "confirm" or t == "leave" then
                     pcall(function() btn:activate() end)
                     pcall(function() btn.MouseButton1Click:Fire() end)
                 end
@@ -71,7 +119,7 @@ spawn(function()
         local overlay = promptGui:FindFirstChild("promptOverlay")
         if overlay then
             overlay.ChildAdded:Connect(function(child)
-                task.wait(0.1)
+                task.wait(0.15)
                 autoConfirmTeleport(overlay)
             end)
             autoConfirmTeleport(overlay)
@@ -262,18 +310,18 @@ local SkipBtn = CreateBtn("SKIP PLAYER", 0.07)
 local HopBtn  = CreateBtn("HOP SERVER", 0.53)
 
 HopBtn.MouseButton1Click:Connect(function()
+    if isHopping then
+        print("⏳ Đang hop, vui lòng chờ...")
+        return
+    end
     HopBtn.Text = "HOPPING..."
-    getgenv().hopserver = true
-    getgenv().autoHopLoop = true
+    getgenv().hopserver  = true
+    getgenv().autoHopLoop = false  -- không loop vô tận
     spawn(function()
-        while getgenv().autoHopLoop do
-            if getgenv().HopServer then
-                pcall(function() getgenv().HopServer() end)
-            end
-            task.wait(3)
-        end
+        HopServer()
+        task.wait(3)
+        HopBtn.Text = "HOP SERVER"
     end)
-    task.delay(3, function() HopBtn.Text = "HOP SERVER" end)
 end)
 
 SkipBtn.MouseButton1Click:Connect(function()
@@ -718,44 +766,64 @@ local function getNextPosition(center)
     return center + Vector3.new(math.sin(math.rad(angle)) * radius, yTween, math.cos(math.rad(angle)) * radius)
 end
 
-local starthop = false
+local starthop      = false
+local isHopping     = false   -- khóa, tránh hop đồng thời nhiều lần
+local lastHopTime   = 0
+local HOP_COOLDOWN  = 8       -- giây tối thiểu giữa 2 lần hop
 
-spawn(function()
-    while task.wait() do
-        if getgenv().hopserver then
-            stopbypass = true
-            starthop   = true
+-- =============================================
+-- HÀM LẤY DANH SÁCH SERVER HỢP LỆ (không đầy, không blacklist)
+-- =============================================
+local function fetchValidServer()
+    local url  = string.format("https://games.roblox.com/v1/games/%d/servers/Public?limit=100", game.PlaceId)
+    local ok, raw = pcall(function() return game:HttpGet(url) end)
+    if not ok or not raw then return nil end
+
+    local ok2, data = pcall(function() return HttpService:JSONDecode(raw) end)
+    if not ok2 or not data or not data.data then return nil end
+
+    local maxCfg = CFG.Another and CFG.Another.MaxPlayersInServer or 8
+
+    -- Hàm check blacklist
+    local function isBlacklisted(id)
+        for _, b in ipairs(getgenv().ServerBlacklist) do
+            if b == id then return true end
+        end
+        return false
+    end
+
+    -- Ưu tiên 1: server có người, còn chỗ rộng (playing < maxPlayers - 3), không blacklist
+    for _, s in ipairs(data.data) do
+        if s.id and s.playing and s.maxPlayers
+           and s.playing >= 2                      -- có ít nhất 2 người (không vào server trống)
+           and s.playing <= maxCfg                 -- không quá đông theo config
+           and s.playing < s.maxPlayers - 2        -- còn ít nhất 3 slot trống (tránh bị reject)
+           and not isBlacklisted(s.id) then
+            return s
         end
     end
-end)
 
-spawn(function()
-    while task.wait() do
-        if starthop then
-            local inCombat = pcall(function()
-                return lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and
-                       lp.PlayerGui.Main:FindFirstChild("BottomHUDList") and
-                       lp.PlayerGui.Main.BottomHUDList:FindFirstChild("InCombat") and
-                       lp.PlayerGui.Main.BottomHUDList.InCombat.Visible and
-                       string.find(string.lower(lp.PlayerGui.Main.BottomHUDList.InCombat.Text), "risk")
-            end)
-            if inCombat then
-                repeat
-                    task.wait()
-                    if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                        to(lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, math.random(500, 2000), 0))
-                    end
-                until not (lp.PlayerGui and lp.PlayerGui:FindFirstChild("Main") and
-                           lp.PlayerGui.Main:FindFirstChild("BottomHUDList") and
-                           lp.PlayerGui.Main.BottomHUDList:FindFirstChild("InCombat") and
-                           lp.PlayerGui.Main.BottomHUDList.InCombat.Visible and
-                           string.find(string.lower(lp.PlayerGui.Main.BottomHUDList.InCombat.Text), "risk"))
-            end
-            starthop = false
-            HopServer()
+    -- Ưu tiên 2: server còn ít nhất 1 slot, không blacklist
+    for _, s in ipairs(data.data) do
+        if s.id and s.playing and s.maxPlayers
+           and s.playing < s.maxPlayers - 1        -- còn ít nhất 2 slot
+           and not isBlacklisted(s.id) then
+            return s
         end
     end
-end)
+
+    -- Fallback: bất kỳ server nào không đầy và không blacklist
+    for _, s in ipairs(data.data) do
+        if s.id and s.playing and s.maxPlayers
+           and s.playing < s.maxPlayers             -- không đầy
+           and not isBlacklisted(s.id) then
+            return s
+        end
+    end
+
+    -- Không có server nào phù hợp → trả nil, sẽ dùng Teleport thường
+    return nil
+end
 
 function CheckInComBat()
     local ok, result = pcall(function()
@@ -767,53 +835,96 @@ function CheckInComBat()
 end
 
 function HopServer()
-    local S = game.JobId
-    table.insert(getgenv().ServerBlacklist, S)
-    local T, U = pcall(function()
-        local V = HttpService
-        local W = TeleportService
-        local X = string.format("https://games.roblox.com/v1/games/%d/servers/Public?limit=100", game.PlaceId)
-        local Y = V:JSONDecode(game:HttpGet(X))
-        local Z = nil
-        for _, _0 in ipairs(Y.data) do
-            if _0.playing and _0.maxPlayers and _0.playing > 5 and _0.playing < _0.maxPlayers - 2 then
-                local _1, _2 = _0.id, false
-                for _, _3 in ipairs(getgenv().ServerBlacklist) do
-                    if _3 == _1 then _2 = true break end
-                end
-                if not _2 then Z = _0 break end
-            end
+    -- Chống hop đồng thời và hop quá nhanh
+    if isHopping then
+        print("⏳ [HopServer] Đang hop, bỏ qua yêu cầu trùng")
+        return
+    end
+    local now = tick()
+    if now - lastHopTime < HOP_COOLDOWN then
+        print(string.format("⏳ [HopServer] Cooldown còn %.1fs", HOP_COOLDOWN - (now - lastHopTime)))
+        return
+    end
+
+    isHopping   = true
+    lastHopTime = now
+
+    -- Đánh dấu server hiện tại vào blacklist
+    local curJob = game.JobId
+    if curJob and curJob ~= "" then
+        table.insert(getgenv().ServerBlacklist, curJob)
+    end
+
+    print("🔄 [HopServer] Đang tìm server...")
+
+    local server = fetchValidServer()
+
+    if server and server.id then
+        print("✅ [HopServer] Tìm thấy server: " .. server.id
+              .. " (" .. tostring(server.playing) .. "/" .. tostring(server.maxPlayers) .. " người)")
+        local ok, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id)
+        end)
+        if not ok then
+            print("❌ [HopServer] TeleportToPlaceInstance lỗi: " .. tostring(err))
+            task.wait(2)
+            pcall(function() TeleportService:Teleport(game.PlaceId) end)
         end
-        if not Z then
-            for _, _0 in ipairs(Y.data) do
-                if _0.playing and _0.maxPlayers and _0.playing > 10 and _0.playing < _0.maxPlayers then
-                    local _1, _2 = _0.id, false
-                    for _, _3 in ipairs(getgenv().ServerBlacklist) do
-                        if _3 == _1 then _2 = true break end
-                    end
-                    if not _2 then Z = _0 break end
-                end
-            end
-        end
-        if not Z and #Y.data > 0 then
-            for _, _0 in ipairs(Y.data) do
-                local _1, _2 = _0.id, false
-                for _, _3 in ipairs(getgenv().ServerBlacklist) do
-                    if _3 == _1 then _2 = true break end
-                end
-                if not _2 then Z = _0 break end
-            end
-        end
-        if not Z and #Y.data > 0 then Z = Y.data[1] end
-        if Z and Z.id then
-            W:TeleportToPlaceInstance(game.PlaceId, Z.id)
-        else
-            W:Teleport(game.PlaceId)
-        end
+    else
+        print("⚠️ [HopServer] Không tìm thấy server phù hợp → teleport ngẫu nhiên")
+        pcall(function() TeleportService:Teleport(game.PlaceId) end)
+    end
+
+    -- Nếu vẫn còn trong game sau 10 giây (teleport bị reject), reset lock
+    task.delay(10, function()
+        isHopping = false
+        print("🔓 [HopServer] Reset hop lock")
     end)
-    if not T or U then TeleportService:Teleport(game.PlaceId) end
 end
 getgenv().HopServer = HopServer
+
+-- =============================================
+-- VÒNG LẶP HOP (chờ hết combat rồi mới hop)
+-- =============================================
+spawn(function()
+    while task.wait() do
+        if getgenv().hopserver then
+            stopbypass = true
+            starthop   = true
+        end
+    end
+end)
+
+spawn(function()
+    while task.wait(0.5) do
+        if starthop and not isHopping then
+            -- Chờ hết combat tag trước khi hop
+            if CheckInComBat() then
+                print("⚔️ [HopServer] Đang combat, chờ hết tag...")
+                local waitCount = 0
+                repeat
+                    task.wait(1)
+                    waitCount = waitCount + 1
+                    -- Bay lên tránh bị chết trong lúc chờ
+                    pcall(function()
+                        if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                            lp.Character.HumanoidRootPart.CFrame =
+                                lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 500, 0)
+                        end
+                    end)
+                    -- Timeout 30 giây, không chờ mãi
+                    if waitCount >= 30 then
+                        print("⏰ [HopServer] Timeout chờ combat, hop luôn!")
+                        break
+                    end
+                until not CheckInComBat()
+            end
+            starthop = false
+            getgenv().hopserver = false
+            HopServer()
+        end
+    end
+end)
 
 local skipping = false
 function SkipPlayer()
@@ -872,53 +983,129 @@ local function isLowHealth()
 end
 
 -- =============================================
--- isValidBountyTarget (ĐÃ FIX: thêm NoHaki + NoPvP)
+-- DEBUG: bật/tắt log chi tiết tại đây
+-- =============================================
+local DEBUG_TARGET = true   -- true = in lý do reject mỗi player ra console
+
+local function debugLog(name, reason)
+    if DEBUG_TARGET then
+        print(string.format("  ❌ [%s] → %s", name, reason))
+    end
+end
+
+-- =============================================
+-- isValidBountyTarget (có debug log)
 -- =============================================
 local function isValidBountyTarget(v)
     if not v or v == lp then return false end
-    if not v.Character or not v.Character:FindFirstChild("HumanoidRootPart") then return false end
-    if not v:FindFirstChild("Data") or not v.Data:FindFirstChild("Level") then return false end
-    if not v:FindFirstChild("leaderstats") or not v.leaderstats:FindFirstChild("Bounty/Honor") then return false end
+
+    local name = v.Name
+
+    if not v.Character or not v.Character:FindFirstChild("HumanoidRootPart") then
+        debugLog(name, "Không có Character/HumanoidRootPart")
+        return false
+    end
+    if not v:FindFirstChild("Data") or not v.Data:FindFirstChild("Level") then
+        debugLog(name, "Không có Data/Level")
+        return false
+    end
+    if not v:FindFirstChild("leaderstats") or not v.leaderstats:FindFirstChild("Bounty/Honor") then
+        debugLog(name, "Không có leaderstats/Bounty")
+        return false
+    end
 
     local bounty = v.leaderstats["Bounty/Honor"].Value
-    if bounty < (CFG.Hunt and CFG.Hunt.Min or 0) or bounty > (CFG.Hunt and CFG.Hunt.Max or 1e9) then return false end
+    local minB   = CFG.Hunt and CFG.Hunt.Min or 0
+    local maxB   = CFG.Hunt and CFG.Hunt.Max or 1e9
+    if bounty < minB then
+        debugLog(name, string.format("Bounty quá thấp: %d < Min(%d)", bounty, minB))
+        return false
+    end
+    if bounty > maxB then
+        debugLog(name, string.format("Bounty quá cao: %d > Max(%d)", bounty, maxB))
+        return false
+    end
 
     if lp.Data and lp.Data.Level then
-        if (tonumber(lp.Data.Level.Value) - 250) >= v.Data.Level.Value then return false end
+        local myLv   = tonumber(lp.Data.Level.Value) or 0
+        local targLv = v.Data.Level.Value or 0
+        if (myLv - 250) >= targLv then
+            debugLog(name, string.format("Level quá thấp: target Lv%d, mình Lv%d (gap > 250)", targLv, myLv))
+            return false
+        end
     end
 
-    if v.Team == nil then return false end
-    if not (tostring(lp.Team) == (CFG.Team or "") or
-           (tostring(v.Team) == (CFG.Team or "") and tostring(lp.Team) ~= (CFG.Team or ""))) then return false end
+    if v.Team == nil then
+        debugLog(name, "Team = nil")
+        return false
+    end
+    local myTeam   = tostring(lp.Team)
+    local targTeam = tostring(v.Team)
+    local cfgTeam  = CFG.Team or ""
+    local validEnemy = (myTeam == cfgTeam and targTeam ~= cfgTeam)
+                    or (myTeam ~= cfgTeam and targTeam == cfgTeam)
+    if not validEnemy then
+        debugLog(name, string.format("Team không hợp lệ: myTeam=%s targTeam=%s cfgTeam=%s", myTeam, targTeam, cfgTeam))
+        return false
+    end
 
-    if CFG.Skip and CFG.Skip.Fruit and hasValue(CFG.Skip.FruitList, v.Data.DevilFruit and v.Data.DevilFruit.Value or "") then return false end
-    if CFG.Skip and CFG.Skip.RaceV4 and v.Character:FindFirstChild("RaceTransformed") then return false end
-    if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then return false end
+    if CFG.Skip and CFG.Skip.Fruit then
+        local fruit = v.Data.DevilFruit and v.Data.DevilFruit.Value or ""
+        if hasValue(CFG.Skip.FruitList, fruit) then
+            debugLog(name, "Fruit bị skip: " .. fruit)
+            return false
+        end
+    end
+
+    if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then
+        debugLog(name, "Đang dùng Race V4")
+        return false
+    end
+
     if CFG.Skip and CFG.Skip.SafeZone then
-        if CheckSafeZone(v.Character.HumanoidRootPart) then return false end
+        if CheckSafeZone(v.Character.HumanoidRootPart) then
+            debugLog(name, "Trong SafeZone")
+            return false
+        end
     end
 
-    -- FIX: NoHaki - bỏ qua target chưa có Haki
     if CFG.Skip and CFG.Skip.NoHaki then
         local hasHaki = v.Character:FindFirstChild("HasBuso") or v.Character:FindFirstChild("HasKen")
-        if not hasHaki then return false end
+        if not hasHaki then
+            debugLog(name, "Không có Haki (NoHaki=true)")
+            return false
+        end
     end
 
-    -- FIX: NoPvP - bỏ qua target chưa bật PvP
     if CFG.Skip and CFG.Skip.NoPvP then
         local pvpOn = v:FindFirstChild("Data") and v.Data:FindFirstChild("PvP") and v.Data.PvP.Value == true
-        if not pvpOn then return false end
+        if not pvpOn then
+            debugLog(name, "Chưa bật PvP (NoPvP=true)")
+            return false
+        end
     end
 
-    if getgenv().dangerBlacklist[v.Name] then return false end
-    if hasValue(getgenv().checked, v) then return false end
-    if v.Character.HumanoidRootPart.CFrame.Y > 12000 then return false end
+    if getgenv().dangerBlacklist[name] then
+        debugLog(name, "Trong DangerBlacklist")
+        return false
+    end
+
+    if hasValue(getgenv().checked, v) then
+        debugLog(name, "Đã trong danh sách checked (đã đánh/skip rồi)")
+        return false
+    end
+
+    local yPos = v.Character.HumanoidRootPart.CFrame.Y
+    if yPos > 12000 then
+        debugLog(name, string.format("Bay quá cao: Y=%.0f", yPos))
+        return false
+    end
 
     return true
 end
 
 -- =============================================
--- HÀM TÌM TARGET
+-- HÀM TÌM TARGET (có debug log)
 -- =============================================
 function target()
     pcall(function()
@@ -927,9 +1114,29 @@ function target()
         local p = nil
         getgenv().targ = nil
 
-        for _, v in pairs(Players:GetPlayers()) do
+        local allPlayers = Players:GetPlayers()
+
+        if DEBUG_TARGET then
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("🔍 [Target Scan] Quét " .. #allPlayers .. " player trong server:")
+        end
+
+        local totalOthers = 0
+        local totalValid  = 0
+
+        for _, v in pairs(allPlayers) do
+            if v == lp then continue end
+            totalOthers = totalOthers + 1
+
             if isValidBountyTarget(v) then
+                totalValid = totalValid + 1
                 local dist = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                if DEBUG_TARGET then
+                    print(string.format("  ✅ [%s] → HỢP LỆ | dist=%.0f | bounty=%s | lv=%s",
+                        v.Name, dist,
+                        tostring(v.leaderstats and v.leaderstats["Bounty/Honor"] and v.leaderstats["Bounty/Honor"].Value or "?"),
+                        tostring(v.Data and v.Data.Level and v.Data.Level.Value or "?")))
+                end
                 if dist < d and not getgenv().hopserver then
                     p = v
                     d = dist
@@ -944,6 +1151,12 @@ function target()
                     end
                 end
             end
+        end
+
+        if DEBUG_TARGET then
+            print(string.format("📊 Kết quả: %d/%d player hợp lệ | Chọn: %s",
+                totalValid, totalOthers, p and p.Name or "NONE → Sẽ HOP"))
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         end
 
         if p == nil then
@@ -965,22 +1178,24 @@ function target()
                     end
                 end
                 if hasRemaining then
-                    print("⏳ [HopAfterAllPlayers] Còn player đủ điều kiện, chờ...")
+                    print("⏳ [HopAfterAllPlayers] Còn player đủ điều kiện nhưng bị filter khác → chờ, không hop")
                 else
-                    print("✅ [HopAfterAllPlayers] Đã xử lý hết → Hop!")
+                    print("✅ [HopAfterAllPlayers] Không còn ai → Hop!")
                     getgenv().checked = {}
                     HopServer()
                 end
             else
+                print("⚠️ [Target] Không tìm được target → Hop!")
                 HopServer()
             end
         else
-            print("🎯 Target: " .. p.Name)
+            print("🎯 Target đã chọn: " .. p.Name)
         end
         getgenv().targ = p
     end)
 end
 getgenv().target = target
+
 
 -- =============================================
 -- KEN AUTO
@@ -1370,8 +1585,285 @@ spawn(function()
 end)
 
 -- =============================================
--- XỬ LÝ LỖI PROMPT
+-- ESP SYSTEM - Hiện tên, máu, level, khoảng cách cho tất cả player
 -- =============================================
+local ESP = {}
+local ESP_ENABLED = true
+local Camera = Workspace.CurrentCamera
+
+-- Màu sắc theo team
+local function getESPColor(v)
+    if v == lp then return Color3.fromRGB(100, 200, 255) end  -- bản thân: xanh nhạt
+    -- Cùng team với mình
+    if tostring(v.Team) == tostring(lp.Team) then
+        return Color3.fromRGB(80, 220, 80)   -- xanh lá = đồng đội
+    end
+    -- Target hiện tại: đỏ tươi
+    if getgenv().targ and v == getgenv().targ then
+        return Color3.fromRGB(255, 50, 50)
+    end
+    -- Kẻ địch
+    return Color3.fromRGB(255, 180, 30)      -- cam = kẻ địch thường
+end
+
+-- Tạo BillboardGui cho 1 player
+local function createESP(v)
+    if not v or not v.Character then return end
+    if ESP[v.Name] then return end  -- đã có rồi
+
+    local hrp = v.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local bb = Instance.new("BillboardGui")
+    bb.Name             = "DX_ESP_" .. v.Name
+    bb.Adornee          = hrp
+    bb.AlwaysOnTop      = true
+    bb.Size             = UDim2.new(0, 200, 0, 90)
+    bb.StudsOffset      = Vector3.new(0, 3.2, 0)
+    bb.MaxDistance      = 2000
+    bb.ResetOnSpawn     = false
+    bb.Parent           = CoreGui
+
+    -- Frame trong suốt
+    local frame = Instance.new("Frame", bb)
+    frame.BackgroundTransparency = 1
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.Position = UDim2.new(0, 0, 0, 0)
+
+    local function makeLabel(yPos, fontSize)
+        local lbl = Instance.new("TextLabel", frame)
+        lbl.BackgroundTransparency = 1
+        lbl.Size     = UDim2.new(1, 0, 0, fontSize + 4)
+        lbl.Position = UDim2.new(0, 0, 0, yPos)
+        lbl.Font     = Enum.Font.GothamBold
+        lbl.TextSize = fontSize
+        lbl.TextStrokeTransparency = 0.4
+        lbl.TextStrokeColor3      = Color3.fromRGB(0, 0, 0)
+        lbl.TextXAlignment        = Enum.TextXAlignment.Center
+        return lbl
+    end
+
+    local nameLabel  = makeLabel(0,  15)
+    local hpLabel    = makeLabel(18, 13)
+    local lvlLabel   = makeLabel(34, 13)
+    local distLabel  = makeLabel(50, 12)
+    local bountyLabel = makeLabel(64, 11)
+
+    ESP[v.Name] = {
+        bb          = bb,
+        nameLabel   = nameLabel,
+        hpLabel     = hpLabel,
+        lvlLabel    = lvlLabel,
+        distLabel   = distLabel,
+        bountyLabel = bountyLabel,
+        player      = v,
+    }
+end
+
+-- Xóa ESP của 1 player
+local function removeESP(name)
+    if ESP[name] then
+        pcall(function() ESP[name].bb:Destroy() end)
+        ESP[name] = nil
+    end
+end
+
+-- Xóa hết ESP
+local function clearAllESP()
+    for name, data in pairs(ESP) do
+        pcall(function() data.bb:Destroy() end)
+        ESP[name] = nil
+    end
+end
+
+-- Tạo ESP khi player join
+Players.PlayerAdded:Connect(function(v)
+    task.wait(2)
+    pcall(function() createESP(v) end)
+end)
+
+Players.PlayerRemoving:Connect(function(v)
+    removeESP(v.Name)
+end)
+
+-- Tạo ESP ban đầu cho tất cả player hiện có
+task.spawn(function()
+    task.wait(2)
+    for _, v in pairs(Players:GetPlayers()) do
+        pcall(function() createESP(v) end)
+    end
+end)
+
+-- Xử lý respawn: tạo lại ESP khi character mới
+Players.PlayerAdded:Connect(function(v)
+    v.CharacterAdded:Connect(function()
+        task.wait(1)
+        removeESP(v.Name)
+        pcall(function() createESP(v) end)
+    end)
+end)
+for _, v in pairs(Players:GetPlayers()) do
+    v.CharacterAdded:Connect(function()
+        task.wait(1)
+        removeESP(v.Name)
+        pcall(function() createESP(v) end)
+    end)
+end
+
+-- Thanh máu helper
+local function hpBar(current, max)
+    if max <= 0 then return "[???]" end
+    local pct = math.clamp(current / max, 0, 1)
+    local bars = math.floor(pct * 10)
+    return "[" .. string.rep("|", bars) .. string.rep(" ", 10 - bars) .. "]"
+        .. string.format(" %.0f%%", pct * 100)
+end
+
+local function formatNum(n)
+    if n >= 1000000 then return string.format("%.1fM", n/1000000)
+    elseif n >= 1000 then return string.format("%.1fK", n/1000)
+    else return tostring(n) end
+end
+
+-- Nút toggle ESP trong GUI
+local ESPBtn = Instance.new("TextButton", MainFrame)
+ESPBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ESPBtn.BackgroundTransparency = 0.9
+ESPBtn.Position = UDim2.new(0.07, 0, 0.71, 0)
+ESPBtn.Size = UDim2.new(0.86, 0, 0, 30)
+ESPBtn.Font = Enum.Font.RobotoMono
+ESPBtn.Text = "ESP: ON"
+ESPBtn.TextColor3 = Color3.fromRGB(80, 220, 80)
+ESPBtn.TextSize = 15
+Instance.new("UICorner", ESPBtn).CornerRadius = UDim.new(0, 6)
+local espStroke = Instance.new("UIStroke", ESPBtn)
+espStroke.Color = Color3.fromRGB(80, 220, 80)
+espStroke.Thickness = 1.5
+
+ESPBtn.MouseButton1Click:Connect(function()
+    ESP_ENABLED = not ESP_ENABLED
+    if ESP_ENABLED then
+        ESPBtn.Text = "ESP: ON"
+        ESPBtn.TextColor3 = Color3.fromRGB(80, 220, 80)
+        espStroke.Color   = Color3.fromRGB(80, 220, 80)
+    else
+        ESPBtn.Text = "ESP: OFF"
+        ESPBtn.TextColor3 = Color3.fromRGB(200, 60, 60)
+        espStroke.Color   = Color3.fromRGB(200, 60, 60)
+        -- Ẩn tất cả billboard khi tắt
+        for _, data in pairs(ESP) do
+            pcall(function() data.bb.Enabled = false end)
+        end
+    end
+end)
+
+-- Vòng lặp cập nhật ESP (RenderStepped để mượt)
+RunService.RenderStepped:Connect(function()
+    if not ESP_ENABLED then return end
+
+    local myChar = lp.Character
+    local myHRP  = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+    for _, v in pairs(Players:GetPlayers()) do
+        pcall(function()
+            local data = ESP[v.Name]
+
+            -- Tạo ESP nếu chưa có (vd mới respawn)
+            if not data then
+                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    createESP(v)
+                    data = ESP[v.Name]
+                end
+                if not data then return end
+            end
+
+            local char = v.Character
+            local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+            local hum  = char and char:FindFirstChild("Humanoid")
+
+            -- Nếu character không hợp lệ, ẩn
+            if not hrp or not hum then
+                data.bb.Enabled = false
+                return
+            end
+
+            -- Cập nhật adornee nếu character đổi
+            if data.bb.Adornee ~= hrp then
+                data.bb.Adornee = hrp
+            end
+
+            data.bb.Enabled = true
+
+            local color = getESPColor(v)
+
+            -- Khoảng cách
+            local dist = 0
+            if myHRP then
+                dist = math.floor((hrp.Position - myHRP.Position).Magnitude)
+            end
+
+            -- Máu
+            local hp    = math.floor(hum.Health)
+            local maxHp = math.floor(hum.MaxHealth)
+
+            -- Level
+            local level = v:FindFirstChild("Data") and v.Data:FindFirstChild("Level")
+                          and v.Data.Level.Value or "?"
+
+            -- Bounty
+            local bounty = v:FindFirstChild("leaderstats")
+                           and v.leaderstats:FindFirstChild("Bounty/Honor")
+                           and v.leaderstats["Bounty/Honor"].Value or 0
+
+            -- Team tag
+            local teamTag = ""
+            if tostring(v.Team) == tostring(lp.Team) then
+                teamTag = " [ALLY]"
+            elseif v == lp then
+                teamTag = " [YOU]"
+            elseif getgenv().targ and v == getgenv().targ then
+                teamTag = " [TARGET]"
+            end
+
+            -- Màu máu: xanh → vàng → đỏ theo %
+            local hpPct = maxHp > 0 and (hp / maxHp) or 0
+            local hpColor
+            if hpPct > 0.6 then
+                hpColor = Color3.fromRGB(80, 220, 80)
+            elseif hpPct > 0.3 then
+                hpColor = Color3.fromRGB(255, 200, 50)
+            else
+                hpColor = Color3.fromRGB(255, 60, 60)
+            end
+
+            -- Cập nhật labels
+            data.nameLabel.Text      = v.Name .. teamTag
+            data.nameLabel.TextColor3 = color
+
+            data.hpLabel.Text        = hpBar(hp, maxHp) .. "  " .. hp .. "/" .. maxHp
+            data.hpLabel.TextColor3  = hpColor
+
+            data.lvlLabel.Text       = "Lv. " .. tostring(level)
+            data.lvlLabel.TextColor3 = Color3.fromRGB(200, 160, 255)
+
+            data.distLabel.Text      = "📍 " .. tostring(dist) .. " studs"
+            data.distLabel.TextColor3 = dist < 50
+                and Color3.fromRGB(255, 80, 80)
+                or  Color3.fromRGB(200, 200, 200)
+
+            data.bountyLabel.Text    = "💰 " .. formatNum(bounty)
+            data.bountyLabel.TextColor3 = Color3.fromRGB(255, 210, 60)
+        end)
+    end
+
+    -- Dọn ESP của player đã rời game
+    for name, data in pairs(ESP) do
+        if not Players:FindFirstChild(name) then
+            removeESP(name)
+        end
+    end
+end)
+
 CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
     if not getgenv().hopserver and child.Name == 'ErrorPrompt'
        and child:FindFirstChild('MessageArea')
