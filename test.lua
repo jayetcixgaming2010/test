@@ -1,5 +1,5 @@
 -- =============================================
--- DARKNESS X • AUTO BOUNTY (FIXED TARGET & ESP)
+-- DARKNESS X • AUTO BOUNTY (FIXED TARGET & ESP, REMOVED HOP GUI)
 -- =============================================
 -- Yêu cầu: Đặt cấu hình trong getgenv().Setting trước khi chạy
 -- =============================================
@@ -220,7 +220,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.BackgroundTransparency = 0.3
 MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
-MainFrame.Size = UDim2.new(0, 400, 0, 320)
+MainFrame.Size = UDim2.new(0, 400, 0, 280)  -- Giảm chiều cao để bỏ nút Hop
 MainFrame.Visible = true
 MainFrame.ClipsDescendants = true
 
@@ -306,43 +306,23 @@ Title.Font     = Enum.Font.RobotoMono
 local BountyLbl = CreateText("Bounty Earn: 0", 60)
 local ExecLbl   = CreateText("Executor: Check...", 95)
 local TimeLbl   = CreateText("Time Player: 00:00:00", 130)
-local TargetLbl = CreateText("Target: Searching...", 175)
-local DistLbl   = CreateText("Distance: 0m", 210)
+local TargetLbl = CreateText("Target: Searching...", 165)  -- Điều chỉnh vị trí
+local DistLbl   = CreateText("Distance: 0m", 200)
 
-local function CreateBtn(text, xPos)
-    local btn = Instance.new("TextButton", MainFrame)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.9
-    btn.Position = UDim2.new(xPos, 0, 0.84, 0)
-    btn.Size = UDim2.new(0.4, 0, 0, 40)
-    btn.Font = Enum.Font.RobotoMono
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 16
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(255, 255, 255)
-    stroke.Thickness = 1.5
-    return btn
-end
-
-local SkipBtn = CreateBtn("SKIP PLAYER", 0.07)
-local HopBtn  = CreateBtn("HOP SERVER", 0.53)
-
-HopBtn.MouseButton1Click:Connect(function()
-    if isHopping then
-        print("⏳ Đang hop, vui lòng chờ...")
-        return
-    end
-    HopBtn.Text = "HOPPING..."
-    getgenv().hopserver = true
-    getgenv().autoHopLoop = false
-    spawn(function()
-        HopServer()
-        task.wait(3)
-        HopBtn.Text = "HOP SERVER"
-    end)
-end)
+-- Chỉ giữ lại nút Skip Player, bỏ nút Hop Server
+local SkipBtn = Instance.new("TextButton", MainFrame)
+SkipBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SkipBtn.BackgroundTransparency = 0.9
+SkipBtn.Position = UDim2.new(0.07, 0, 0.76, 0)  -- Điều chỉnh vị trí
+SkipBtn.Size = UDim2.new(0.86, 0, 0, 40)
+SkipBtn.Font = Enum.Font.RobotoMono
+SkipBtn.Text = "SKIP PLAYER"
+SkipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SkipBtn.TextSize = 16
+Instance.new("UICorner", SkipBtn).CornerRadius = UDim.new(0, 6)
+local stroke = Instance.new("UIStroke", SkipBtn)
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Thickness = 1.5
 
 SkipBtn.MouseButton1Click:Connect(function()
     SkipBtn.Text = "SKIPPING..."
@@ -892,6 +872,7 @@ spawn(function()
                     waitCount = waitCount + 1
                     pcall(function()
                         if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                            -- Bay lên an toàn khi chờ hop
                             lp.Character.HumanoidRootPart.CFrame = lp.Character.HumanoidRootPart.CFrame * CFrame.new(0, 500, 0)
                         end
                     end)
@@ -986,7 +967,7 @@ local function isLowHealth()
 end
 
 -- =============================================
--- DEBUG TARGET (BẬT ĐỂ XEM LÝ DO LOẠI)
+-- DEBUG TARGET
 -- =============================================
 local DEBUG_TARGET = true
 
@@ -997,14 +978,13 @@ local function debugLog(name, reason)
 end
 
 -- =============================================
--- isValidBountyTarget (ĐÃ NỚI LỎNG ĐIỀU KIỆN)
+-- isValidBountyTarget
 -- =============================================
 local function isValidBountyTarget(v)
     if not v or v == lp then return false end
 
     local name = v.Name
 
-    -- Kiểm tra tồn tại cơ bản
     if not v.Character then
         debugLog(name, "Không có Character")
         return false
@@ -1013,8 +993,6 @@ local function isValidBountyTarget(v)
         debugLog(name, "Không có HumanoidRootPart")
         return false
     end
-    -- Nếu chưa có Data, có thể do chưa load xong -> tạm thời bỏ qua nhưng vẫn cho phép target (nếu có leaderstats)
-    -- Thực tế, Data thường có sau vài giây, nên nếu thiếu thì vẫn coi là không hợp lệ để tránh lỗi
     if not v:FindFirstChild("Data") or not v.Data:FindFirstChild("Level") then
         debugLog(name, "Không có Data/Level (chưa load)")
         return false
@@ -1024,7 +1002,6 @@ local function isValidBountyTarget(v)
         return false
     end
 
-    -- Kiểm tra bounty
     local bounty = v.leaderstats["Bounty/Honor"].Value
     local minB = CFG.Hunt and CFG.Hunt.Min or 0
     local maxB = CFG.Hunt and CFG.Hunt.Max or 1e9
@@ -1037,7 +1014,6 @@ local function isValidBountyTarget(v)
         return false
     end
 
-    -- Kiểm tra level (nếu có)
     if lp.Data and lp.Data.Level then
         local myLv = tonumber(lp.Data.Level.Value) or 0
         local targLv = v.Data.Level.Value or 0
@@ -1047,7 +1023,6 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- TEAM: cần cùng team để lấy bounty/honor
     local cfgTeam = CFG.Team or "Pirates"
     local targTeam = v.Team and v.Team.Name or ""
     if targTeam == "" then
@@ -1059,7 +1034,6 @@ local function isValidBountyTarget(v)
         return false
     end
 
-    -- Skip Fruit nếu cấu hình
     if CFG.Skip and CFG.Skip.Fruit then
         local fruit = v.Data.DevilFruit and v.Data.DevilFruit.Value or ""
         if hasValue(CFG.Skip.FruitList, fruit) then
@@ -1068,13 +1042,11 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- Skip Race V4
     if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then
         debugLog(name, "Đang dùng Race V4")
         return false
     end
 
-    -- SafeZone
     if CFG.Skip and CFG.Skip.SafeZone then
         if CheckSafeZone(v.Character.HumanoidRootPart) then
             debugLog(name, "Trong SafeZone")
@@ -1082,7 +1054,6 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- Chỉ kiểm tra NoHaki nếu được bật trong config
     if CFG.Skip and CFG.Skip.NoHaki then
         local hasHaki = v.Character:FindFirstChild("HasBuso") or v.Character:FindFirstChild("HasKen")
         if not hasHaki then
@@ -1091,7 +1062,6 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- Chỉ kiểm tra NoPvP nếu được bật
     if CFG.Skip and CFG.Skip.NoPvP then
         local pvpOn = v:FindFirstChild("Data") and v.Data:FindFirstChild("PvP") and v.Data.PvP.Value == true
         if not pvpOn then
@@ -1100,19 +1070,16 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- DangerBlacklist
     if getgenv().dangerBlacklist[name] then
         debugLog(name, "Trong DangerBlacklist")
         return false
     end
 
-    -- Checked list
     if hasValue(getgenv().checked, v) then
         debugLog(name, "Đã trong danh sách checked")
         return false
     end
 
-    -- Bay cao quá
     local yPos = v.Character.HumanoidRootPart.CFrame.Y
     if yPos > 12000 then
         debugLog(name, string.format("Bay quá cao: Y=%.0f", yPos))
@@ -1123,11 +1090,11 @@ local function isValidBountyTarget(v)
 end
 
 -- =============================================
--- HÀM TÌM TARGET (ĐÃ BỔ SUNG LOG SỐ LƯỢNG)
+-- HÀM TÌM TARGET
 -- =============================================
 local lastTargetCall = 0
 local TARGET_COOLDOWN = 1.5
-local startupDone = false   -- sẽ set sau STARTUP_DELAY
+local startupDone = false
 
 function target()
     if not startupDone then
@@ -1187,7 +1154,6 @@ function target()
         print(string.format("📊 [Target] Hợp lệ: %d/%d", totalValid, totalOthers))
 
         if p == nil then
-            -- Kiểm tra có player nào trong server không
             local anyPlayer = false
             for _, v in pairs(Players:GetPlayers()) do
                 if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -1350,7 +1316,7 @@ pcall(function()
 end)
 
 -- =============================================
--- SAFE HEALTH LOOP
+-- SAFE HEALTH LOOP (SỬA LỖI BAY)
 -- =============================================
 local safehealth = false
 spawn(function()
@@ -1361,10 +1327,11 @@ spawn(function()
             pcall(function()
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
                     local hrp = lp.Character.HumanoidRootPart
-                    local safeY = 12000
+                    -- Chỉ bay lên nếu đang ở dưới 12000, nhưng không bay quá cao để tránh lỗi
+                    local safeY = 5000  -- Giảm độ cao để tránh bay quá xa
                     local curY = hrp.Position.Y
                     if curY < safeY then
-                        hrp.CFrame = CFrame.new(hrp.Position.X, safeY + math.random(0, 3000), hrp.Position.Z)
+                        hrp.CFrame = CFrame.new(hrp.Position.X, safeY + math.random(0, 500), hrp.Position.Z)
                         print("🚨 [SafeHealth] Máu thấp, bay lên Y=" .. math.floor(hrp.Position.Y))
                     end
                 end
@@ -1422,7 +1389,6 @@ local lastSkillTime = 0
 local SKILL_INTERVAL = 0.15
 local STARTUP_DELAY = 8
 
--- ĐẢM BẢO startupDone luôn được set thành true sau STARTUP_DELAY
 spawn(function()
     task.wait(STARTUP_DELAY)
     startupDone = true
@@ -1433,7 +1399,6 @@ end)
 spawn(function()
     while task.wait(0.05) do
         if not startupDone then
-            -- Chưa sẵn sàng, bỏ qua
             continue
         end
 
@@ -1556,18 +1521,16 @@ spawn(function()
 end)
 
 -- =============================================
--- ESP SYSTEM (ĐÃ SỬA LỖI KHÔNG HIỆN)
+-- ESP SYSTEM (SỬA LỖI KHÔNG HIỆN)
 -- =============================================
 local ESP = {}
 local ESP_ENABLED = true
 local Camera = Workspace.CurrentCamera
 
--- Xác định parent cho BillboardGui: ưu tiên CoreGui, nếu không được thì dùng PlayerGui
 local function getESPParent()
     if CoreGui then
         return CoreGui
     else
-        -- Fallback: tạo ScreenGui trong PlayerGui (một số executors chặn CoreGui)
         local gui = Instance.new("ScreenGui")
         gui.Name = "DX_ESP"
         gui.Parent = player.PlayerGui
@@ -1656,9 +1619,8 @@ local function clearAllESP()
     end
 end
 
--- Xử lý khi player thêm vào
 Players.PlayerAdded:Connect(function(v)
-    task.wait(2) -- chờ character load
+    task.wait(2)
     pcall(function() createESP(v) end)
     v.CharacterAdded:Connect(function()
         task.wait(1)
@@ -1674,7 +1636,6 @@ Players.PlayerRemoving:Connect(function(v)
     removeESP(v.Name)
 end)
 
--- Tạo ESP cho các player đã có trong server
 task.spawn(function()
     task.wait(2)
     for _, v in pairs(Players:GetPlayers()) do
@@ -1682,7 +1643,6 @@ task.spawn(function()
     end
 end)
 
--- Đăng ký sự kiện cho các player hiện tại (đề phòng)
 for _, v in pairs(Players:GetPlayers()) do
     v.CharacterAdded:Connect(function()
         task.wait(1)
@@ -1729,7 +1689,6 @@ ESPBtn.MouseButton1Click:Connect(function()
         ESPBtn.Text = "ESP: ON"
         ESPBtn.TextColor3 = Color3.fromRGB(80, 220, 80)
         espStroke.Color = Color3.fromRGB(80, 220, 80)
-        -- Bật lại tất cả BillboardGui
         for _, data in pairs(ESP) do
             pcall(function() data.bb.Enabled = true end)
         end
@@ -1743,7 +1702,6 @@ ESPBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Vòng lặp cập nhật ESP
 RunService.RenderStepped:Connect(function()
     if not ESP_ENABLED then return end
 
@@ -1835,7 +1793,6 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
-    -- Dọn dẹp ESP của player đã rời game
     for name, data in pairs(ESP) do
         if not Players:FindFirstChild(name) then
             removeESP(name)
