@@ -1046,19 +1046,18 @@ local function isValidBountyTarget(v)
         end
     end
 
-    if v.Team == nil then
-        debugLog(name, "Team = nil (chưa chọn team)")
+    -- TEAM FIX: Blox Fruit bounty system:
+    -- Pirates đánh Pirates = lấy Bounty | Marines đánh Marines = lấy Honor
+    -- => target phải CÙNG team với mình (CFG.Team)
+    -- => lp.Team có thể nil khi load → dùng CFG.Team thay thế
+    local cfgTeam  = CFG.Team or "Pirates"
+    local targTeam = v.Team and v.Team.Name or ""
+    if targTeam == "" then
+        debugLog(name, "Target chưa có team")
         return false
     end
-    -- Dùng .Name để lấy tên team thực, tránh "Teams.Pirates" vs "Pirates"
-    local myTeam   = lp.Team and lp.Team.Name or ""
-    local targTeam = v.Team and v.Team.Name or ""
-    local cfgTeam  = CFG.Team or ""
-    -- Đánh kẻ địch = team khác với mình
-    -- Nếu mình là Pirates thì đánh Marines và ngược lại
-    local sameTeam = (myTeam == targTeam)
-    if sameTeam then
-        debugLog(name, string.format("Cùng team: myTeam=%s targTeam=%s", myTeam, targTeam))
+    if targTeam ~= cfgTeam then
+        debugLog(name, string.format("Team khác phe: target=%s mình=%s (cần cùng team)", targTeam, cfgTeam))
         return false
     end
 
@@ -1631,9 +1630,10 @@ local Camera = Workspace.CurrentCamera
 local function getESPColor(v)
     if v == lp then return Color3.fromRGB(100, 200, 255) end  -- bản thân: xanh nhạt
     -- Cùng team với mình
-    -- BUG11 FIX: dùng .Name nhất quán với isValidBountyTarget
-    if v.Team and lp.Team and v.Team.Name == lp.Team.Name then
-        return Color3.fromRGB(80, 220, 80)   -- xanh lá = đồng đội
+    -- Team fix: dùng CFG.Team (config) để xác định đồng đội, không dùng lp.Team (có thể nil)
+    local myConfigTeam = (getgenv().Setting and getgenv().Setting.Team) or "Pirates"
+    if v.Team and v.Team.Name == myConfigTeam then
+        return Color3.fromRGB(80, 220, 80)   -- xanh lá = cùng team với mình (config)
     end
     -- Target hiện tại: đỏ tươi
     if getgenv().targ and v == getgenv().targ then
@@ -1853,12 +1853,20 @@ RunService.RenderStepped:Connect(function()
 
             -- Team tag
             local teamTag = ""
-            -- BUG11 FIX: dùng .Name
-            if v.Team and lp.Team and v.Team.Name == lp.Team.Name then
-                teamTag = " [ALLY]"
+            -- Team fix: dùng CFG.Team
+            local myConfigTeam2 = (getgenv().Setting and getgenv().Setting.Team) or "Pirates"
+            if v.Team and v.Team.Name == myConfigTeam2 then
+                -- Cùng phe bounty = target hợp lệ để hunt
+                if getgenv().targ and v == getgenv().targ then
+                    teamTag = " [TARGET]"
+                else
+                    teamTag = " [HUNTABLE]"  -- cùng phe, có thể hunt
+                end
             elseif v == lp then
                 teamTag = " [YOU]"
-            elseif getgenv().targ and v == getgenv().targ then
+            end
+            -- TARGET override (đã handle ở trên khi cùng team)
+            if getgenv().targ and v == getgenv().targ and teamTag ~= " [TARGET]" then
                 teamTag = " [TARGET]"
             end
 
