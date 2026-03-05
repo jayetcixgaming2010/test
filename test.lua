@@ -55,8 +55,8 @@ getgenv().ServerBlacklist = getgenv().ServerBlacklist or {}
 spawn(function()
     local FULL_KEYWORDS = {
         "server is full", "this place is full", "no available servers",
-        "server full", "place is full", "không có chỗ", "máy chủ đầy",
-        "filled", "capacity"
+        "server full", "place is full", "không có chỗ", "máy chủ đầy"
+        -- Bỏ "filled" và "capacity" vì quá chung, dễ nhầm với UI của game
     }
 
     local function isServerFullMsg(gui)
@@ -136,8 +136,9 @@ spawn(function()
         autoConfirmTeleport(child)
     end)
 
-    while task.wait(0.5) do
-        pcall(function() autoConfirmTeleport(CoreGui) end)
+    -- BUG6 FIX: Bỏ scan liên tục CoreGui → dùng event-driven hoàn toàn
+    -- Chỉ scan PlayerGui mỗi 2 giây (cần thiết cho một số executor)
+    while task.wait(2) do
         pcall(function() autoConfirmTeleport(player.PlayerGui) end)
     end
 end)
@@ -507,11 +508,11 @@ function bypass(Pos)
                     pcall(function()
                         lp.Character:WaitForChild("Humanoid"):ChangeState(15)
                         lp.Character:SetPrimaryPartCFrame(is)
-                        wait(0.1)
+                        task.wait(0.1)
                         if lp.Character and lp.Character:FindFirstChild("Head") then
                             lp.Character.Head:Destroy()
                         end
-                        wait(0.5)
+                        task.wait(0.5)
                         repeat
                             task.wait()
                             if lp.Character and lp.Character:FindFirstChild("PrimaryPart") then
@@ -927,13 +928,23 @@ spawn(function()
 end)
 
 local skipping = false
+-- BUG9 FIX: tự reset checked list sau 120 giây (tránh checked đầy → hop oan)
+local lastCheckedReset = tick()
+local CHECKED_RESET_INTERVAL = 120
+
 function SkipPlayer()
     if skipping then return end
     skipping = true
     getgenv().killed = getgenv().targ
     if getgenv().targ then table.insert(getgenv().checked, getgenv().targ) end
     getgenv().targ = nil
-    print("None")
+    -- Reset checked nếu đã quá lâu
+    if tick() - lastCheckedReset > CHECKED_RESET_INTERVAL then
+        getgenv().checked = {}
+        lastCheckedReset = tick()
+        print("[SkipPlayer] Auto-reset checked list sau " .. CHECKED_RESET_INTERVAL .. "s")
+    end
+    print("Skip → target scan")
     if getgenv().target then getgenv().target() end
     task.spawn(function()
         task.wait(0.5)
@@ -1036,16 +1047,18 @@ local function isValidBountyTarget(v)
     end
 
     if v.Team == nil then
-        debugLog(name, "Team = nil")
+        debugLog(name, "Team = nil (chưa chọn team)")
         return false
     end
-    local myTeam   = tostring(lp.Team)
-    local targTeam = tostring(v.Team)
+    -- Dùng .Name để lấy tên team thực, tránh "Teams.Pirates" vs "Pirates"
+    local myTeam   = lp.Team and lp.Team.Name or ""
+    local targTeam = v.Team and v.Team.Name or ""
     local cfgTeam  = CFG.Team or ""
-    local validEnemy = (myTeam == cfgTeam and targTeam ~= cfgTeam)
-                    or (myTeam ~= cfgTeam and targTeam == cfgTeam)
-    if not validEnemy then
-        debugLog(name, string.format("Team không hợp lệ: myTeam=%s targTeam=%s cfgTeam=%s", myTeam, targTeam, cfgTeam))
+    -- Đánh kẻ địch = team khác với mình
+    -- Nếu mình là Pirates thì đánh Marines và ngược lại
+    local sameTeam = (myTeam == targTeam)
+    if sameTeam then
+        debugLog(name, string.format("Cùng team: myTeam=%s targTeam=%s", myTeam, targTeam))
         return false
     end
 
@@ -1107,12 +1120,22 @@ end
 -- =============================================
 -- HÀM TÌM TARGET (có debug log)
 -- =============================================
+local lastTargetCall = 0
+local TARGET_COOLDOWN = 1.5  -- giây tối thiểu giữa 2 lần quét target
+
 function target()
+    -- BUG1 FIX: không chạy trước khi startup xong
+    if not startupDone then return end
+    -- BUG2 FIX: cooldown tránh spam HopServer
+    local now = tick()
+    if now - lastTargetCall < TARGET_COOLDOWN then return end
+    lastTargetCall = now
+
     pcall(function()
         if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
         local d = math.huge
         local p = nil
-        getgenv().targ = nil
+        -- BUG4 FIX: không nil targ ở đây, chỉ nil sau khi scan xong
 
         local allPlayers = Players:GetPlayers()
 
@@ -1161,26 +1184,50 @@ function target()
 
         if p == nil then
             if CFG.Another and CFG.Another.HopAfterAllPlayers then
+                -- Dùng isValidBountyTarget để check chính xác (kể cả NoHaki, NoPvP...)
+                -- Tắt debug tạm để không spam log
+                local savedDebug = DEBUG_TARGET
+                DEBUG_TARGET = false
                 local hasRemaining = false
                 for _, v in pairs(Players:GetPlayers()) do
-                    if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart")
-                       and v:FindFirstChild("Data") and v:FindFirstChild("leaderstats")
-                       and v.leaderstats["Bounty/Honor"] then
-                        local bounty = v.leaderstats["Bounty/Honor"].Value
-                        if bounty >= (CFG.Hunt and CFG.Hunt.Min or 0) and bounty <= (CFG.Hunt and CFG.Hunt.Max or 1e9) then
-                            if lp.Data and lp.Data.Level and (tonumber(lp.Data.Level.Value) - 250) < v.Data.Level.Value then
-                                if not hasValue(getgenv().checked, v) and not getgenv().dangerBlacklist[v.Name] then
-                                    hasRemaining = true
-                                    break
-                                end
+                    if v ~= lp and isValidBountyTarget(v) then
+                        hasRemaining = true
+                        break
+                    end
+                end
+                -- Cũng check những người trong checked - nếu checked hết mọi người thì reset
+                if not hasRemaining then
+                    local allChecked = true
+                    for _, v in pairs(Players:GetPlayers()) do
+                        if v ~= lp then
+                            if not hasValue(getgenv().checked, v) then
+                                allChecked = false
+                                break
+                            end
+                        end
+                    end
+                    if allChecked and #getgenv().checked > 0 then
+                        print("🔄 [HopAfterAllPlayers] Đã check hết mọi người, reset checked list")
+                        getgenv().checked = {}
+                        -- Thử lại lần nữa sau khi reset
+                        for _, v in pairs(Players:GetPlayers()) do
+                            if v ~= lp and isValidBountyTarget(v) then
+                                hasRemaining = true
+                                p = v
+                                break
                             end
                         end
                     end
                 end
-                if hasRemaining then
-                    print("⏳ [HopAfterAllPlayers] Còn player đủ điều kiện nhưng bị filter khác → chờ, không hop")
+                DEBUG_TARGET = savedDebug
+                if hasRemaining and p == nil then
+                    -- Có người hợp lệ nhưng không chọn được (hopserver=true?) → bỏ qua
+                    print("⏳ [HopAfterAllPlayers] Có " .. "player hợp lệ, chờ...")
+                elseif p ~= nil then
+                    -- Tìm lại được sau reset
+                    print("🎯 [HopAfterAllPlayers] Tìm lại được target: " .. p.Name)
                 else
-                    print("✅ [HopAfterAllPlayers] Không còn ai → Hop!")
+                    print("✅ [HopAfterAllPlayers] Không còn ai hợp lệ → Hop!")
                     getgenv().checked = {}
                     HopServer()
                 end
@@ -1191,6 +1238,7 @@ function target()
         else
             print("🎯 Target đã chọn: " .. p.Name)
         end
+        -- BUG4 FIX: chỉ nil targ sau khi đã chọn được p (hoặc không có ai)
         getgenv().targ = p
     end)
 end
@@ -1216,38 +1264,27 @@ end)
 -- =============================================
 local gunmethod = CFG.Gun and CFG.Gun.GunMode or false
 
+-- BUG5 FIX: Weapon rotation dùng task.spawn riêng mỗi vòng, không lồng task.wait trong while
+local weaponCycle = {"Melee","Blox Fruit","Sword","Gun"}
+local weaponIdx   = 1
 spawn(function()
-    while task.wait() do
+    while true do
+        local delay = 1
         pcall(function()
-            if getgenv().targ and getgenv().targ.Character and getgenv().targ.Character:FindFirstChild("HumanoidRootPart") and
-               lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                if (getgenv().targ.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude < 40 then
-                    if not gunmethod then
-                        if CFG.Melee and CFG.Melee.Enable then
-                            getgenv().weapon = "Melee"
-                            task.wait(CFG.Melee.Delay or 0.1)
-                        end
-                        if CFG.Fruit and CFG.Fruit.Enable then
-                            getgenv().weapon = "Blox Fruit"
-                            task.wait(CFG.Fruit.Delay or 0.1)
-                        end
-                        if CFG.Sword and CFG.Sword.Enable then
-                            getgenv().weapon = "Sword"
-                            task.wait(CFG.Sword.Delay or 0.1)
-                        end
-                        if CFG.Gun and CFG.Gun.Enable then
-                            getgenv().weapon = "Gun"
-                            task.wait(CFG.Gun.Delay or 0.1)
-                        end
-                    else
-                        pcall(function()
-                            EquipWeapon("Melee")
-                            EquipWeapon("Gun")
-                        end)
-                    end
+            if not gunmethod then
+                local wName = weaponCycle[weaponIdx]
+                local cfgMap = {["Melee"]=CFG.Melee,["Blox Fruit"]=CFG.Fruit,["Sword"]=CFG.Sword,["Gun"]=CFG.Gun}
+                local wcfg   = cfgMap[wName]
+                if wcfg and wcfg.Enable then
+                    getgenv().weapon = wName
+                    delay = wcfg.Delay or 1
                 end
+                weaponIdx = (weaponIdx % #weaponCycle) + 1
+            else
+                pcall(function() EquipWeapon("Melee") EquipWeapon("Gun") end)
             end
         end)
+        task.wait(delay)
     end
 end)
 
@@ -1357,22 +1394,26 @@ end)
 -- =============================================
 local safehealth = false
 spawn(function()
-    while task.wait(0.05) do
-        if isLowHealth() then
+    -- BUG10 FIX: check mỗi 0.5s, bay lên 1 lần duy nhất khi vào trạng thái máu thấp
+    while task.wait(0.5) do
+        if isLowHealth() and not safehealth then
             safehealth = true
             checkDangerAndBlacklist()
             pcall(function()
                 if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp       = lp.Character.HumanoidRootPart
-                    local flyHeight = math.random(8000, 15000)
-                    hrp.CFrame      = hrp.CFrame * CFrame.new(0, flyHeight, 0)
+                    local hrp = lp.Character.HumanoidRootPart
+                    -- Bay lên 1 lần tới độ cao cố định, không tích lũy
+                    local safeY = 12000
+                    local curY  = hrp.Position.Y
+                    if curY < safeY then
+                        hrp.CFrame = CFrame.new(hrp.Position.X, safeY + math.random(0, 3000), hrp.Position.Z)
+                        print("🚨 [SafeHealth] Máu thấp, bay lên Y=" .. math.floor(hrp.Position.Y))
+                    end
                 end
             end)
-            repeat task.wait(0.5) until not isLowHealth() or not lp.Character
+        elseif not isLowHealth() and safehealth then
             safehealth = false
             print("💚 [SafeHealth] Máu đã hồi, tiếp tục hunt!")
-        else
-            safehealth = false
         end
     end
 end)
@@ -1454,10 +1495,7 @@ spawn(function()
         if not getgenv().targ or not getgenv().targ.Character then
             getgenv().target()
         end
-        -- Chi hop neu target() da chay xong ma van nil, va chua hop
-        if not getgenv().targ and not getgenv().hopserver and not isHopping then
-            getgenv().hopserver = true
-        end
+        -- KHÔNG set hopserver=true ở đây — target() tự xử lý hop khi cần
 
         pcall(function()
             if not (getgenv().targ and getgenv().targ.Character
@@ -1548,23 +1586,7 @@ spawn(function()
                     end
                 end
 
-                -- Kiểm tra notification để skip
-                for _, v in pairs(lp.PlayerGui.Notifications:GetChildren()) do
-                    if v:IsA("TextLabel") then
-                        local text = string.lower(v.Text)
-                        for _, kw in ipairs({
-                            "player died recently","you can't attack them yet",
-                            "cannot attack","died recently","can't attack them",
-                            "cannot attack this player","skill locked",
-                        }) do
-                            if string.find(text, kw) then
-                                SkipPlayer()
-                                pcall(function() v:Destroy() end)
-                                break
-                            end
-                        end
-                    end
-                end
+                -- BUG8 FIX: notification check đã có loop riêng bên dưới, không duplicate ở đây
             end
         end)
     end
@@ -1609,7 +1631,8 @@ local Camera = Workspace.CurrentCamera
 local function getESPColor(v)
     if v == lp then return Color3.fromRGB(100, 200, 255) end  -- bản thân: xanh nhạt
     -- Cùng team với mình
-    if tostring(v.Team) == tostring(lp.Team) then
+    -- BUG11 FIX: dùng .Name nhất quán với isValidBountyTarget
+    if v.Team and lp.Team and v.Team.Name == lp.Team.Name then
         return Color3.fromRGB(80, 220, 80)   -- xanh lá = đồng đội
     end
     -- Target hiện tại: đỏ tươi
@@ -1690,10 +1713,16 @@ local function clearAllESP()
     end
 end
 
--- Tạo ESP khi player join
+-- Tạo ESP khi player join + xử lý respawn
 Players.PlayerAdded:Connect(function(v)
     task.wait(2)
     pcall(function() createESP(v) end)
+    -- BUG3 FIX: đăng ký CharacterAdded ở đây, không lặp lại bên dưới
+    v.CharacterAdded:Connect(function()
+        task.wait(1)
+        removeESP(v.Name)
+        pcall(function() createESP(v) end)
+    end)
 end)
 
 Players.PlayerRemoving:Connect(function(v)
@@ -1708,14 +1737,7 @@ task.spawn(function()
     end
 end)
 
--- Xử lý respawn: tạo lại ESP khi character mới
-Players.PlayerAdded:Connect(function(v)
-    v.CharacterAdded:Connect(function()
-        task.wait(1)
-        removeESP(v.Name)
-        pcall(function() createESP(v) end)
-    end)
-end)
+-- Xử lý respawn: tạo lại ESP khi character mới (chỉ đăng ký 1 lần trong PlayerAdded ở trên)
 for _, v in pairs(Players:GetPlayers()) do
     v.CharacterAdded:Connect(function()
         task.wait(1)
@@ -1831,7 +1853,8 @@ RunService.RenderStepped:Connect(function()
 
             -- Team tag
             local teamTag = ""
-            if tostring(v.Team) == tostring(lp.Team) then
+            -- BUG11 FIX: dùng .Name
+            if v.Team and lp.Team and v.Team.Name == lp.Team.Name then
                 teamTag = " [ALLY]"
             elseif v == lp then
                 teamTag = " [YOU]"
