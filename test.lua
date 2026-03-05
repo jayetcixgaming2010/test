@@ -1,9 +1,7 @@
 -- =============================================
--- DARKNESS X • AUTO BOUNTY (FIXED VERSION)
+-- DARKNESS X • AUTO BOUNTY (FIXED TARGET & ESP)
 -- =============================================
 -- Yêu cầu: Đặt cấu hình trong getgenv().Setting trước khi chạy
--- Ví dụ:
--- getgenv().Setting = { Team = "Pirates", Hunt = { Min = 0, Max = 30000000 }, ... }
 -- =============================================
 
 local CFG = getgenv().Setting or {}
@@ -60,7 +58,7 @@ end
 getgenv().weapon          = nil
 getgenv().targ            = nil
 getgenv().lasttarrget     = nil
-getgenv().checked         = {}          -- Danh sách player đã từng target (để skip tạm)
+getgenv().checked         = {}
 getgenv().pl              = game.Players:GetPlayers()
 getgenv().killed          = nil
 getgenv().hopserver       = false
@@ -85,7 +83,7 @@ local function sendRequest(url, method, headers, body)
 end
 
 -- =============================================
--- AUTO CONFIRM TELEPORT POPUP + XỬ LÝ SERVER ĐẦY (đã tối ưu)
+-- AUTO CONFIRM TELEPORT POPUP + XỬ LÝ SERVER ĐẦY
 -- =============================================
 local function isServerFullMsg(gui)
     if not gui then return false end
@@ -125,7 +123,6 @@ local function autoConfirmTeleport(gui)
         end)
         return
     end
-    -- Confirm teleport bình thường
     for _, btn in pairs(gui:GetDescendants()) do
         if btn:IsA("TextButton") or btn:IsA("ImageButton") then
             local t = string.lower(btn.Text or "")
@@ -136,7 +133,6 @@ local function autoConfirmTeleport(gui)
     end
 end
 
--- Gắn sự kiện, không dùng vòng lặp liên tục
 local promptGui = CoreGui:WaitForChild("RobloxPromptGui", 10)
 if promptGui then
     local overlay = promptGui:FindFirstChild("promptOverlay")
@@ -160,7 +156,7 @@ player.PlayerGui.ChildAdded:Connect(function(child)
 end)
 
 -- =============================================
--- DANGER BLACKLIST (reset khi đổi target)
+-- DANGER BLACKLIST
 -- =============================================
 local dangerCooldown = {}
 local function checkDangerAndBlacklist()
@@ -191,7 +187,6 @@ local function checkDangerAndBlacklist()
     end
 end
 
--- Reset danger blacklist khi target chết hoặc được skip
 local function resetDangerForTarget(targetName)
     getgenv().dangerCount[targetName] = nil
     getgenv().dangerBlacklist[targetName] = nil
@@ -241,7 +236,7 @@ MainStroke.Color = Color3.fromRGB(255, 255, 255)
 MainStroke.Thickness = 2
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
--- Kéo thả MainFrame (sử dụng thuật toán chống conflict)
+-- Kéo thả MainFrame
 local dragging, dragInput, dragStart, startPos
 local function updateDrag(input)
     local delta = input.Position - dragStart
@@ -266,7 +261,7 @@ UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then updateDrag(input) end
 end)
 
--- Kéo thả ToggleBtn (tương tự)
+-- Kéo thả ToggleBtn
 local toggleDragging, toggleDragInput, toggleDragStart, toggleStartPos
 local function updateToggleDrag(input)
     local delta = input.Position - toggleDragStart
@@ -397,7 +392,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- =============================================
--- WORLD / ISLAND SETUP (mở rộng)
+-- WORLD / ISLAND SETUP
 -- =============================================
 local placeId = game.PlaceId
 local worldMap = {
@@ -478,14 +473,11 @@ local rs = RunService
 local tween = nil
 local stopbypass = false
 
--- Hàm di chuyển an toàn (thay thế bypass cũ)
 function safeTeleport(destinationCF)
     if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = lp.Character.HumanoidRootPart
     hrp.CFrame = destinationCF
-    -- Chờ một chút để game cập nhật
     task.wait(0.1)
-    -- Nếu vị trí chưa đúng, lặp lại vài lần
     for i = 1, 5 do
         if (hrp.Position - destinationCF.Position).Magnitude > 10 then
             hrp.CFrame = destinationCF
@@ -513,7 +505,6 @@ function bypass(Pos)
         if (lp.Character.Head.Position - Pos.Position).magnitude > (is.Position - Pos.Position).magnitude then
             if tween then pcall(function() tween:Destroy() end) end
 
-            -- Các đảo đặc biệt cần set CFrame liên tục
             local specialIslands = {
                 CFrame.new(61163.8515625, 11.6796875, 1819.7841796875),
                 CFrame.new(-12471.169921875 + 50, 374.94024658203, -7551.677734375),
@@ -538,7 +529,6 @@ function bypass(Pos)
                         lp.Character:WaitForChild("Humanoid"):ChangeState(15)
                         lp.Character:SetPrimaryPartCFrame(is)
                         task.wait(0.1)
-                        -- Không xóa Head nữa, thay bằng teleport lại
                         safeTeleport(is)
                         task.wait(0.5)
                     end)
@@ -548,7 +538,6 @@ function bypass(Pos)
     end
 end
 
--- Tốc độ di chuyển tối đa (studs/giây)
 local MOVE_SPEED = 350
 
 function to(Pos)
@@ -728,7 +717,6 @@ function hasValue(array, targetString)
     return false
 end
 
--- CombatFramework hack (bọc pcall)
 local y = nil
 pcall(function()
     if lp:FindFirstChild("PlayerScripts") then
@@ -764,7 +752,6 @@ spawn(function()
     end)
 end)
 
--- Di chuyển vòng tròn
 local radius = 25
 local speedCircle = 30
 local angle = 0
@@ -932,7 +919,7 @@ function SkipPlayer()
     if oldTarg then
         getgenv().killed = oldTarg
         table.insert(getgenv().checked, oldTarg)
-        resetDangerForTarget(oldTarg.Name)   -- reset danger blacklist cho target cũ
+        resetDangerForTarget(oldTarg.Name)
     end
     getgenv().targ = nil
     if tick() - lastCheckedReset > CHECKED_RESET_INTERVAL then
@@ -949,7 +936,6 @@ function SkipPlayer()
 end
 getgenv().SkipPlayer = SkipPlayer
 
--- Xóa khỏi checked khi player rời game
 Players.PlayerRemoving:Connect(function(p)
     for i, v in ipairs(getgenv().checked) do
         if v == p then
@@ -1000,9 +986,9 @@ local function isLowHealth()
 end
 
 -- =============================================
--- DEBUG TARGET
+-- DEBUG TARGET (BẬT ĐỂ XEM LÝ DO LOẠI)
 -- =============================================
-local DEBUG_TARGET = true   -- bật/tắt log chi tiết
+local DEBUG_TARGET = true
 
 local function debugLog(name, reason)
     if DEBUG_TARGET then
@@ -1011,19 +997,26 @@ local function debugLog(name, reason)
 end
 
 -- =============================================
--- isValidBountyTarget (có fix team)
+-- isValidBountyTarget (ĐÃ NỚI LỎNG ĐIỀU KIỆN)
 -- =============================================
 local function isValidBountyTarget(v)
     if not v or v == lp then return false end
 
     local name = v.Name
 
-    if not v.Character or not v.Character:FindFirstChild("HumanoidRootPart") then
-        debugLog(name, "Không có Character/HumanoidRootPart")
+    -- Kiểm tra tồn tại cơ bản
+    if not v.Character then
+        debugLog(name, "Không có Character")
         return false
     end
+    if not v.Character:FindFirstChild("HumanoidRootPart") then
+        debugLog(name, "Không có HumanoidRootPart")
+        return false
+    end
+    -- Nếu chưa có Data, có thể do chưa load xong -> tạm thời bỏ qua nhưng vẫn cho phép target (nếu có leaderstats)
+    -- Thực tế, Data thường có sau vài giây, nên nếu thiếu thì vẫn coi là không hợp lệ để tránh lỗi
     if not v:FindFirstChild("Data") or not v.Data:FindFirstChild("Level") then
-        debugLog(name, "Không có Data/Level")
+        debugLog(name, "Không có Data/Level (chưa load)")
         return false
     end
     if not v:FindFirstChild("leaderstats") or not v.leaderstats:FindFirstChild("Bounty/Honor") then
@@ -1031,6 +1024,7 @@ local function isValidBountyTarget(v)
         return false
     end
 
+    -- Kiểm tra bounty
     local bounty = v.leaderstats["Bounty/Honor"].Value
     local minB = CFG.Hunt and CFG.Hunt.Min or 0
     local maxB = CFG.Hunt and CFG.Hunt.Max or 1e9
@@ -1043,6 +1037,7 @@ local function isValidBountyTarget(v)
         return false
     end
 
+    -- Kiểm tra level (nếu có)
     if lp.Data and lp.Data.Level then
         local myLv = tonumber(lp.Data.Level.Value) or 0
         local targLv = v.Data.Level.Value or 0
@@ -1052,7 +1047,7 @@ local function isValidBountyTarget(v)
         end
     end
 
-    -- Team check: cần cùng team để lấy bounty/honor
+    -- TEAM: cần cùng team để lấy bounty/honor
     local cfgTeam = CFG.Team or "Pirates"
     local targTeam = v.Team and v.Team.Name or ""
     if targTeam == "" then
@@ -1064,6 +1059,7 @@ local function isValidBountyTarget(v)
         return false
     end
 
+    -- Skip Fruit nếu cấu hình
     if CFG.Skip and CFG.Skip.Fruit then
         local fruit = v.Data.DevilFruit and v.Data.DevilFruit.Value or ""
         if hasValue(CFG.Skip.FruitList, fruit) then
@@ -1072,11 +1068,13 @@ local function isValidBountyTarget(v)
         end
     end
 
+    -- Skip Race V4
     if CFG["Skip Race V4"] and v.Character:FindFirstChild("RaceTransformed") then
         debugLog(name, "Đang dùng Race V4")
         return false
     end
 
+    -- SafeZone
     if CFG.Skip and CFG.Skip.SafeZone then
         if CheckSafeZone(v.Character.HumanoidRootPart) then
             debugLog(name, "Trong SafeZone")
@@ -1084,6 +1082,7 @@ local function isValidBountyTarget(v)
         end
     end
 
+    -- Chỉ kiểm tra NoHaki nếu được bật trong config
     if CFG.Skip and CFG.Skip.NoHaki then
         local hasHaki = v.Character:FindFirstChild("HasBuso") or v.Character:FindFirstChild("HasKen")
         if not hasHaki then
@@ -1092,6 +1091,7 @@ local function isValidBountyTarget(v)
         end
     end
 
+    -- Chỉ kiểm tra NoPvP nếu được bật
     if CFG.Skip and CFG.Skip.NoPvP then
         local pvpOn = v:FindFirstChild("Data") and v.Data:FindFirstChild("PvP") and v.Data.PvP.Value == true
         if not pvpOn then
@@ -1100,16 +1100,19 @@ local function isValidBountyTarget(v)
         end
     end
 
+    -- DangerBlacklist
     if getgenv().dangerBlacklist[name] then
         debugLog(name, "Trong DangerBlacklist")
         return false
     end
 
+    -- Checked list
     if hasValue(getgenv().checked, v) then
         debugLog(name, "Đã trong danh sách checked")
         return false
     end
 
+    -- Bay cao quá
     local yPos = v.Character.HumanoidRootPart.CFrame.Y
     if yPos > 12000 then
         debugLog(name, string.format("Bay quá cao: Y=%.0f", yPos))
@@ -1120,69 +1123,71 @@ local function isValidBountyTarget(v)
 end
 
 -- =============================================
--- HÀM TÌM TARGET
+-- HÀM TÌM TARGET (ĐÃ BỔ SUNG LOG SỐ LƯỢNG)
 -- =============================================
 local lastTargetCall = 0
 local TARGET_COOLDOWN = 1.5
+local startupDone = false   -- sẽ set sau STARTUP_DELAY
 
 function target()
-    if not startupDone then return end
+    if not startupDone then
+        print("⏳ [Target] Chờ startupDone...")
+        return
+    end
     local now = tick()
     if now - lastTargetCall < TARGET_COOLDOWN then return end
     lastTargetCall = now
 
     pcall(function()
-        if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-        local d = math.huge
-        local p = nil
+        if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+            print("⚠️ [Target] Nhân vật chưa sẵn sàng")
+            return
+        end
 
         local allPlayers = Players:GetPlayers()
+        print("🔍 [Target] Tổng số player trong server: " .. #allPlayers)
 
-        if DEBUG_TARGET then
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("🔍 [Target Scan] Quét " .. #allPlayers .. " player:")
-        end
+        local d = math.huge
+        local p = nil
 
         local totalOthers = 0
         local totalValid = 0
 
         for _, v in pairs(allPlayers) do
-            if v == lp then continue end
-            totalOthers = totalOthers + 1
-
-            if isValidBountyTarget(v) then
-                totalValid = totalValid + 1
-                local dist = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
-                if DEBUG_TARGET then
-                    print(string.format("  ✅ [%s] → HỢP LỆ | dist=%.0f | bounty=%s | lv=%s",
-                        v.Name, dist,
-                        tostring(v.leaderstats and v.leaderstats["Bounty/Honor"] and v.leaderstats["Bounty/Honor"].Value or "?"),
-                        tostring(v.Data and v.Data.Level and v.Data.Level.Value or "?")))
-                end
-                if dist < d and not getgenv().hopserver then
-                    p = v
-                    d = dist
-                    if CFG.Chat and #CFG.Chat > 0 then
-                        local chatMsg = CFG.Chat[math.random(1, #CFG.Chat)]
-                        if chatMsg then
-                            pcall(function()
-                                ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
-                                    :FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
-                            end)
+            if v == lp then
+                -- Bỏ qua bản thân
+            else
+                totalOthers = totalOthers + 1
+                if isValidBountyTarget(v) then
+                    totalValid = totalValid + 1
+                    local dist = (v.Character.HumanoidRootPart.Position - lp.Character.HumanoidRootPart.Position).Magnitude
+                    if DEBUG_TARGET then
+                        print(string.format("  ✅ [%s] dist=%.0f | bounty=%s | lv=%s",
+                            v.Name, dist,
+                            tostring(v.leaderstats and v.leaderstats["Bounty/Honor"] and v.leaderstats["Bounty/Honor"].Value or "?"),
+                            tostring(v.Data and v.Data.Level and v.Data.Level.Value or "?")))
+                    end
+                    if dist < d and not getgenv().hopserver then
+                        p = v
+                        d = dist
+                        if CFG.Chat and #CFG.Chat > 0 then
+                            local chatMsg = CFG.Chat[math.random(1, #CFG.Chat)]
+                            if chatMsg then
+                                pcall(function()
+                                    ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents")
+                                        :FindFirstChild("SayMessageRequest"):FireServer(chatMsg, "All")
+                                end)
+                            end
                         end
                     end
                 end
             end
         end
 
-        if DEBUG_TARGET then
-            print(string.format("📊 Kết quả: %d/%d player hợp lệ | Chọn: %s",
-                totalValid, totalOthers, p and p.Name or "NONE"))
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        end
+        print(string.format("📊 [Target] Hợp lệ: %d/%d", totalValid, totalOthers))
 
         if p == nil then
-            -- Kiểm tra xem có player nào trong server không
+            -- Kiểm tra có player nào trong server không
             local anyPlayer = false
             for _, v in pairs(Players:GetPlayers()) do
                 if v ~= lp and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
@@ -1194,7 +1199,6 @@ function target()
                 print("⚠️ [Target] Không còn player nào trong server → Hop!")
                 HopServer()
             else
-                -- Có player nhưng không hợp lệ, đợi thêm
                 print("⏳ [Target] Có player nhưng không hợp lệ, chờ...")
             end
         else
@@ -1417,8 +1421,8 @@ local DEFAULT_WEAPON_CFG = { idealDist = 10, skillRange = 20 }
 local lastSkillTime = 0
 local SKILL_INTERVAL = 0.15
 local STARTUP_DELAY = 8
-local startupDone = false
 
+-- ĐẢM BẢO startupDone luôn được set thành true sau STARTUP_DELAY
 spawn(function()
     task.wait(STARTUP_DELAY)
     startupDone = true
@@ -1428,7 +1432,10 @@ end)
 
 spawn(function()
     while task.wait(0.05) do
-        if not startupDone then continue end
+        if not startupDone then
+            -- Chưa sẵn sàng, bỏ qua
+            continue
+        end
 
         if not getgenv().targ or not getgenv().targ.Character then
             getgenv().target()
@@ -1549,11 +1556,27 @@ spawn(function()
 end)
 
 -- =============================================
--- ESP SYSTEM
+-- ESP SYSTEM (ĐÃ SỬA LỖI KHÔNG HIỆN)
 -- =============================================
 local ESP = {}
 local ESP_ENABLED = true
 local Camera = Workspace.CurrentCamera
+
+-- Xác định parent cho BillboardGui: ưu tiên CoreGui, nếu không được thì dùng PlayerGui
+local function getESPParent()
+    if CoreGui then
+        return CoreGui
+    else
+        -- Fallback: tạo ScreenGui trong PlayerGui (một số executors chặn CoreGui)
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "DX_ESP"
+        gui.Parent = player.PlayerGui
+        gui.ResetOnSpawn = false
+        return gui
+    end
+end
+
+local ESPParent = getESPParent()
 
 local function getESPColor(v)
     if v == lp then return Color3.fromRGB(100, 200, 255) end
@@ -1582,7 +1605,7 @@ local function createESP(v)
     bb.StudsOffset = Vector3.new(0, 3.2, 0)
     bb.MaxDistance = 2000
     bb.ResetOnSpawn = false
-    bb.Parent = CoreGui
+    bb.Parent = ESPParent
 
     local frame = Instance.new("Frame", bb)
     frame.BackgroundTransparency = 1
@@ -1633,8 +1656,9 @@ local function clearAllESP()
     end
 end
 
+-- Xử lý khi player thêm vào
 Players.PlayerAdded:Connect(function(v)
-    task.wait(2)
+    task.wait(2) -- chờ character load
     pcall(function() createESP(v) end)
     v.CharacterAdded:Connect(function()
         task.wait(1)
@@ -1650,6 +1674,7 @@ Players.PlayerRemoving:Connect(function(v)
     removeESP(v.Name)
 end)
 
+-- Tạo ESP cho các player đã có trong server
 task.spawn(function()
     task.wait(2)
     for _, v in pairs(Players:GetPlayers()) do
@@ -1657,6 +1682,7 @@ task.spawn(function()
     end
 end)
 
+-- Đăng ký sự kiện cho các player hiện tại (đề phòng)
 for _, v in pairs(Players:GetPlayers()) do
     v.CharacterAdded:Connect(function()
         task.wait(1)
@@ -1682,6 +1708,7 @@ local function formatNum(n)
     else return tostring(n) end
 end
 
+-- Nút toggle ESP trong GUI
 local ESPBtn = Instance.new("TextButton", MainFrame)
 ESPBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 ESPBtn.BackgroundTransparency = 0.9
@@ -1702,6 +1729,10 @@ ESPBtn.MouseButton1Click:Connect(function()
         ESPBtn.Text = "ESP: ON"
         ESPBtn.TextColor3 = Color3.fromRGB(80, 220, 80)
         espStroke.Color = Color3.fromRGB(80, 220, 80)
+        -- Bật lại tất cả BillboardGui
+        for _, data in pairs(ESP) do
+            pcall(function() data.bb.Enabled = true end)
+        end
     else
         ESPBtn.Text = "ESP: OFF"
         ESPBtn.TextColor3 = Color3.fromRGB(200, 60, 60)
@@ -1712,6 +1743,7 @@ ESPBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- Vòng lặp cập nhật ESP
 RunService.RenderStepped:Connect(function()
     if not ESP_ENABLED then return end
 
@@ -1803,6 +1835,7 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 
+    -- Dọn dẹp ESP của player đã rời game
     for name, data in pairs(ESP) do
         if not Players:FindFirstChild(name) then
             removeESP(name)
@@ -1907,7 +1940,7 @@ pcall(function()
 end)
 
 -- =============================================
--- DỌN DẸP KHI TẮT SCRIPT (nếu có hàm)
+-- DỌN DẸP KHI TẮT SCRIPT
 -- =============================================
 getgenv().cleanup = function()
     clearAllESP()
