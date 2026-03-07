@@ -3062,7 +3062,7 @@ setmetatable(L_1_[45], {
 												until L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Check") == 0
 											end
 											if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-												L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+												L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 											end
 											L_1_[31](L_146_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5, 200)
 											L_1_[14]()
@@ -3092,7 +3092,7 @@ setmetatable(L_1_[45], {
 											until L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Check") == 0
 										end
 										if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-											L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 										end
 										L_1_[31](L_149_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5, 200)
 										L_1_[14]()
@@ -3464,7 +3464,7 @@ L_1_[39] = function()
 						repeat
 							L_1_[45]["wt"]()
 							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 							end
 							L_1_[31](L_201_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 							L_1_[14]()
@@ -3479,7 +3479,7 @@ L_1_[39] = function()
 						repeat
 							L_1_[45]["wt"]()
 							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 							end
 							L_1_[31](L_204_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 							L_1_[14]()
@@ -3547,7 +3547,7 @@ L_1_[39] = function()
 								repeat
 									L_1_[45]["wt"](.1)
 									if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-										L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 									end
 									L_1_[31](L_214_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 									L_1_[14]()
@@ -3609,7 +3609,7 @@ L_1_[39] = function()
 												repeat
 													L_1_[45]["wt"]()
 													if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-														L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+														L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 													end
 													L_1_[31](L_226_[2]["Part"]["CFrame"], 1.5)
 												until tostring(L_226_[2]["Part"]["BrickColor"]) == "Lime green"
@@ -3629,7 +3629,7 @@ L_1_[39] = function()
 												repeat
 													L_1_[45]["wt"]()
 													if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-														L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+														L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 													end
 													L_1_[31](L_229_[2]["Part"]["CFrame"], 1.5)
 												until tostring(L_229_[2]["Part"]["BrickColor"]) == "Lime green"
@@ -3649,7 +3649,7 @@ L_1_[39] = function()
 												repeat
 													L_1_[45]["wt"]()
 													if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-														L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+														L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 													end
 													L_1_[31](L_232_[2]["Part"]["CFrame"], 1.5)
 												until tostring(L_232_[2]["Part"]["BrickColor"]) == "Lime green"
@@ -3688,7 +3688,7 @@ L_1_[39] = function()
 						repeat
 							L_1_[45]["wt"](.1)
 							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 							end
 							L_1_[31](L_235_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 							L_1_[14]()
@@ -3842,7 +3842,7 @@ L_1_[39] = function()
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("EliteHunter")
 						L_1_[31](L_256_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 						if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-							L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 						end
 						L_1_[14]()
 					until not L_256_[3]["Parent"] or L_256_[3]["Humanoid"]["Health"] <= 0
@@ -3860,7 +3860,7 @@ L_1_[39] = function()
 						repeat
 							L_1_[45]["wt"]()
 							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 							end
 							L_1_[31](L_259_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 							L_1_[14]()
@@ -3875,7 +3875,7 @@ L_1_[39] = function()
 						repeat
 							L_1_[45]["wt"]()
 							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[35]["Character"]["HumanoidRootPart"]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
 							end
 							L_1_[31](L_262_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 							L_1_[14]()
@@ -4687,7 +4687,7 @@ task["spawn"](function()
 												end
 												L_1_[7]["Remotes"]["CommF_"]:InvokeServer("RaidsNpc", "Select", Select_Map)
 												L_1_[45]["wt"](.2)
-												if L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip") and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
+												if (L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip")) and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 													if L_1_[30] == 4442272183 and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 														local L_328_ = {}
 														fireclickdetector(L_1_[19]["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"], 1)
@@ -4991,7 +4991,7 @@ task["spawn"](function()
 												end
 												L_1_[7]["Remotes"]["CommF_"]:InvokeServer("RaidsNpc", "Select", Select_Map)
 												L_1_[45]["wt"](.2)
-												if L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip") and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
+												if (L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip")) and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 													if L_1_[30] == 4442272183 and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 														local L_355_ = {}
 														fireclickdetector(L_1_[19]["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"], 1)
@@ -4999,7 +4999,7 @@ task["spawn"](function()
 														repeat
 															L_355_[1] = L_355_[1] + 1
 															L_1_[45]["wt"](1)
-														until L_355_[1] >= 20 or L_1_[35]["PlayerGui"]["Main"]["Timer"]["Visible"] == true
+														until L_355_[1] >= 20 or L_1_[35]["PlayerGui"]["Main"]["Timer"]["Visible"]
 													elseif L_1_[30] == 7449423635 then
 														L_1_[31](CFrame["new"](-5034, 315, -2951), 1.5)
 														if ((CFrame["new"](-5034, 315, -2951))["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3 then
@@ -5217,7 +5217,7 @@ task["spawn"](function()
 												end
 												L_1_[7]["Remotes"]["CommF_"]:InvokeServer("RaidsNpc", "Select", Select_Map)
 												L_1_[45]["wt"](.2)
-												if L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip") and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
+												if (L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip")) and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 													if L_1_[30] == 4442272183 and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 														local L_372_ = {}
 														fireclickdetector(L_1_[19]["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"], 1)
