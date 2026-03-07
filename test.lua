@@ -534,7 +534,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0  
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
-ImageLabel.Image = "rbxassetid://112485471724320"  -- icon của bạn
+ImageLabel.Image = "rbxassetid://94416642815435"  -- icon của bạn
 ImageLabel.ZIndex = 6
 
 TextButton.Parent = dutdit  
