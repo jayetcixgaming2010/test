@@ -755,6 +755,9 @@ L_1_.UI_Valkyrie = TextLabel_3
 L_1_.UI_MirrorFractal = TextLabel_4
 L_1_.UI_SkullGuitar = TextLabel_5
 L_1_.UI_CDK = TextLabel_7
+L_1_.UI_Item1 = ItemLabel1_1
+L_1_.UI_Item2 = ItemLabel2_1
+L_1_.UI_Item3 = ItemLabel1_2
 
 -- ========== END NEW UI ==========
 
@@ -764,6 +767,73 @@ elseif L_1_[30] == 4442272183 then
 	New_World = true
 elseif L_1_[30] == 7449423635 then
 	Three_World = true
+end
+L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
+
+-- Hàm cập nhật UI (thêm vào sau UI)
+local function updateUI()
+	pcall(function()
+		local plr = L_1_[5]
+		if plr and plr.Data then
+			local beli = plr.Data.Beli and plr.Data.Beli.Value or "N/A"
+			local level = plr.Data.Level and plr.Data.Level.Value or "N/A"
+			local frag = plr.Data.Fragments and plr.Data.Fragments.Value or "N/A"
+			local race = plr.Data.Race and plr.Data.Race.Value or "N/A"
+			local world = Three_World and "Third Sea" or (New_World and "Second Sea" or "First Sea")
+			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌") -- First Sea không có tick
+			if world == "First Sea" then seaEmoji = "❌" end
+			
+			if L_1_.UI_Beli then L_1_.UI_Beli.Text = "Beli: " .. tostring(beli) end
+			if L_1_.UI_Level then L_1_.UI_Level.Text = "Level: " .. tostring(level) .. "    " .. world .. " : " .. seaEmoji end
+			if L_1_.UI_Race then L_1_.UI_Race.Text = "Race: " .. tostring(race) end
+			if L_1_.UI_Frag then L_1_.UI_Frag.Text = "Frag: " .. tostring(frag) end
+			
+			-- Kiểm tra các item đặc biệt
+			local godhuman = God_Human_C or L_1_[45]["gi"] and (L_1_[45]["gi"]("Godhuman") or L_1_[45]["gi"]("God Human"))
+			local pullLever = ExSeb or false
+			local valkyrie = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
+			local mirror = Mirror_Fractal_H or false
+			local soulGuitar = L_1_[45]["gi"] and L_1_[45]["gi"]("Soul Guitar")
+			local cdk = L_1_[45]["gi"] and L_1_[45]["gi"]("Cursed Dual Katana")
+			
+			if L_1_.UI_GodHuman then L_1_.UI_GodHuman.Text = (godhuman and "🟢" or "🔴") .. " GodHuman" end
+			if L_1_.UI_PullLever then L_1_.UI_PullLever.Text = (pullLever and "🟢" or "🔴") .. " Pull Lever" end
+			if L_1_.UI_Valkyrie then L_1_.UI_Valkyrie.Text = (valkyrie and "🟢" or "🔴") .. " Valkyrie Helm" end
+			if L_1_.UI_MirrorFractal then L_1_.UI_MirrorFractal.Text = (mirror and "🟢" or "🔴") .. " Mirror Fractal" end
+			if L_1_.UI_SkullGuitar then L_1_.UI_SkullGuitar.Text = (soulGuitar and "🟢" or "🔴") .. " Skull Guitar" end
+			if L_1_.UI_CDK then L_1_.UI_CDK.Text = (cdk and "🟢" or "🔴") .. " Curse Dual Katana" end
+			
+			-- Hiển thị 3 item bất kỳ (ví dụ lấy từ inventory)
+			local inv = {}
+			if L_1_[45]["GetFruits"] then
+				inv = L_1_[45]["GetFruits"]() or {}
+			end
+			local items = {}
+			for i, v in pairs(inv) do
+				table.insert(items, v.Name)
+			end
+			if #items >= 1 then L_1_.UI_Item1.Text = items[1] else L_1_.UI_Item1.Text = "None" end
+			if #items >= 2 then L_1_.UI_Item2.Text = items[2] else L_1_.UI_Item2.Text = "None" end
+			if #items >= 3 then L_1_.UI_Item3.Text = items[3] else L_1_.UI_Item3.Text = "None" end
+		end
+	end)
+end
+
+-- Vòng lặp cập nhật UI
+task.spawn(function()
+	while wait(1) do
+		updateUI()
+	end
+end)
+
+-- Hàm Status cũ cập nhật cả UI mới
+L_1_[45]["Status"] = function(text)
+	L_1_[26].Text = text  -- vẫn giữ nếu có
+	pcall(function()
+		if L_1_.UI_BottomStatus then
+			L_1_.UI_BottomStatus.Text = "Status Farm: " .. text
+		end
+	end)
 end
 L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
 function CheckLevel2()
