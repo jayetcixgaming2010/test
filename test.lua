@@ -162,7 +162,8 @@ Main_1.Selectable = false
 UICorner_1.CornerRadius = UDim.new(0, 5)
 UICorner_1.Parent = Main_1
 
-UIStroke_1.Color = Color3.fromRGB(255, 80, 80)
+-- Đổi màu viền từ hồng đậm sang xanh dương đậm
+UIStroke_1.Color = Color3.fromRGB(0, 100, 255)
 UIStroke_1.Thickness = 2.5
 UIStroke_1.Parent = Main_1
 
@@ -260,13 +261,14 @@ RaceLabel_1.TextSize = 16
 RaceLabel_1.TextXAlignment = Enum.TextXAlignment.Left
 RaceLabel_1.TextYAlignment = Enum.TextYAlignment.Bottom
 
+-- Các text label hiển thị item giữ nguyên màu trắng, chỉ đổi ký tự 🔴 thành 🔵 nếu muốn (không bắt buộc)
 TextLabel_1.BackgroundTransparency = 1
 TextLabel_1.Parent = Main_1
 TextLabel_1.Position = UDim2.new(0.07000000029802322, 0, 0.800000011920929, 0)
 TextLabel_1.Size = UDim2.new(0, 0, 0, 18)
 TextLabel_1.Selectable = false
 TextLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_1.Text = "🔴 GodHuman"
+TextLabel_1.Text = "🔴 GodHuman"   -- giữ nguyên ký tự
 TextLabel_1.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextLabel_1.TextSize = 16
 TextLabel_1.TextXAlignment = Enum.TextXAlignment.Left
@@ -356,7 +358,11 @@ Top_1.TextColor3 = Color3.fromRGB(255, 255, 255)
 Top_1.TextSize = 16
 Top_1.TextYAlignment = Enum.TextYAlignment.Bottom
 
-UIGradient_1.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 80, 80)), }
+-- Đổi gradient từ hồng sang xanh (cyan → xanh dương)
+UIGradient_1.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
+}
 UIGradient_1.Parent = Top_1
 
 Under_1.BackgroundTransparency = 0.9990000128746033
@@ -371,7 +377,10 @@ Under_1.TextColor3 = Color3.fromRGB(255, 255, 255)
 Under_1.TextSize = 16
 Under_1.TextYAlignment = Enum.TextYAlignment.Bottom
 
-UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 80, 80)), }
+UIGradient_2.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
+}
 UIGradient_2.Parent = Under_1
 
 Under_2.BackgroundTransparency = 0.9990000128746033
@@ -386,7 +395,10 @@ Under_2.TextColor3 = Color3.fromRGB(255, 255, 255)
 Under_2.TextSize = 16
 Under_2.TextYAlignment = Enum.TextYAlignment.Bottom
 
-UIGradient_3.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 80)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 80, 80)), }
+UIGradient_3.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
+}
 UIGradient_3.Parent = Under_2
 
 DropShadow_1.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -449,7 +461,8 @@ Main_1.Size = UDim2.new(1, -50,1, -55)
 
 local UIStroke_1 = Instance.new("UIStroke")
 UIStroke_1.Parent = Main_1
-UIStroke_1.Color = Color3.fromRGB(233,80,80)
+-- Đổi màu viền từ hồng nhạt sang xanh nhạt
+UIStroke_1.Color = Color3.fromRGB(0, 200, 255)
 UIStroke_1.Thickness = 2.5
 
 local Top2_1 = Instance.new("TextLabel")
@@ -462,7 +475,8 @@ Top2_1.Position = UDim2.new(0.5, 0,0, 10)
 Top2_1.Size = UDim2.new(0, 300,0, 18)
 Top2_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Top2_1.Text = "Status: Waiting for available room to join..."
-Top2_1.TextColor3 = Color3.fromRGB(233,80,80)
+-- Đổi màu chữ
+Top2_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Top2_1.TextSize = 16
 Top2_1.TextWrapped = true
 
@@ -478,7 +492,8 @@ Under_1.Position = UDim2.new(0.5, 0,0, 30)
 Under_1.Size = UDim2.new(0, 450,0, 18)
 Under_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Under_1.Text = "Status Farm: N/A"
-Under_1.TextColor3 = Color3.fromRGB(233,80,80)
+-- Đổi màu chữ
+Under_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Under_1.TextSize = 16
 
 local TextLabel_1 = Instance.new("TextLabel")
@@ -490,8 +505,9 @@ TextLabel_1.BorderSizePixel = 0
 TextLabel_1.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
 TextLabel_1.Size = UDim2.new(0, 210,0, 50)
 TextLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_1.Text = "discord.gg/2anc7nHw6b"
-TextLabel_1.TextColor3 = Color3.fromRGB(233,80,80)
+TextLabel_1.Text = "discord.gg/DuAp7VwVG3"
+-- Đổi màu chữ
+TextLabel_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 TextLabel_1.TextSize = 16
 
 local UIStroke_2 = Instance.new("UIStroke")
@@ -534,7 +550,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0  
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
-ImageLabel.Image = "rbxassetid://94416642815435"  -- icon của bạn
+ImageLabel.Image = "rbxassetid://101079681851432"  -- icon của bạn
 ImageLabel.ZIndex = 6
 
 TextButton.Parent = dutdit  
