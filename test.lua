@@ -1,4 +1,3 @@
--- @discord_betaa
 local L_1_ = {}
 L_1_[3] = table["concat"]
 if not game:IsLoaded() then
@@ -87,6 +86,8 @@ L_1_[2] = game:service("VirtualInputManager")
 L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
+L_1_[6] = game:GetService("TweenService")  -- keep tween service
+
 task["spawn"](function()
 	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
 		L_1_[7]["Effect"]:Destroy()
@@ -254,9 +255,8 @@ task["spawn"](function()
 		shared["BC_2"] = true
 	end
 end)
-L_1_[43] = game:GetService("CoreGui")
-L_1_[6] = game:GetService("TweenService")
--- // UI Large \\ --
+
+-- ================= NEW UI =================
 local Lighting = game:GetService("Lighting")
 
 local blur = Instance.new("BlurEffect")
@@ -264,6 +264,7 @@ blur.Name = "CameraBlur"
 blur.Size = 24
 blur.Parent = Lighting
 
+-- // UI Large \\ --
 local CoinCard_1 = Instance.new("ScreenGui")
 local DropShadowHolder_1 = Instance.new("Frame")
 local Main_1 = Instance.new("Frame")
@@ -562,7 +563,6 @@ DropShadow_1.ImageTransparency = 0.25
 DropShadow_1.ImageColor3 = Color3.fromRGB(0, 0, 0)
 
 -- // UI Top \\ --
-
 local Status = Instance.new("ScreenGui")
 Status.Name = "Status"
 Status.Parent = game:GetService("CoreGui")
@@ -596,25 +596,25 @@ DropShadow2_1.ImageTransparency = 0.5
 DropShadow2_1.ScaleType = Enum.ScaleType.Slice
 DropShadow2_1.SliceCenter = Rect.new(49, 49, 450, 450)
 
-local StatusMain = Instance.new("Frame")
-StatusMain.Name = "Main"
-StatusMain.Parent = DropShadow2_1
-StatusMain.AnchorPoint = Vector2.new(0.5, 0.5)
-StatusMain.BackgroundColor3 = Color3.fromRGB(0,0,0)
-StatusMain.BackgroundTransparency = 0.5
-StatusMain.BorderColor3 = Color3.fromRGB(0,0,0)
-StatusMain.BorderSizePixel = 0
-StatusMain.Position = UDim2.new(0.5, 0,0.5, 0)
-StatusMain.Size = UDim2.new(1, -50,1, -55)
+local Main_1 = Instance.new("Frame")
+Main_1.Name = "Main"
+Main_1.Parent = DropShadow2_1
+Main_1.AnchorPoint = Vector2.new(0.5, 0.5)
+Main_1.BackgroundColor3 = Color3.fromRGB(0,0,0)
+Main_1.BackgroundTransparency = 0.5
+Main_1.BorderColor3 = Color3.fromRGB(0,0,0)
+Main_1.BorderSizePixel = 0
+Main_1.Position = UDim2.new(0.5, 0,0.5, 0)
+Main_1.Size = UDim2.new(1, -50,1, -55)
 
-local StatusUIStroke = Instance.new("UIStroke")
-StatusUIStroke.Parent = StatusMain
-StatusUIStroke.Color = Color3.fromRGB(233,80,80)
-StatusUIStroke.Thickness = 2.5
+local UIStroke_1 = Instance.new("UIStroke")
+UIStroke_1.Parent = Main_1
+UIStroke_1.Color = Color3.fromRGB(233,80,80)
+UIStroke_1.Thickness = 2.5
 
 local Top2_1 = Instance.new("TextLabel")
 Top2_1.Name = "Top2"
-Top2_1.Parent = StatusMain
+Top2_1.Parent = Main_1
 Top2_1.AnchorPoint = Vector2.new(0.5, 0)
 Top2_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
 Top2_1.BackgroundTransparency = 1
@@ -626,123 +626,138 @@ Top2_1.TextColor3 = Color3.fromRGB(233,80,80)
 Top2_1.TextSize = 16
 Top2_1.TextWrapped = true
 
-local StatusUnder = Instance.new("TextLabel")
-StatusUnder.Name = "Under"
-StatusUnder.Parent = StatusMain
-StatusUnder.AnchorPoint = Vector2.new(0.5, 0)
-StatusUnder.BackgroundColor3 = Color3.fromRGB(255,255,255)
-StatusUnder.BackgroundTransparency = 0.9990000128746033
-StatusUnder.BorderColor3 = Color3.fromRGB(0,0,0)
-StatusUnder.BorderSizePixel = 0
-StatusUnder.Position = UDim2.new(0.5, 0,0, 30)
-StatusUnder.Size = UDim2.new(0, 450,0, 18)
-StatusUnder.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-StatusUnder.Text = "Status Farm: N/A"
-StatusUnder.TextColor3 = Color3.fromRGB(233,80,80)
-StatusUnder.TextSize = 16
+local Under_1 = Instance.new("TextLabel")
+Under_1.Name = "Under"
+Under_1.Parent = Main_1
+Under_1.AnchorPoint = Vector2.new(0.5, 0)
+Under_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
+Under_1.BackgroundTransparency = 0.9990000128746033
+Under_1.BorderColor3 = Color3.fromRGB(0,0,0)
+Under_1.BorderSizePixel = 0
+Under_1.Position = UDim2.new(0.5, 0,0, 30)
+Under_1.Size = UDim2.new(0, 450,0, 18)
+Under_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+Under_1.Text = "Status Farm: N/A"
+Under_1.TextColor3 = Color3.fromRGB(233,80,80)
+Under_1.TextSize = 16
 
-local DiscordLabel = Instance.new("TextLabel")
-DiscordLabel.Parent = Status
-DiscordLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-DiscordLabel.BackgroundColor3 = Color3.fromRGB(163,162,165)
-DiscordLabel.BackgroundTransparency = 1
-DiscordLabel.BorderSizePixel = 0
-DiscordLabel.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
-DiscordLabel.Size = UDim2.new(0, 210,0, 50)
-DiscordLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-DiscordLabel.Text = "discord.gg/2anc7nHw6b"
-DiscordLabel.TextColor3 = Color3.fromRGB(233,80,80)
-DiscordLabel.TextSize = 16
+local TextLabel_1 = Instance.new("TextLabel")
+TextLabel_1.Parent = Status
+TextLabel_1.AnchorPoint = Vector2.new(0.5, 0.5)
+TextLabel_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
+TextLabel_1.BackgroundTransparency = 1
+TextLabel_1.BorderSizePixel = 0
+TextLabel_1.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
+TextLabel_1.Size = UDim2.new(0, 210,0, 50)
+TextLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+TextLabel_1.Text = "discord.gg/2anc7nHw6b"
+TextLabel_1.TextColor3 = Color3.fromRGB(233,80,80)
+TextLabel_1.TextSize = 16
 
-local DiscordStroke = Instance.new("UIStroke")
-DiscordStroke.Parent = DiscordLabel
-DiscordStroke.Thickness = 1
+local UIStroke_2 = Instance.new("UIStroke")
+UIStroke_2.Parent = TextLabel_1
+UIStroke_2.Thickness = 1
 
-local DiscordGradient = Instance.new("UIGradient")
-DiscordGradient.Parent = DiscordStroke
-DiscordGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(1,0)}
-
--- Gán lại biến L_1_[11] và L_1_[26] để các đoạn code bên dưới vẫn hoạt động
-L_1_[11] = Status
-L_1_[26] = StatusUnder
-L_1_[15] = Top2_1
-L_1_[12] = StatusUIStroke
+local UIGradient_1 = Instance.new("UIGradient")
+UIGradient_1.Parent = UIStroke_2
+UIGradient_1.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(1,0)}
 
 -- // Toggle UI \\ --
-
 local LonelyHubBtn = Instance.new("ScreenGui")
 local dutdit = Instance.new("Frame")
-local UICornerBtn = Instance.new("UICorner")
-local ImageLabelBtn = Instance.new("ImageLabel")
-local TextButtonBtn = Instance.new("TextButton")
+local UICorner = Instance.new("UICorner")
+local ImageLabel = Instance.new("ImageLabel")
+local TextButton = Instance.new("TextButton")
 
-LonelyHubBtn.Name = "Lonely Hub Btn"
+LonelyHubBtn.Name = "Lonely Hub Btn"  
 LonelyHubBtn.Parent = game:GetService("CoreGui")
-LonelyHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+LonelyHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
 LonelyHubBtn.DisplayOrder = 10
 
-dutdit.Name = "dut dit"
-dutdit.Parent = LonelyHubBtn
-dutdit.AnchorPoint = Vector2.new(0.1, 0.1)
-dutdit.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-dutdit.Position = UDim2.new(0, 20, 0.1, -6)
-dutdit.Size = UDim2.new(0, 50, 0, 50)
+dutdit.Name = "dut dit"  
+dutdit.Parent = LonelyHubBtn  
+dutdit.AnchorPoint = Vector2.new(0.1, 0.1)  
+dutdit.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  
+dutdit.Position = UDim2.new(0, 20, 0.1, -6)  
+dutdit.Size = UDim2.new(0, 50, 0, 50)  
 dutdit.Active = true
 dutdit.Draggable = true
 
-UICornerBtn.CornerRadius = UDim.new(1, 0)
-UICornerBtn.Parent = dutdit
+UICorner.CornerRadius = UDim.new(1, 0)  
+UICorner.Parent = dutdit  
 
-ImageLabelBtn.Parent = dutdit
-ImageLabelBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabelBtn.BackgroundTransparency = 1.0
-ImageLabelBtn.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabelBtn.Size = UDim2.new(0, 40, 0, 40)
-ImageLabelBtn.Image = "rbxassetid://112485471724320"
+ImageLabel.Parent = dutdit  
+ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)  
+ImageLabel.BackgroundTransparency = 1.0  
+ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
+ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
+ImageLabel.Image = "rbxassetid://112485471724320"  
 
-TextButtonBtn.Parent = dutdit
-TextButtonBtn.BackgroundTransparency = 1.0
-TextButtonBtn.Size = UDim2.new(1, 0, 1, 0)
-TextButtonBtn.Font = Enum.Font.SourceSans
-TextButtonBtn.Text = ""
-TextButtonBtn.TextColor3 = Color3.fromRGB(27, 42, 53)
+TextButton.Parent = dutdit  
+TextButton.BackgroundTransparency = 1.0  
+TextButton.Size = UDim2.new(1, 0, 1, 0)  
+TextButton.Font = Enum.Font.SourceSans  
+TextButton.Text = ""  
+TextButton.TextColor3 = Color3.fromRGB(27, 42, 53)  
 
-local zoomedIn = false
-local originalSize = UDim2.new(0, 40, 0, 40)
-local zoomedSize = UDim2.new(0, 30, 0, 30)
-local tweenInfoBtn = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local TweenService = game:GetService("TweenService")  
+local VirtualInputManager = game:GetService("VirtualInputManager")  
 
-local faded = false
-local fadeInTween = L_1_[6]:Create(dutdit, tweenInfoBtn, {BackgroundTransparency = 0.25})
-local fadeOutTween = L_1_[6]:Create(dutdit, tweenInfoBtn, {BackgroundTransparency = 0})
+local zoomedIn = false  
+local originalSize = UDim2.new(0, 40, 0, 40)  
+local zoomedSize = UDim2.new(0, 30, 0, 30)  
+local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)  
 
-TextButtonBtn.MouseButton1Down:Connect(function()
-    if zoomedIn then
-        L_1_[6]:Create(ImageLabelBtn, tweenInfoBtn, {Size = originalSize}):Play()
-    else
-        L_1_[6]:Create(ImageLabelBtn, tweenInfoBtn, {Size = zoomedSize}):Play()
-    end
-    zoomedIn = not zoomedIn
+local faded = false  
+local fadeInTween = TweenService:Create(dutdit, tweenInfo, {BackgroundTransparency = 0.25})  
+local fadeOutTween = TweenService:Create(dutdit, tweenInfo, {BackgroundTransparency = 0})  
 
-    if faded then
-        fadeOutTween:Play()
-    else
-        fadeInTween:Play()
-    end
-    faded = not faded
+TextButton.MouseButton1Down:Connect(  
+    function()  
+        if zoomedIn then  
+            TweenService:Create(ImageLabel, tweenInfo, {Size = originalSize}):Play()  
+        else  
+            TweenService:Create(ImageLabel, tweenInfo, {Size = zoomedSize}):Play()  
+        end  
+        zoomedIn = not zoomedIn  
 
-    if CoinCard_1.Enabled == false then
-        CoinCard_1.Enabled = true
-    else
-        CoinCard_1.Enabled = false
-    end
+        if faded then  
+            fadeOutTween:Play()  
+        else  
+            fadeInTween:Play()  
+        end  
+        faded = not faded  
+        
+        if CoinCard_1.Enabled == false then
+            CoinCard_1.Enabled = true
+        else
+            CoinCard_1.Enabled = false
+        end
+        
+        if blur.Size == 24 then
+            blur.Size = 0
+        else
+            blur.Size = 24
+        end
+    end  
+)
 
-    if blur.Size == 24 then
-        blur.Size = 0
-    else
-        blur.Size = 24
-    end
-end)
+-- Store UI references for later updates
+L_1_.UI_TopStatus = Top2_1
+L_1_.UI_BottomStatus = Under_1
+L_1_.UI_Beli = BeliLabel_1
+L_1_.UI_Level = LevelLabel_1
+L_1_.UI_Race = RaceLabel_1
+L_1_.UI_Frag = TextLabel_6
+L_1_.UI_GodHuman = TextLabel_1
+L_1_.UI_PullLever = TextLabel_2
+L_1_.UI_Valkyrie = TextLabel_3
+L_1_.UI_MirrorFractal = TextLabel_4
+L_1_.UI_SkullGuitar = TextLabel_5
+L_1_.UI_CDK = TextLabel_7
+
+-- ========== END NEW UI ==========
+
 if L_1_[30] == 2753915549 then
 	Old_World = true
 elseif L_1_[30] == 4442272183 then
