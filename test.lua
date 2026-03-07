@@ -1,3 +1,4 @@
+-- @discord_betaa
 local L_1_ = {}
 L_1_[3] = table["concat"]
 if not game:IsLoaded() then
@@ -86,177 +87,16 @@ L_1_[2] = game:service("VirtualInputManager")
 L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
-L_1_[6] = game:GetService("TweenService")  -- keep tween service
+L_1_[6] = game:GetService("TweenService")
 
-task["spawn"](function()
-	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
-		L_1_[7]["Effect"]:Destroy()
-		for L_2_forvar0, L_3_forvar1 in pairs(getconnections(L_1_[5]["PlayerGui"]["Main"]["Settings"]["Buttons"]["FastModeButton"]["Activated"])) do
-			local L_4_ = {}
-			L_4_[2], L_4_[3] = L_2_forvar0, L_3_forvar1
-			L_4_[3]["Function"]()
-		end
-	end
-end)
-wait(2)
-task["spawn"](function()
-	if (getgenv())["Configs"]["FPS Booster"] then
-		local L_5_ = {}
-		L_5_[3] = L_1_[19]:WaitForChild("Enemies")
-		L_5_[2] = (L_1_[19]:WaitForChild("Map")):GetDescendants()
-		for L_6_forvar0, L_7_forvar1 in ipairs(L_5_[2]) do
-			local L_8_ = {}
-			L_8_[2], L_8_[1] = L_6_forvar0, L_7_forvar1
-			if L_8_[1]:IsA("BasePart") then
-				local L_9_ = {}
-				L_9_[2] = false
-				for L_10_forvar0 = 1, 5, 1 do
-					local L_11_ = {}
-					L_11_[3] = L_10_forvar0
-					L_11_[1] = L_1_[19]["Map"]["Jungle"]["QuestPlates"]:FindFirstChild("Plate" .. L_11_[3])
-					if L_11_[1] and (L_8_[1]["Name"] == "Button" and L_8_[1]:IsDescendantOf(L_11_[1])) then
-						L_9_[2] = true
-						break
-					end
-				end
-				if L_9_[2] then
-					continue
-				end
-				if L_8_[1]["Name"] == "Door" and L_8_[1]:IsDescendantOf(L_1_[19]["Map"]["Ice"]) then
-					continue
-				end
-				if L_8_[1]:IsDescendantOf(L_1_[19]["Map"]["Jungle"]:FindFirstChild("Final")) then
-					continue
-				end
-				if L_1_[19]["Map"]:FindFirstChild("IceCastle") then
-					if L_8_[1]:IsDescendantOf(L_1_[19]["Map"]:FindFirstChild("IceCastle")) then
-						continue
-					end
-				end
-				L_9_[1] = true
-				for L_12_forvar0, L_13_forvar1 in ipairs(L_5_[3]:GetChildren()) do
-					local L_14_ = {}
-					L_14_[3], L_14_[1] = L_12_forvar0, L_13_forvar1
-					L_14_[2] = L_14_[1]:FindFirstChild("HumanoidRootPart")
-					if L_14_[2] and (L_14_[2]["Position"] - L_8_[1]["Position"])["Magnitude"] < 10 then
-						L_9_[1] = false
-						break
-					end
-				end
-				if L_9_[1] then
-					L_8_[1]:Destroy()
-				end
-			end
-		end
-		if L_1_[5]["PlayerGui"]:FindFirstChild("Notifications") then
-			L_1_[5]["PlayerGui"]["Notifications"]["Enabled"] = false
-		end
-		shared = shared or {}
-		if shared["BC_1"] == nil then
-			shared["BC_1"] = true
-		end
-		if shared["BC_1"] and shared["BC_2"] == nil then
-			local L_15_ = {}
-			L_15_[6] = workspace
-			L_15_[4] = L_1_[16]
-			L_15_[3] = L_15_[6]["Terrain"]
-			L_15_[2] = L_1_[29]
-			L_15_[1] = L_1_[5]["Character"]
-			L_15_[3]["WaterWaveSize"] = 0
-			L_15_[3]["WaterWaveSpeed"] = 0
-			L_15_[3]["WaterReflectance"] = 0
-			L_15_[3]["WaterTransparency"] = 0
-			L_15_[4]["GlobalShadows"] = false
-			L_15_[4]["FogEnd"] = 9000000000
-			L_15_[4]["Brightness"] = 0
-			if settings and (settings())["Rendering"] then
-				(settings())["Rendering"]["QualityLevel"] = "Level01";
-				(settings())["Rendering"]["GraphicsMode"] = "NoGraphics"
-			end
-			for L_16_forvar0, L_17_forvar1 in pairs(L_15_[6]:GetDescendants()) do
-				local L_18_ = {}
-				L_18_[2], L_18_[3] = L_16_forvar0, L_17_forvar1
-				if L_18_[3]:IsA("BasePart") or L_18_[3]:IsA("SpawnLocation") or L_18_[3]:IsA("WedgePart") or L_18_[3]:IsA("Terrain") or L_18_[3]:IsA("MeshPart") then
-					L_18_[3]["Material"] = Enum["Material"]["Plastic"]
-					L_18_[3]["Reflectance"] = 0
-					L_18_[3]["CastShadow"] = false
-				elseif L_18_[3]:IsA("Decal") or L_18_[3]:IsA("Texture") then
-					L_18_[3]["Texture"] = ""
-					L_18_[3]["Transparency"] = 1
-				elseif L_18_[3]:IsA("ParticleEmitter") or L_18_[3]:IsA("Trail") then
-					L_18_[3]["LightInfluence"] = 0
-					L_18_[3]["Texture"] = ""
-					L_18_[3]["Lifetime"] = NumberRange["new"](0)
-				elseif L_18_[3]:IsA("Explosion") then
-					L_18_[3]["BlastPressure"] = 0
-					L_18_[3]["BlastRadius"] = 0
-				elseif L_18_[3]:IsA("Fire") or L_18_[3]:IsA("SpotLight") or L_18_[3]:IsA("Smoke") or L_18_[3]:IsA("Sparkles") then
-					L_18_[3]["Enabled"] = false
-				elseif L_18_[3]:IsA("MeshPart") then
-					L_18_[3]["Material"] = Enum["Material"]["Plastic"]
-					L_18_[3]["Reflectance"] = 0
-					L_18_[3]["TextureID"] = ""
-					L_18_[3]["CastShadow"] = false
-					L_18_[3]["RenderFidelity"] = Enum["RenderFidelity"]["Performance"]
-				elseif L_18_[3]:IsA("SpecialMesh") then
-					L_18_[3]["TextureId"] = ""
-				elseif L_18_[3]:IsA("Shirt") or L_18_[3]:IsA("Pants") or L_18_[3]:IsA("Accessory") then
-					L_18_[3]:Destroy()
-				end
-			end
-			for L_19_forvar0, L_20_forvar1 in pairs(L_15_[4]:GetDescendants()) do
-				local L_21_ = {}
-				L_21_[1], L_21_[2] = L_19_forvar0, L_20_forvar1
-				if L_21_[2]:IsA("BlurEffect") or L_21_[2]:IsA("SunRaysEffect") or L_21_[2]:IsA(L_1_[3]({
-					"ColorCorrectionEffec",
-					"t"
-				})) or L_21_[2]:IsA("BloomEffect") or L_21_[2]:IsA("DepthOfFieldEffect") then
-					L_21_[2]["Enabled"] = false
-				end
-			end
-			if L_15_[1] then
-				for L_22_forvar0, L_23_forvar1 in pairs(L_15_[1]:GetDescendants()) do
-					local L_24_ = {}
-					L_24_[3], L_24_[2] = L_22_forvar0, L_23_forvar1
-					if L_24_[2]:IsA("Shirt") or L_24_[2]:IsA("Pants") or L_24_[2]:IsA("Accessory") then
-						L_24_[2]:Destroy()
-					end
-				end
-			end
-			if L_1_[30] == 2753915549 or L_1_[30] == 4442272183 or L_1_[30] == 7449423635 then
-				local L_25_ = {}
-				L_25_[1] = L_1_[7]:FindFirstChild("Effect") and L_1_[7]["Effect"]:FindFirstChild("Container")
-				if L_25_[1] then
-					local L_26_ = {}
-					L_26_[1] = L_25_[1]:FindFirstChild("Shared")
-					L_26_[3] = L_25_[1]:FindFirstChild("Misc")
-					if L_26_[1] then
-						if L_26_[1]:FindFirstChild("AirDash") then
-							L_26_[1]["AirDash"]:Destroy()
-						end
-						if L_26_[1]:FindFirstChild("LightningTP") then
-							L_26_[1]["LightningTP"]:Destroy()
-						end
-					end
-					if L_26_[3] then
-						if L_26_[3]:FindFirstChild("Damage") then
-							L_26_[3]["Damage"]:Destroy()
-						end
-						if L_26_[3]:FindFirstChild("Confetti") then
-							L_26_[3]["Confetti"]:Destroy()
-						end
-					end
-					if L_25_[1]:FindFirstChild("LevelUp") then
-						L_25_[1]["LevelUp"]:Destroy()
-					end
-				end
-			end
-		end
-		shared["BC_2"] = true
-	end
+-- Xóa UI cũ nếu còn
+pcall(function()
+    if L_1_[4]:FindFirstChild("Status_UI") then
+        L_1_[4]["Status_UI"]:Destroy()
+    end
 end)
 
--- ================= NEW UI =================
+-- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
 
 local blur = Instance.new("BlurEffect")
@@ -673,15 +513,18 @@ LonelyHubBtn.Name = "Lonely Hub Btn"
 LonelyHubBtn.Parent = game:GetService("CoreGui")
 LonelyHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
 LonelyHubBtn.DisplayOrder = 10
+LonelyHubBtn.Enabled = true
 
 dutdit.Name = "dut dit"  
 dutdit.Parent = LonelyHubBtn  
 dutdit.AnchorPoint = Vector2.new(0.1, 0.1)  
 dutdit.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  
+dutdit.BackgroundTransparency = 0  
 dutdit.Position = UDim2.new(0, 20, 0.1, -6)  
 dutdit.Size = UDim2.new(0, 50, 0, 50)  
 dutdit.Active = true
 dutdit.Draggable = true
+dutdit.ZIndex = 5
 
 UICorner.CornerRadius = UDim.new(1, 0)  
 UICorner.Parent = dutdit  
@@ -691,7 +534,8 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0  
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
-ImageLabel.Image = "rbxassetid://112485471724320"  
+ImageLabel.Image = "rbxassetid://112485471724320"  -- icon của bạn
+ImageLabel.ZIndex = 6
 
 TextButton.Parent = dutdit  
 TextButton.BackgroundTransparency = 1.0  
@@ -699,6 +543,34 @@ TextButton.Size = UDim2.new(1, 0, 1, 0)
 TextButton.Font = Enum.Font.SourceSans  
 TextButton.Text = ""  
 TextButton.TextColor3 = Color3.fromRGB(27, 42, 53)  
+TextButton.ZIndex = 7
+
+-- Tooltip khi hover
+local tooltip = Instance.new("TextLabel")
+tooltip.Name = "Tooltip"
+tooltip.Parent = dutdit
+tooltip.AnchorPoint = Vector2.new(0.5, 1)
+tooltip.Position = UDim2.new(0.5, 0, 0, -5)
+tooltip.Size = UDim2.new(0, 70, 0, 22)
+tooltip.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+tooltip.BackgroundTransparency = 0.2
+tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+tooltip.Text = "Toggle UI"
+tooltip.Font = Enum.Font.GothamBold
+tooltip.TextSize = 13
+tooltip.Visible = false
+tooltip.ZIndex = 10
+tooltip.RichText = true
+
+-- Hiệu ứng hover
+dutdit.MouseEnter:Connect(function()
+    tooltip.Visible = true
+    L_1_[6]:Create(dutdit, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
+end)
+dutdit.MouseLeave:Connect(function()
+    tooltip.Visible = false
+    L_1_[6]:Create(dutdit, TweenInfo.new(0.2), {Size = UDim2.new(0, 50, 0, 50)}):Play()
+end)
 
 local TweenService = game:GetService("TweenService")  
 local VirtualInputManager = game:GetService("VirtualInputManager")  
@@ -759,18 +631,7 @@ L_1_.UI_Item1 = ItemLabel1_1
 L_1_.UI_Item2 = ItemLabel2_1
 L_1_.UI_Item3 = ItemLabel1_2
 
--- ========== END NEW UI ==========
-
-if L_1_[30] == 2753915549 then
-	Old_World = true
-elseif L_1_[30] == 4442272183 then
-	New_World = true
-elseif L_1_[30] == 7449423635 then
-	Three_World = true
-end
-L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
-
--- Hàm cập nhật UI (thêm vào sau UI)
+-- Hàm cập nhật UI định kỳ
 local function updateUI()
 	pcall(function()
 		local plr = L_1_[5]
@@ -780,16 +641,15 @@ local function updateUI()
 			local frag = plr.Data.Fragments and plr.Data.Fragments.Value or "N/A"
 			local race = plr.Data.Race and plr.Data.Race.Value or "N/A"
 			local world = Three_World and "Third Sea" or (New_World and "Second Sea" or "First Sea")
-			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌") -- First Sea không có tick
-			if world == "First Sea" then seaEmoji = "❌" end
+			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌")
 			
 			if L_1_.UI_Beli then L_1_.UI_Beli.Text = "Beli: " .. tostring(beli) end
 			if L_1_.UI_Level then L_1_.UI_Level.Text = "Level: " .. tostring(level) .. "    " .. world .. " : " .. seaEmoji end
 			if L_1_.UI_Race then L_1_.UI_Race.Text = "Race: " .. tostring(race) end
 			if L_1_.UI_Frag then L_1_.UI_Frag.Text = "Frag: " .. tostring(frag) end
 			
-			-- Kiểm tra các item đặc biệt
-			local godhuman = God_Human_C or L_1_[45]["gi"] and (L_1_[45]["gi"]("Godhuman") or L_1_[45]["gi"]("God Human"))
+			-- Kiểm tra các item đặc biệt (có thể bổ sung thêm)
+			local godhuman = God_Human_C or (L_1_[45]["gi"] and L_1_[45]["gi"]("Godhuman"))
 			local pullLever = ExSeb or false
 			local valkyrie = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
 			local mirror = Mirror_Fractal_H or false
@@ -821,19 +681,202 @@ end
 
 -- Vòng lặp cập nhật UI
 task.spawn(function()
-	while wait(1) do
+	while task.wait(1) do
 		updateUI()
 	end
 end)
 
--- Hàm Status cũ cập nhật cả UI mới
+-- Định nghĩa lại hàm Status (cập nhật thanh trạng thái dưới cùng)
 L_1_[45]["Status"] = function(text)
-	L_1_[26].Text = text  -- vẫn giữ nếu có
 	pcall(function()
 		if L_1_.UI_BottomStatus then
 			L_1_.UI_BottomStatus.Text = "Status Farm: " .. text
 		end
 	end)
+end
+
+-- Đặt trạng thái ban đầu
+L_1_[45]["Status"]("Idle")
+
+-- ========== KẾT THÚC UI MỚI ==========
+
+task["spawn"](function()
+	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
+		L_1_[7]["Effect"]:Destroy()
+		for L_2_forvar0, L_3_forvar1 in pairs(getconnections(L_1_[5]["PlayerGui"]["Main"]["Settings"]["Buttons"]["FastModeButton"]["Activated"])) do
+			local L_4_ = {}
+			L_4_[2], L_4_[3] = L_2_forvar0, L_3_forvar1
+			L_4_[3]["Function"]()
+		end
+	end
+end)
+wait(2)
+task["spawn"](function()
+	if (getgenv())["Configs"]["FPS Booster"] then
+		local L_5_ = {}
+		L_5_[3] = L_1_[19]:WaitForChild("Enemies")
+		L_5_[2] = (L_1_[19]:WaitForChild("Map")):GetDescendants()
+		for L_6_forvar0, L_7_forvar1 in ipairs(L_5_[2]) do
+			local L_8_ = {}
+			L_8_[2], L_8_[1] = L_6_forvar0, L_7_forvar1
+			if L_8_[1]:IsA("BasePart") then
+				local L_9_ = {}
+				L_9_[2] = false
+				for L_10_forvar0 = 1, 5, 1 do
+					local L_11_ = {}
+					L_11_[3] = L_10_forvar0
+					L_11_[1] = L_1_[19]["Map"]["Jungle"]["QuestPlates"]:FindFirstChild("Plate" .. L_11_[3])
+					if L_11_[1] and (L_8_[1]["Name"] == "Button" and L_8_[1]:IsDescendantOf(L_11_[1])) then
+						L_9_[2] = true
+						break
+					end
+				end
+				if L_9_[2] then
+					continue
+				end
+				if L_8_[1]["Name"] == "Door" and L_8_[1]:IsDescendantOf(L_1_[19]["Map"]["Ice"]) then
+					continue
+				end
+				if L_8_[1]:IsDescendantOf(L_1_[19]["Map"]["Jungle"]:FindFirstChild("Final")) then
+					continue
+				end
+				if L_1_[19]["Map"]:FindFirstChild("IceCastle") then
+					if L_8_[1]:IsDescendantOf(L_1_[19]["Map"]:FindFirstChild("IceCastle")) then
+						continue
+					end
+				end
+				L_9_[1] = true
+				for L_12_forvar0, L_13_forvar1 in ipairs(L_5_[3]:GetChildren()) do
+					local L_14_ = {}
+					L_14_[3], L_14_[1] = L_12_forvar0, L_13_forvar1
+					L_14_[2] = L_14_[1]:FindFirstChild("HumanoidRootPart")
+					if L_14_[2] and (L_14_[2]["Position"] - L_8_[1]["Position"])["Magnitude"] < 10 then
+						L_9_[1] = false
+						break
+					end
+				end
+				if L_9_[1] then
+					L_8_[1]:Destroy()
+				end
+			end
+		end
+		if L_1_[5]["PlayerGui"]:FindFirstChild("Notifications") then
+			L_1_[5]["PlayerGui"]["Notifications"]["Enabled"] = false
+		end
+		shared = shared or {}
+		if shared["BC_1"] == nil then
+			shared["BC_1"] = true
+		end
+		if shared["BC_1"] and shared["BC_2"] == nil then
+			local L_15_ = {}
+			L_15_[6] = workspace
+			L_15_[4] = L_1_[16]
+			L_15_[3] = L_15_[6]["Terrain"]
+			L_15_[2] = L_1_[29]
+			L_15_[1] = L_1_[5]["Character"]
+			L_15_[3]["WaterWaveSize"] = 0
+			L_15_[3]["WaterWaveSpeed"] = 0
+			L_15_[3]["WaterReflectance"] = 0
+			L_15_[3]["WaterTransparency"] = 0
+			L_15_[4]["GlobalShadows"] = false
+			L_15_[4]["FogEnd"] = 9000000000
+			L_15_[4]["Brightness"] = 0
+			if settings and (settings())["Rendering"] then
+				(settings())["Rendering"]["QualityLevel"] = "Level01";
+				(settings())["Rendering"]["GraphicsMode"] = "NoGraphics"
+			end
+			for L_16_forvar0, L_17_forvar1 in pairs(L_15_[6]:GetDescendants()) do
+				local L_18_ = {}
+				L_18_[2], L_18_[3] = L_16_forvar0, L_17_forvar1
+				if L_18_[3]:IsA("BasePart") or L_18_[3]:IsA("SpawnLocation") or L_18_[3]:IsA("WedgePart") or L_18_[3]:IsA("Terrain") or L_18_[3]:IsA("MeshPart") then
+					L_18_[3]["Material"] = Enum["Material"]["Plastic"]
+					L_18_[3]["Reflectance"] = 0
+					L_18_[3]["CastShadow"] = false
+				elseif L_18_[3]:IsA("Decal") or L_18_[3]:IsA("Texture") then
+					L_18_[3]["Texture"] = ""
+					L_18_[3]["Transparency"] = 1
+				elseif L_18_[3]:IsA("ParticleEmitter") or L_18_[3]:IsA("Trail") then
+					L_18_[3]["LightInfluence"] = 0
+					L_18_[3]["Texture"] = ""
+					L_18_[3]["Lifetime"] = NumberRange["new"](0)
+				elseif L_18_[3]:IsA("Explosion") then
+					L_18_[3]["BlastPressure"] = 0
+					L_18_[3]["BlastRadius"] = 0
+				elseif L_18_[3]:IsA("Fire") or L_18_[3]:IsA("SpotLight") or L_18_[3]:IsA("Smoke") or L_18_[3]:IsA("Sparkles") then
+					L_18_[3]["Enabled"] = false
+				elseif L_18_[3]:IsA("MeshPart") then
+					L_18_[3]["Material"] = Enum["Material"]["Plastic"]
+					L_18_[3]["Reflectance"] = 0
+					L_18_[3]["TextureID"] = ""
+					L_18_[3]["CastShadow"] = false
+					L_18_[3]["RenderFidelity"] = Enum["RenderFidelity"]["Performance"]
+				elseif L_18_[3]:IsA("SpecialMesh") then
+					L_18_[3]["TextureId"] = ""
+				elseif L_18_[3]:IsA("Shirt") or L_18_[3]:IsA("Pants") or L_18_[3]:IsA("Accessory") then
+					L_18_[3]:Destroy()
+				end
+			end
+			for L_19_forvar0, L_20_forvar1 in pairs(L_15_[4]:GetDescendants()) do
+				local L_21_ = {}
+				L_21_[1], L_21_[2] = L_19_forvar0, L_20_forvar1
+				if L_21_[2]:IsA("BlurEffect") or L_21_[2]:IsA("SunRaysEffect") or L_21_[2]:IsA(L_1_[3]({
+					"ColorCorrectionEffec",
+					"t"
+				})) or L_21_[2]:IsA("BloomEffect") or L_21_[2]:IsA("DepthOfFieldEffect") then
+					L_21_[2]["Enabled"] = false
+				end
+			end
+			if L_15_[1] then
+				for L_22_forvar0, L_23_forvar1 in pairs(L_15_[1]:GetDescendants()) do
+					local L_24_ = {}
+					L_24_[3], L_24_[2] = L_22_forvar0, L_23_forvar1
+					if L_24_[2]:IsA("Shirt") or L_24_[2]:IsA("Pants") or L_24_[2]:IsA("Accessory") then
+						L_24_[2]:Destroy()
+					end
+				end
+			end
+			if L_1_[30] == 2753915549 or L_1_[30] == 4442272183 or L_1_[30] == 7449423635 then
+				local L_25_ = {}
+				L_25_[1] = L_1_[7]:FindFirstChild("Effect") and L_1_[7]["Effect"]:FindFirstChild("Container")
+				if L_25_[1] then
+					local L_26_ = {}
+					L_26_[1] = L_25_[1]:FindFirstChild("Shared")
+					L_26_[3] = L_25_[1]:FindFirstChild("Misc")
+					if L_26_[1] then
+						if L_26_[1]:FindFirstChild("AirDash") then
+							L_26_[1]["AirDash"]:Destroy()
+						end
+						if L_26_[1]:FindFirstChild("LightningTP") then
+							L_26_[1]["LightningTP"]:Destroy()
+						end
+					end
+					if L_26_[3] then
+						if L_26_[3]:FindFirstChild("Damage") then
+							L_26_[3]["Damage"]:Destroy()
+						end
+						if L_26_[3]:FindFirstChild("Confetti") then
+							L_26_[3]["Confetti"]:Destroy()
+						end
+					end
+					if L_25_[1]:FindFirstChild("LevelUp") then
+						L_25_[1]["LevelUp"]:Destroy()
+					end
+				end
+			end
+		end
+		shared["BC_2"] = true
+	end
+end)
+
+L_1_[43] = game:GetService("CoreGui")
+-- Đã xóa phần tạo Status_UI cũ
+
+if L_1_[30] == 2753915549 then
+	Old_World = true
+elseif L_1_[30] == 4442272183 then
+	New_World = true
+elseif L_1_[30] == 7449423635 then
+	Three_World = true
 end
 L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
 function CheckLevel2()
