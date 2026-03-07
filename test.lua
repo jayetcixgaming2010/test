@@ -89,14 +89,6 @@ L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
 
--- Xóa UI cũ nếu còn
-pcall(function()
-    local core = game:GetService("CoreGui")
-    if core:FindFirstChild("CoinCard") then core.CoinCard:Destroy() end
-    if core:FindFirstChild("Status") then core.Status:Destroy() end
-    if core:FindFirstChild("Lonely Hub Btn") then core["Lonely Hub Btn"]:Destroy() end
-end)
-
 -- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
 
@@ -120,13 +112,13 @@ local ItemLabel1_2 = Instance.new("TextLabel")
 local BeliLabel_1 = Instance.new("TextLabel")
 local LevelLabel_1 = Instance.new("TextLabel")
 local RaceLabel_1 = Instance.new("TextLabel")
-local TextLabel_1 = Instance.new("TextLabel")
-local TextLabel_2 = Instance.new("TextLabel")
-local TextLabel_3 = Instance.new("TextLabel")
-local TextLabel_4 = Instance.new("TextLabel")
-local TextLabel_5 = Instance.new("TextLabel")
-local TextLabel_6 = Instance.new("TextLabel")
-local TextLabel_7 = Instance.new("TextLabel")
+local GodHumanLabel = Instance.new("TextLabel")   -- thay cho TextLabel_1 cũ
+local PullLeverLabel = Instance.new("TextLabel")  -- thay cho TextLabel_2 cũ
+local ValkyrieLabel = Instance.new("TextLabel")   -- thay cho TextLabel_3 cũ
+local MirrorLabel = Instance.new("TextLabel")     -- thay cho TextLabel_4 cũ
+local SkullGuitarLabel = Instance.new("TextLabel") -- thay cho TextLabel_5 cũ
+local FragLabel = Instance.new("TextLabel")       -- thay cho TextLabel_6 cũ
+local CDKLabel = Instance.new("TextLabel")        -- thay cho TextLabel_7 cũ
 local Top_1 = Instance.new("TextLabel")
 local UIGradient_1 = Instance.new("UIGradient")
 local Under_1 = Instance.new("TextLabel")
@@ -163,7 +155,6 @@ Main_1.Selectable = false
 UICorner_1.CornerRadius = UDim.new(0, 5)
 UICorner_1.Parent = Main_1
 
--- Đổi màu viền từ hồng đậm sang xanh dương đậm
 UIStroke_1.Color = Color3.fromRGB(0, 100, 255)
 UIStroke_1.Thickness = 2.5
 UIStroke_1.Parent = Main_1
@@ -262,90 +253,89 @@ RaceLabel_1.TextSize = 16
 RaceLabel_1.TextXAlignment = Enum.TextXAlignment.Left
 RaceLabel_1.TextYAlignment = Enum.TextYAlignment.Bottom
 
--- Các text label hiển thị item giữ nguyên màu trắng, chỉ đổi ký tự 🔴 thành 🔵 nếu muốn (không bắt buộc)
-TextLabel_1.BackgroundTransparency = 1
-TextLabel_1.Parent = Main_1
-TextLabel_1.Position = UDim2.new(0.07000000029802322, 0, 0.800000011920929, 0)
-TextLabel_1.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_1.Selectable = false
-TextLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_1.Text = "🔴 GodHuman"   -- giữ nguyên ký tự
-TextLabel_1.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_1.TextSize = 16
-TextLabel_1.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_1.TextYAlignment = Enum.TextYAlignment.Bottom
+GodHumanLabel.BackgroundTransparency = 1
+GodHumanLabel.Parent = Main_1
+GodHumanLabel.Position = UDim2.new(0.07000000029802322, 0, 0.800000011920929, 0)
+GodHumanLabel.Size = UDim2.new(0, 0, 0, 18)
+GodHumanLabel.Selectable = false
+GodHumanLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+GodHumanLabel.Text = "🔴 GodHuman"
+GodHumanLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+GodHumanLabel.TextSize = 16
+GodHumanLabel.TextXAlignment = Enum.TextXAlignment.Left
+GodHumanLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_2.BackgroundTransparency = 1
-TextLabel_2.Parent = Main_1
-TextLabel_2.Position = UDim2.new(0.75, 0, 0.8999999761581421, 0)
-TextLabel_2.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_2.Selectable = false
-TextLabel_2.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_2.Text = "🔴 Pull Lever"
-TextLabel_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_2.TextSize = 16
-TextLabel_2.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_2.TextYAlignment = Enum.TextYAlignment.Bottom
+PullLeverLabel.BackgroundTransparency = 1
+PullLeverLabel.Parent = Main_1
+PullLeverLabel.Position = UDim2.new(0.75, 0, 0.8999999761581421, 0)
+PullLeverLabel.Size = UDim2.new(0, 0, 0, 18)
+PullLeverLabel.Selectable = false
+PullLeverLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+PullLeverLabel.Text = "🔴 Pull Lever"
+PullLeverLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+PullLeverLabel.TextSize = 16
+PullLeverLabel.TextXAlignment = Enum.TextXAlignment.Left
+PullLeverLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_3.BackgroundTransparency = 1
-TextLabel_3.Parent = Main_1
-TextLabel_3.Position = UDim2.new(0.75, 0, 0.800000011920929, 0)
-TextLabel_3.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_3.Selectable = false
-TextLabel_3.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_3.Text = "🔴 Valkyrie Helm"
-TextLabel_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_3.TextSize = 16
-TextLabel_3.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_3.TextYAlignment = Enum.TextYAlignment.Bottom
+ValkyrieLabel.BackgroundTransparency = 1
+ValkyrieLabel.Parent = Main_1
+ValkyrieLabel.Position = UDim2.new(0.75, 0, 0.800000011920929, 0)
+ValkyrieLabel.Size = UDim2.new(0, 0, 0, 18)
+ValkyrieLabel.Selectable = false
+ValkyrieLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+ValkyrieLabel.Text = "🔴 Valkyrie Helm"
+ValkyrieLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ValkyrieLabel.TextSize = 16
+ValkyrieLabel.TextXAlignment = Enum.TextXAlignment.Left
+ValkyrieLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_4.BackgroundTransparency = 1
-TextLabel_4.Parent = Main_1
-TextLabel_4.Position = UDim2.new(0.4000000059604645, 0, 0.8999999761581421, 0)
-TextLabel_4.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_4.Selectable = false
-TextLabel_4.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_4.Text = "🔴 Mirror Fractal"
-TextLabel_4.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_4.TextSize = 16
-TextLabel_4.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_4.TextYAlignment = Enum.TextYAlignment.Bottom
+MirrorLabel.BackgroundTransparency = 1
+MirrorLabel.Parent = Main_1
+MirrorLabel.Position = UDim2.new(0.4000000059604645, 0, 0.8999999761581421, 0)
+MirrorLabel.Size = UDim2.new(0, 0, 0, 18)
+MirrorLabel.Selectable = false
+MirrorLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+MirrorLabel.Text = "🔴 Mirror Fractal"
+MirrorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+MirrorLabel.TextSize = 16
+MirrorLabel.TextXAlignment = Enum.TextXAlignment.Left
+MirrorLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_5.BackgroundTransparency = 1
-TextLabel_5.Parent = Main_1
-TextLabel_5.Position = UDim2.new(0.07000000029802322, 0, 0.8999999761581421, 0)
-TextLabel_5.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_5.Selectable = false
-TextLabel_5.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_5.Text = "🔴 Skull Guitar"
-TextLabel_5.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_5.TextSize = 16
-TextLabel_5.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_5.TextYAlignment = Enum.TextYAlignment.Bottom
+SkullGuitarLabel.BackgroundTransparency = 1
+SkullGuitarLabel.Parent = Main_1
+SkullGuitarLabel.Position = UDim2.new(0.07000000029802322, 0, 0.8999999761581421, 0)
+SkullGuitarLabel.Size = UDim2.new(0, 0, 0, 18)
+SkullGuitarLabel.Selectable = false
+SkullGuitarLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+SkullGuitarLabel.Text = "🔴 Skull Guitar"
+SkullGuitarLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SkullGuitarLabel.TextSize = 16
+SkullGuitarLabel.TextXAlignment = Enum.TextXAlignment.Left
+SkullGuitarLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_6.BackgroundTransparency = 1
-TextLabel_6.Parent = Main_1
-TextLabel_6.Position = UDim2.new(0.07000000029802322, 0, 0.6499999761581421, 0)
-TextLabel_6.Size = UDim2.new(0, 33, 0, 18)
-TextLabel_6.Selectable = false
-TextLabel_6.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_6.Text = "Frag: N/A"
-TextLabel_6.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_6.TextSize = 16
-TextLabel_6.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_6.TextYAlignment = Enum.TextYAlignment.Bottom
+FragLabel.BackgroundTransparency = 1
+FragLabel.Parent = Main_1
+FragLabel.Position = UDim2.new(0.07000000029802322, 0, 0.6499999761581421, 0)
+FragLabel.Size = UDim2.new(0, 33, 0, 18)
+FragLabel.Selectable = false
+FragLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+FragLabel.Text = "Frag: N/A"
+FragLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+FragLabel.TextSize = 16
+FragLabel.TextXAlignment = Enum.TextXAlignment.Left
+FragLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
-TextLabel_7.BackgroundTransparency = 1
-TextLabel_7.Parent = Main_1
-TextLabel_7.Position = UDim2.new(0.4000000059604645, 0, 0.800000011920929, 0)
-TextLabel_7.Size = UDim2.new(0, 0, 0, 18)
-TextLabel_7.Selectable = false
-TextLabel_7.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_7.Text = "🔴 Curse Dual Katana"
-TextLabel_7.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_7.TextSize = 16
-TextLabel_7.TextXAlignment = Enum.TextXAlignment.Left
-TextLabel_7.TextYAlignment = Enum.TextYAlignment.Bottom
+CDKLabel.BackgroundTransparency = 1
+CDKLabel.Parent = Main_1
+CDKLabel.Position = UDim2.new(0.4000000059604645, 0, 0.800000011920929, 0)
+CDKLabel.Size = UDim2.new(0, 0, 0, 18)
+CDKLabel.Selectable = false
+CDKLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+CDKLabel.Text = "🔴 Curse Dual Katana"
+CDKLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CDKLabel.TextSize = 16
+CDKLabel.TextXAlignment = Enum.TextXAlignment.Left
+CDKLabel.TextYAlignment = Enum.TextYAlignment.Bottom
 
 Top_1.BackgroundTransparency = 0.9990000128746033
 Top_1.Name = "Top"
@@ -354,12 +344,11 @@ Top_1.Position = UDim2.new(0.5, 0, 0.05000000074505806, 0)
 Top_1.Size = UDim2.new(0, 0, 0, 18)
 Top_1.Selectable = false
 Top_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-Top_1.Text = "Lonely Stats Checker"
+Top_1.Text = "Tsunami Stats Checker"
 Top_1.TextColor3 = Color3.fromRGB(255, 255, 255)
 Top_1.TextSize = 16
 Top_1.TextYAlignment = Enum.TextYAlignment.Bottom
 
--- Đổi gradient từ hồng sang xanh (cyan → xanh dương)
 UIGradient_1.Color = ColorSequence.new{
     ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 255))
@@ -462,7 +451,6 @@ Main_1.Size = UDim2.new(1, -50,1, -55)
 
 local UIStroke_1 = Instance.new("UIStroke")
 UIStroke_1.Parent = Main_1
--- Đổi màu viền từ hồng nhạt sang xanh nhạt
 UIStroke_1.Color = Color3.fromRGB(0, 200, 255)
 UIStroke_1.Thickness = 2.5
 
@@ -476,7 +464,6 @@ Top2_1.Position = UDim2.new(0.5, 0,0, 10)
 Top2_1.Size = UDim2.new(0, 300,0, 18)
 Top2_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Top2_1.Text = "Status: Waiting for available room to join..."
--- Đổi màu chữ
 Top2_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Top2_1.TextSize = 16
 Top2_1.TextWrapped = true
@@ -493,26 +480,24 @@ Under_1.Position = UDim2.new(0.5, 0,0, 30)
 Under_1.Size = UDim2.new(0, 450,0, 18)
 Under_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Under_1.Text = "Status Farm: N/A"
--- Đổi màu chữ
 Under_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Under_1.TextSize = 16
 
-local TextLabel_1 = Instance.new("TextLabel")
-TextLabel_1.Parent = Status
-TextLabel_1.AnchorPoint = Vector2.new(0.5, 0.5)
-TextLabel_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
-TextLabel_1.BackgroundTransparency = 1
-TextLabel_1.BorderSizePixel = 0
-TextLabel_1.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
-TextLabel_1.Size = UDim2.new(0, 210,0, 50)
-TextLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-TextLabel_1.Text = "discord.gg/DuAp7VwVG3"
--- Đổi màu chữ
-TextLabel_1.TextColor3 = Color3.fromRGB(0, 200, 255)
-TextLabel_1.TextSize = 16
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Parent = Status
+DiscordLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+DiscordLabel.BackgroundColor3 = Color3.fromRGB(163,162,165)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.BorderSizePixel = 0
+DiscordLabel.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
+DiscordLabel.Size = UDim2.new(0, 210,0, 50)
+DiscordLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+DiscordLabel.Text = "discord.gg/DuAp7VwVG3"
+DiscordLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+DiscordLabel.TextSize = 16
 
 local UIStroke_2 = Instance.new("UIStroke")
-UIStroke_2.Parent = TextLabel_1
+UIStroke_2.Parent = DiscordLabel
 UIStroke_2.Thickness = 1
 
 local UIGradient_1 = Instance.new("UIGradient")
@@ -520,20 +505,20 @@ UIGradient_1.Parent = UIStroke_2
 UIGradient_1.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(0,0), NumberSequenceKeypoint.new(1,0)}
 
 -- // Toggle UI \\ --
-local LonelyHubBtn = Instance.new("ScreenGui")
+local TsunamiHubBtn = Instance.new("ScreenGui")
 local dutdit = Instance.new("Frame")
 local UICorner = Instance.new("UICorner")
 local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
-LonelyHubBtn.Name = "Lonely Hub Btn"  
-LonelyHubBtn.Parent = game:GetService("CoreGui")
-LonelyHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
-LonelyHubBtn.DisplayOrder = 10
-LonelyHubBtn.Enabled = true
+TsunamiHubBtn.Name = "Tsunami Hub Btn"  
+TsunamiHubBtn.Parent = game:GetService("CoreGui")
+TsunamiHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
+TsunamiHubBtn.DisplayOrder = 10
+TsunamiHubBtn.Enabled = true
 
 dutdit.Name = "dut dit"  
-dutdit.Parent = LonelyHubBtn  
+dutdit.Parent = TsunamiHubBtn  
 dutdit.AnchorPoint = Vector2.new(0.1, 0.1)  
 dutdit.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  
 dutdit.BackgroundTransparency = 0  
@@ -637,13 +622,13 @@ L_1_.UI_BottomStatus = Under_1
 L_1_.UI_Beli = BeliLabel_1
 L_1_.UI_Level = LevelLabel_1
 L_1_.UI_Race = RaceLabel_1
-L_1_.UI_Frag = TextLabel_6
-L_1_.UI_GodHuman = TextLabel_1
-L_1_.UI_PullLever = TextLabel_2
-L_1_.UI_Valkyrie = TextLabel_3
-L_1_.UI_MirrorFractal = TextLabel_4
-L_1_.UI_SkullGuitar = TextLabel_5
-L_1_.UI_CDK = TextLabel_7
+L_1_.UI_Frag = FragLabel          -- gán đúng label Frag
+L_1_.UI_GodHuman = GodHumanLabel   -- gán đúng label GodHuman
+L_1_.UI_PullLever = PullLeverLabel
+L_1_.UI_Valkyrie = ValkyrieLabel
+L_1_.UI_MirrorFractal = MirrorLabel
+L_1_.UI_SkullGuitar = SkullGuitarLabel
+L_1_.UI_CDK = CDKLabel
 L_1_.UI_Item1 = ItemLabel1_1
 L_1_.UI_Item2 = ItemLabel2_1
 L_1_.UI_Item3 = ItemLabel1_2
@@ -665,7 +650,7 @@ local function updateUI()
 			if L_1_.UI_Race then L_1_.UI_Race.Text = "Race: " .. tostring(race) end
 			if L_1_.UI_Frag then L_1_.UI_Frag.Text = "Frag: " .. tostring(frag) end
 			
-			-- Kiểm tra các item đặc biệt (có thể bổ sung thêm)
+			-- Kiểm tra các item đặc biệt
 			local godhuman = God_Human_C or (L_1_[45]["gi"] and L_1_[45]["gi"]("Godhuman"))
 			local pullLever = ExSeb or false
 			local valkyrie = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
