@@ -91,9 +91,10 @@ L_1_[6] = game:GetService("TweenService")
 
 -- Xóa UI cũ nếu còn
 pcall(function()
-    if L_1_[4]:FindFirstChild("Status_UI") then
-        L_1_[4]["Status_UI"]:Destroy()
-    end
+    local core = game:GetService("CoreGui")
+    if core:FindFirstChild("CoinCard") then core.CoinCard:Destroy() end
+    if core:FindFirstChild("Status") then core.Status:Destroy() end
+    if core:FindFirstChild("Lonely Hub Btn") then core["Lonely Hub Btn"]:Destroy() end
 end)
 
 -- ================= UI MỚI =================
