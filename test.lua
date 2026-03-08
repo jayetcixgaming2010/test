@@ -7368,125 +7368,114 @@ task["spawn"](function()
 						L_1_[10]:Teleport(L_1_[30], L_1_[35])
 					end
 				until not L_1_[45]["CheckBoss"]("Longma")
-			elseif Quest == "Soul Guitar" then
-				if L_1_[45]["CheckItem"]("Bones") < 500 then
-					if Three_World then
-						L_1_[45]["FarmBone"](false)
-					else
+				elseif Quest == "Soul Guitar" then
+					if L_1_[45]["CheckItem"]("Bones") < 500 then
+						-- Nếu chưa có đủ 500 Bones, chuyển đến Haunted Castle để farm
+						if Three_World then
+							-- Kiểm tra xem đã ở Haunted Castle chưa
+							local hauntedPos = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625)
+							if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
+								-- Teleport đến gần khu vực
+								L_1_[31](hauntedPos, 1.5)
+							else
+								-- Farm bone
+								L_1_[45]["FarmBone"](false)
+							end
+						else
+							-- Nếu chưa ở Third Sea, tự động đi đến
+							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
+							TleP = true
+							wait(50)
+						end
+					elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
+						-- Farm Ectoplasm ở Second Sea (Ship)
+						if New_World then
+							local shipPos = CFrame.new(921.30249023438, 125.400390625, 32937.34375)
+							if (shipPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
+								repeat
+									L_1_[45]["wt"]()
+									L_1_[31](shipPos, 1.5)
+								until (L_1_[35].Character.HumanoidRootPart.Position - shipPos.Position).Magnitude <= 3
+							else
+								-- Tìm enemy gần nhất để farm Ectoplasm
+								Monster = nil
+								for range = 1500, 0, -300 do
+									L_1_[45]["GetMonster"](range)
+									if Monster then break end
+								end
+								if Monster and Monster.Humanoid.Health > 0 then
+									repeat
+										wait()
+										L_1_[31](Monster.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0), 1.5)
+										L_1_[14]()
+									until not Monster.Parent or Monster.Humanoid.Health <= 0
+								else
+									L_1_[31](shipPos, 1.5)
+								end
+							end
+						else
+							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
+							TleP = true
+							wait(50)
+						end
+					elseif not Three_World then
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 						TleP = true
 						wait(50)
-					end
-				elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
-					if New_World then
-						if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](921.30249023438, 125.400390625, 32937.34375))["Magnitude"] >= 3000 then
-							repeat
-								L_1_[45]["wt"]()
-								L_1_[31](CFrame["new"](921.30249023438, 125.400390625, 32937.34375), 1.5)
-							until (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](921.30249023438, 125.400390625, 32937.34375))["Magnitude"] <= 3
-						elseif (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](921.30249023438, 125.400390625, 32937.34375))["Magnitude"] < 3000 then
-							Monster = nil
-							for L_574_forvar0 = 1500, 0, -300 do
-								local L_575_ = {}
-								L_575_[2] = L_574_forvar0
-								L_1_[45]["GetMonster"](L_575_[2])
-							end
-							if Monster ~= nil and Monster["Humanoid"]["Health"] > 0 then
-								PosMon_X = Monster["HumanoidRootPart"]["CFrame"]
-								StatrMagnet = true
-								repeat
-									wait()
-									L_1_[31](Monster["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 20, 0), 1.5)
-									L_1_[14]()
-								until not Monster["Parent"] or Monster["Humanoid"]["Health"] <= 0
-								StatrMagnet = false
-							elseif Monster == nil then
-								for L_576_forvar0 = 1500, 0, -300 do
-									local L_577_ = {}
-									L_577_[2] = L_576_forvar0
-									L_1_[45]["GetMonster"](L_577_[2])
-								end
-								if Monster == nil then
-									L_1_[31](CFrame["new"](921.30249023438, 125.400390625, 32937.34375), 1.5)
-								end
-							end
-						end
 					else
-						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
-						TleP = true
-						wait(50)
-					end
-				elseif not Three_World then
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
-					TleP = true
-					wait(50)
-				else
-					if tostring((game:GetService("Workspace"))["Map"]["Haunted Castle"]["SwampWater"]["BrickColor"]) == "Maroon" then
-						if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check") ~= nil and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check"))["Swamp"] == false then
-							repeat
-								wait()
-								L_1_[31](CFrame["new"](-10147.779296875, 138.6266784668, 5939.5600585938), 1.5)
-							until (Vector3["new"](-10147.779296875, 138.6266784668, 5939.5600585938) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
-							wait(1)
-							get_mon = {}
-							L_1_[45]["GetMon_Soul"]()
-							if #get_mon >= 6 then
-								for L_578_forvar0, L_579_forvar1 in pairs(L_1_[35]["Character"]:GetChildren()) do
-									local L_580_ = {}
-									L_580_[3], L_580_[2] = L_578_forvar0, L_579_forvar1
-									if L_580_[2]:IsA("Tool") then
-										L_580_[2]["Parent"] = L_1_[35]["Backpack"]
-									end
-								end
-								L_1_[31](CFrame["new"](-10147.779296875, 158.6266784668, 5939.5600585938), 1.5)
-								for L_581_forvar0, L_582_forvar1 in next, (game:GetService("Workspace"))["Enemies"]:GetChildren() do
-									local L_583_ = {}
-									L_583_[2], L_583_[1] = L_581_forvar0, L_582_forvar1
-									if (L_583_[1]["HumanoidRootPart"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 500 then
-										L_583_[1]["HumanoidRootPart"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 0, 20)
-										sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"])
-									end
-								end
+						-- Bắt đầu làm quest Soul Guitar
+						-- Kiểm tra trạng thái màu nước
+						local swampWater = workspace.Map:FindFirstChild("Haunted Castle") and workspace.Map["Haunted Castle"]:FindFirstChild("SwampWater")
+						if swampWater and tostring(swampWater.BrickColor) == "Maroon" then
+							-- Nước màu đỏ => cần kill 6 Living Zombie
+							local progress = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")
+							if progress and progress.Swamp == false then
+								-- Đến vị trí Swamp
+								L_1_[31](CFrame.new(-10147.779296875, 138.6266784668, 5939.5600585938), 1.5)
 								wait(1)
-								L_1_[14]()
+								get_mon = {}
+								L_1_[45]["GetMon_Soul"]()  -- lấy danh sách Living Zombie
+								if #get_mon >= 6 then
+									-- Gom enemy lại
+									for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+										if enemy.Name == "Living Zombie" and enemy.Humanoid.Health > 0 then
+											enemy.HumanoidRootPart.CFrame = L_1_[35].Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 20)
+										end
+									end
+									wait(1)
+									L_1_[14]()
+									wait(2)
+								end
+							end
+						elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check") ~= nil then
+							-- Các bước khác của puzzle
+							local prog = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")
+							if not Quest_Soul_Guitar then
+								-- Đến vị trí bắt đầu puzzle
+								L_1_[31](CFrame.new(-9680.7412109375, 6.1591067314148, 6346.1552734375), 1.5)
+								wait(1)
+								for k, v in pairs(prog) do
+									if v == false then
+										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", k)
+									end
+								end
 								wait(2)
-							end
-						end
-					elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check") ~= nil then
-						local L_584_ = {}
-						L_584_[2] = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")
-						if not Quest_Soul_Guitar then
-							repeat
-								wait(.1)
-								L_1_[31](CFrame["new"](-9680.7412109375, 6.1591067314148, 6346.1552734375), 1.5)
-							until (Vector3["new"](-9680.7412109375, 6.1591067314148, 6346.1552734375) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 5
-							wait(1)
-							for L_585_forvar0, L_586_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")) do
-								local L_587_ = {}
-								L_587_[3], L_587_[1] = L_585_forvar0, L_586_forvar1
-								if L_587_[1] == false then
-									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", L_587_[3])
+								for k, v in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")) do
+									if v == false then
+										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", k)
+									end
 								end
+								Quest_Soul_Guitar = true
 							end
-							wait(2)
-							for L_588_forvar0, L_589_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")) do
-								local L_590_ = {}
-								L_590_[3], L_590_[1] = L_588_forvar0, L_589_forvar1
-								if L_590_[1] == false then
-									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", L_590_[3])
-								end
+						elseif swampWater and tostring(swampWater.BrickColor) ~= "Maroon" then
+							-- Nước không đỏ => tương tác với gravestone
+							if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2) == true then
+								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2, true)
+							else
+								L_1_[31](CFrame.new(-8652.6416015625, 141.10939025879, 6168.810546875), 1.5)
 							end
-							wait(1)
-							Quest_Soul_Guitar = true
-						end
-					elseif tostring((game:GetService("Workspace"))["Map"]["Haunted Castle"]["SwampWater"]["BrickColor"]) ~= "Maroon" then
-						if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2) == true then
-							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2, true)
-						else
-							L_1_[31](CFrame["new"](-8652.6416015625, 141.10939025879, 6168.810546875), 1.5)
 						end
 					end
-				end
 			elseif Quest == "RGB" then
 				local L_591_ = {}
 				L_591_[1] = nil
