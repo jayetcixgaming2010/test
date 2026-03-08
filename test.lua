@@ -40,7 +40,7 @@ getgenv()["Configs"] = {
     },
     ["Sword"] = swordList,
     ["Gun"]   = gunList,
-    ["FPS Booster"] = SF_Misc["FPS Boost"] == true,
+    ["FPS Booster"] = SF_Misc["FPS Boost"] == false,
 }
 
 -- Tween Speed (dùng cho L_1_[31] teleport)
@@ -662,13 +662,13 @@ local function updateUI()
 			if L_1_.UI_Race then L_1_.UI_Race.Text = "Race: " .. tostring(race) end
 			if L_1_.UI_Frag then L_1_.UI_Frag.Text = "Frag: " .. tostring(frag) end
 			
-			-- Kiểm tra các item đặc biệt
-			local godhuman = God_Human_C or (L_1_[45]["gi"] and L_1_[45]["gi"]("Godhuman"))
-			local pullLever = ExSeb or false
-			local valkyrie = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
-			local mirror = Mirror_Fractal_H or false
+			-- Luôn kiểm tra trực tiếp từ inventory bằng hàm gi
+			local godhuman   = L_1_[45]["gi"] and L_1_[45]["gi"]("Godhuman")
+			local pullLever  = ExSeb or false      -- ExSeb sẽ được cập nhật riêng
+			local valkyrie   = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
+			local mirror     = L_1_[45]["gi"] and L_1_[45]["gi"]("Mirror Fractal")
 			local soulGuitar = L_1_[45]["gi"] and L_1_[45]["gi"]("Soul Guitar")
-			local cdk = L_1_[45]["gi"] and L_1_[45]["gi"]("Cursed Dual Katana")
+			local cdk        = L_1_[45]["gi"] and L_1_[45]["gi"]("Cursed Dual Katana")
 			
 			if L_1_.UI_GodHuman then L_1_.UI_GodHuman.Text = (godhuman and "🟢" or "🔴") .. " GodHuman" end
 			if L_1_.UI_PullLever then L_1_.UI_PullLever.Text = (pullLever and "🟢" or "🔴") .. " Pull Lever" end
@@ -677,21 +677,51 @@ local function updateUI()
 			if L_1_.UI_SkullGuitar then L_1_.UI_SkullGuitar.Text = (soulGuitar and "🟢" or "🔴") .. " Skull Guitar" end
 			if L_1_.UI_CDK then L_1_.UI_CDK.Text = (cdk and "🟢" or "🔴") .. " Curse Dual Katana" end
 			
-			-- Hiển thị 3 item bất kỳ (ví dụ lấy từ inventory)
-			local inv = {}
-			if L_1_[45]["GetFruits"] then
-				inv = L_1_[45]["GetFruits"]() or {}
+			-- Lấy toàn bộ inventory (thay cho GetFruits)
+			local allItems = {}
+			pcall(function()
+				local invData = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")
+				if type(invData) == "table" then
+					for _, item in pairs(invData) do
+						if type(item) == "table" and item.Name then
+							table.insert(allItems, item.Name)
+						end
+					end
+				end
+			end)
+
+			-- Hiển thị 3 item đầu
+			for i = 1, 3 do
+				local label = L_1_["UI_Item"..i]
+				if label then
+					label.Text = allItems[i] or "None"
+				end
 			end
-			local items = {}
-			for i, v in pairs(inv) do
-				table.insert(items, v.Name)
-			end
-			if #items >= 1 then L_1_.UI_Item1.Text = items[1] else L_1_.UI_Item1.Text = "None" end
-			if #items >= 2 then L_1_.UI_Item2.Text = items[2] else L_1_.UI_Item2.Text = "None" end
-			if #items >= 3 then L_1_.UI_Item3.Text = items[3] else L_1_.UI_Item3.Text = "None" end
 		end
 	end)
 end
+
+-- Vòng lặp cập nhật trạng thái Pull Lever (ExSeb) và các item đặc biệt
+task.spawn(function()
+	while task.wait(10) do
+		pcall(function()
+			if Three_World then
+				-- Kiểm tra tiến độ Race V4 (ExSeb = true khi progress == 4)
+				local progress = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("RaceV4Progress", "Check")
+				if progress == 4 then
+					ExSeb = true
+				end
+			end
+			
+			-- Cập nhật Mirror Fractal (nếu dùng biến toàn cục)
+			if L_1_[45]["gi"]("Mirror Fractal") then
+				Mirror_Fractal_H = true
+			end
+			
+			-- Có thể thêm các item khác nếu cần
+		end)
+	end
+end)
 
 -- Vòng lặp cập nhật UI
 task.spawn(function()
@@ -708,7 +738,6 @@ L_1_[45]["Status"] = function(text)
 		end
 	end)
 end
-
 -- Đặt trạng thái ban đầu
 L_1_[45]["Status"]("Idle")
 
