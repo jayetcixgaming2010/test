@@ -1,61 +1,84 @@
--- @discord_betaa
+-- KaitunLoader.lua - Main Script
+-- Config được load từ SettingFarm (Config.lua)
 local L_1_ = {}
 L_1_[3] = table["concat"]
 if not game:IsLoaded() then
 	repeat
 		game["Loaded"]:Wait()
 	until game:IsLoaded()
-end;
-(getgenv())["Configs"] = {
-	["Quest"] = {
-		["Evo Race V1"] = true,
-		["Evo Race V2"] = true;
-		["RGB Haki"] = true,
-		["Pull Lerver"] = true
-	};
-	["Sword"] = {
-		"Dual-Headed Blade",
-		"Smoke Admiral",
-		"Wardens Sword",
-		"Cutlass",
-		"Katana";
-		"Dual Katana";
-		"Triple Katana",
-		"Iron Mace",
-		"Saber";
-		"Pole (1st Form)",
-		"Gravity Blade",
-		"Longsword";
-		"Rengoku";
-		"Midnight Blade",
-		"Soul Cane",
-		"Bisento",
-		"Yama";
-		"Tushita";
-		"Cursed Dual Katana"
-	};
-	["Gun"] = {
-		"Soul Guitar";
-		"Kabucha",
-		"Venom Bow",
-		"Musket";
-		"Flintlock",
-		"Refined Slingshot",
-		"Magma Blaster";
-		"Dual Flintlock",
-		"Cannon",
-		"Bizarre Revolver";
-		"Bazooka"
-	};
-	["FPS Booster"] = false
+end
+
+-- ===== ADAPTER: Chuyển SettingFarm -> Configs =====
+local SF = getgenv().SettingFarm or {}
+local SF_Sword = SF["Sword"] or {}
+local SF_Gun   = SF["Gun"]   or {}
+local SF_Misc  = SF["Misc"]  or {}
+
+-- Build Configs.Sword (array chỉ gồm những item = true)
+local function buildList(tbl, nameMap)
+    local result = {}
+    for k, v in pairs(tbl) do
+        if v == true then
+            local realName = nameMap and nameMap[k] or k
+            table.insert(result, realName)
+        end
+    end
+    return result
+end
+
+-- CDK alias
+local swordNameMap = { ["CDK"] = "Cursed Dual Katana", ["Pole"] = "Pole (1st Form)" }
+local swordList = buildList(SF_Sword, swordNameMap)
+local gunList   = buildList(SF_Gun,   {})
+
+getgenv()["Configs"] = {
+    ["Quest"] = {
+        ["Evo Race V1"] = SF_Misc["Auto V2"] ~= false,
+        ["Evo Race V2"] = SF_Misc["Auto V3"] ~= false,
+        ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] ~= false,
+        ["Pull Lerver"] = SF_Misc["Pull Lever"] == true,
+    },
+    ["Sword"] = swordList,
+    ["Gun"]   = gunList,
+    ["FPS Booster"] = SF_Misc["FPS Boost"] == true,
 }
+
+-- Tween Speed (dùng cho L_1_[31] teleport)
+getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
+
+-- Team
+getgenv()["SelectedTeam"] = SF["Team"] or "Pirates"
+
+-- Anti Redeem Codes
+getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= false
+
+-- Anti AFK
+getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= false
+
+-- Webhook
+getgenv()["WebhookEnabled"] = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Enabled"]) or false
+getgenv()["WebhookUrl"]     = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Url"]) or ""
+
+-- FPS Cap
+if SF_Misc["Set Fps"] and SF_Misc["Set Fps"]["Enabled"] then
+	settings().Rendering.FrameRateManager = 0
+	settings().Rendering.MaxFrameRate = SF_Misc["Set Fps"]["Cap"] or 30
+end
+-- Buy Haki config
+local SF_Haki = SF["Buy Haki"] or {}
+
+-- Sniper Fruit Shop config
+local SF_FruitShop = SF["Sniper Fruit Shop"] or {}
+
+-- ===== END ADAPTER =====
+
 wait(5)
 if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
 	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
 		repeat
 			wait()
 			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", "Pirates")
+				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", getgenv()["SelectedTeam"] or "Pirates")
 			end
 		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
 	end
@@ -66,7 +89,7 @@ if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") 
 		repeat
 			wait()
 			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", "Pirates")
+				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", getgenv()["SelectedTeam"] or "Pirates")
 			end
 		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
 	end
@@ -536,7 +559,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0  
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
-ImageLabel.Image = "rbxassetid://85565766812207"  -- icon của bạn
+ImageLabel.Image = "rbxassetid://80900795508277"  -- icon của bạn
 ImageLabel.ZIndex = 6
 
 TextButton.Parent = dutdit  
@@ -2608,9 +2631,9 @@ end
 L_1_[31] = function(L_32_arg0, L_33_arg1, L_34_arg2)
 	local L_35_ = {}
 	L_35_[10], L_35_[3], L_35_[4] = L_32_arg0, L_33_arg1, L_34_arg2
-	L_35_[12] = 300
+	L_35_[12] = getgenv()["TweenSpeed"] or 300
 	if L_35_[3] == 1.6 then
-		L_35_[12] = 350
+		L_35_[12] = (getgenv()["TweenSpeed"] or 300) + 50
 	end
 	L_35_[11] = L_35_[4] or 130
 	L_35_[9] = L_1_[35]["Character"] and L_1_[35]["Character"]:FindFirstChild("HumanoidRootPart")
@@ -8097,6 +8120,7 @@ redeem = {
 	"DEVSCOOKING "
 }
 task["spawn"](function()
+	if not getgenv()["AutoRedeemCode"] then return end
 	for L_647_forvar0, L_648_forvar1 in pairs(redeem) do
 		local L_649_ = {}
 		L_649_[2], L_649_[1] = L_647_forvar0, L_648_forvar1
@@ -8104,6 +8128,7 @@ task["spawn"](function()
 	end
 end)
 task["spawn"](function()
+	if not getgenv()["AntiAFK"] then return end
 	while L_1_[45]["wt"](150) do
 		L_1_[2]:SendKeyEvent(true, "Space", false, game)
 		wait(.5)
@@ -8130,8 +8155,13 @@ task["spawn"](function()
 			L_650_[1] = (L_650_[2] - L_1_[18])["Magnitude"]
 			if L_650_[1] <= 1 then
 				L_1_[28] = L_1_[28] + L_1_[36]
-				if L_1_[28] >= 30 and (Quest ~= "Cursed Dual Katana" and (Quest ~= "Evo Race V2" and (Quest ~= "Evo Race V1" and not SROP))) then
+				if L_1_[28] >= 30 and getgenv()["AntiAFK"] ~= false and (Quest ~= "Cursed Dual Katana" and (Quest ~= "Evo Race V2" and (Quest ~= "Evo Race V1" and not SROP))) then
 					L_1_[45]["HopLowServer"](9)
+					if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+						pcall(function()
+							request({Url=getgenv()["WebhookUrl"],Method="POST",Headers={["Content-Type"]="application/json"},Body='{"content":"[Kaitun] HopServer triggered - stuck detected"}' })
+						end)
+					end
 				end
 			else
 				L_1_[28] = 0
@@ -8233,17 +8263,84 @@ task["spawn"](function()
 			if L_1_[45]["tf"](Configs["Sword"], "Midnight Blade") and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Ectoplasm", "Check") >= 100 and not L_1_[45]["gi"]("Midnight Blade")) then
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Ectoplasm", "Buy", 3)
 			end
-			if not klmdlkgf and L_1_[24]["Value"] >= 2000 then
-				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Geppo")
-				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Soru")
-				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("KenTalk", "Buy")
-				klmdlkgf = true
-			end
-			if not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
+			-- ===== Buy Haki (SettingFarm["Buy Haki"]) =====
+			if SF_Haki["Enhancement"] ~= false and not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Buso")
 				klmdlkgfx = true
 			end
+			if not klmdlkgf and L_1_[24]["Value"] >= 2000 then
+				if SF_Haki["Skyjump"] ~= false then
+					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Geppo")
+				end
+				if SF_Haki["Flash Step"] ~= false then
+					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Soru")
+				end
+				if SF_Haki["Observation"] ~= false then
+					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("KenTalk", "Buy")
+				end
+				klmdlkgf = true
+			end
+			-- ===== End Buy Haki =====
 			L_1_[45]["wt"](100)
 		end)
 	end
 end)
+
+-- ===== SNIPER FRUIT SHOP (SettingFarm["Sniper Fruit Shop"]) =====
+task["spawn"](function()
+	if not SF_FruitShop["Enabled"] then return end
+	local targetFruits = SF_FruitShop["Fruit"] or {}
+	if #targetFruits == 0 then return end
+
+	-- Build lookup set
+	local fruitSet = {}
+	for _, name in ipairs(targetFruits) do
+		fruitSet[name] = true
+	end
+
+	local RS = game:GetService("ReplicatedStorage")
+	local CommF = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
+
+	while task["wait"](5) do
+		pcall(function()
+			-- Check Normal Shop stock
+			local normalStock = CommF:InvokeServer("FruitShopStock")
+			if type(normalStock) == "table" then
+				for _, item in pairs(normalStock) do
+					if type(item) == "table" then
+						local name = item["Name"] or item[1]
+						if name and fruitSet[name] then
+							L_1_[45]["Status"]("Fruit Shop: Buying " .. name)
+							CommF:InvokeServer("FruitShopBuy", name)
+							if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+								pcall(function()
+									request({Url=getgenv()["WebhookUrl"],Method="POST",Headers={["Content-Type"]="application/json"},Body='{"content":"[Kaitun] Bought fruit from Normal Shop: '..name..'"}'})
+								end)
+							end
+						end
+					end
+				end
+			end
+
+			-- Check Mirage Island shop stock
+			local mirageStock = CommF:InvokeServer("MirageShopStock")
+			if type(mirageStock) == "table" then
+				for _, item in pairs(mirageStock) do
+					if type(item) == "table" then
+						local name = item["Name"] or item[1]
+						if name and fruitSet[name] then
+							L_1_[45]["Status"]("Mirage Shop: Buying " .. name)
+							CommF:InvokeServer("MirageShopBuy", name)
+							if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+								pcall(function()
+									request({Url=getgenv()["WebhookUrl"],Method="POST",Headers={["Content-Type"]="application/json"},Body='{"content":"[Kaitun] Bought fruit from Mirage Shop: '..name..'"}'})
+								end)
+							end
+						end
+					end
+				end
+			end
+		end)
+	end
+end)
+-- ===== END SNIPER FRUIT SHOP =====
