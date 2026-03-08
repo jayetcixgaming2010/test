@@ -150,8 +150,8 @@ DropShadowHolder_1.BackgroundTransparency = 1
 DropShadowHolder_1.BorderColor3 = Color3.fromRGB(27, 42, 53)
 DropShadowHolder_1.Name = "DropShadowHolder"
 DropShadowHolder_1.Parent = CoinCard_1
-DropShadowHolder_1.Position = UDim2.new(0.5, 0, 0.5, 0)
-DropShadowHolder_1.Size = UDim2.new(0, 600, 0, 400)
+DropShadowHolder_1.Position = UDim2.new(0.5, 0, 0.43, 0)
+DropShadowHolder_1.Size = UDim2.new(0, 600, 0, 360)
 DropShadowHolder_1.ZIndex = 1
 DropShadowHolder_1.Selectable = false
 
@@ -431,7 +431,7 @@ DropShadow2Holder2_1.BackgroundColor3 = Color3.fromRGB(163,163,163)
 DropShadow2Holder2_1.BackgroundTransparency = 1
 DropShadow2Holder2_1.BorderSizePixel = 0
 DropShadow2Holder2_1.Position = UDim2.new(0.5, 0,0.0500000007, 0)
-DropShadow2Holder2_1.Size = UDim2.new(0, 320,0, 68)
+DropShadow2Holder2_1.Size = UDim2.new(0, 420,0, 82)
 DropShadow2Holder2_1.ZIndex = 0
 
 local DropShadow2_1 = Instance.new("ImageLabel")
@@ -459,7 +459,7 @@ StatusMain_1.BackgroundTransparency = 0.5
 StatusMain_1.BorderColor3 = Color3.fromRGB(0,0,0)
 StatusMain_1.BorderSizePixel = 0
 StatusMain_1.Position = UDim2.new(0.5, 0,0.5, 0)
-StatusMain_1.Size = UDim2.new(1, -50,1, -55)
+StatusMain_1.Size = UDim2.new(1, -20,1, -20)
 
 local UIStroke_1 = Instance.new("UIStroke")
 UIStroke_1.Parent = StatusMain_1
@@ -473,12 +473,14 @@ Top2_1.AnchorPoint = Vector2.new(0.5, 0)
 Top2_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
 Top2_1.BackgroundTransparency = 1
 Top2_1.Position = UDim2.new(0.5, 0,0, 10)
-Top2_1.Size = UDim2.new(0, 300,0, 18)
+Top2_1.Size = UDim2.new(0, 400,0, 20)
 Top2_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Top2_1.Text = "Status: Waiting for available room to join..."
 Top2_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Top2_1.TextSize = 16
-Top2_1.TextWrapped = true
+Top2_1.TextWrapped = false
+Top2_1.TextScaled = false
+Top2_1.ClipsDescendants = false
 
 local Under_1 = Instance.new("TextLabel")
 Under_1.Name = "Under"
@@ -488,8 +490,8 @@ Under_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 Under_1.BackgroundTransparency = 0.9990000128746033
 Under_1.BorderColor3 = Color3.fromRGB(0,0,0)
 Under_1.BorderSizePixel = 0
-Under_1.Position = UDim2.new(0.5, 0,0, 30)
-Under_1.Size = UDim2.new(0, 450,0, 18)
+Under_1.Position = UDim2.new(0.5, 0,0, 36)
+Under_1.Size = UDim2.new(0, 400,0, 20)
 Under_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Under_1.Text = "Status Farm: N/A"
 Under_1.TextColor3 = Color3.fromRGB(0, 200, 255)
@@ -830,7 +832,10 @@ task["spawn"](function()
 				elseif L_18_[3]:IsA("SpecialMesh") then
 					L_18_[3]["TextureId"] = ""
 				elseif L_18_[3]:IsA("Shirt") or L_18_[3]:IsA("Pants") or L_18_[3]:IsA("Accessory") then
-					L_18_[3]:Destroy()
+					-- Chỉ xóa của NPC/other players, giữ lại của LocalPlayer
+					if L_15_[1] and not L_18_[3]:IsDescendantOf(L_15_[1]) then
+						L_18_[3]:Destroy()
+					end
 				end
 			end
 			for L_19_forvar0, L_20_forvar1 in pairs(L_15_[4]:GetDescendants()) do
@@ -843,15 +848,7 @@ task["spawn"](function()
 					L_21_[2]["Enabled"] = false
 				end
 			end
-			if L_15_[1] then
-				for L_22_forvar0, L_23_forvar1 in pairs(L_15_[1]:GetDescendants()) do
-					local L_24_ = {}
-					L_24_[3], L_24_[2] = L_22_forvar0, L_23_forvar1
-					if L_24_[2]:IsA("Shirt") or L_24_[2]:IsA("Pants") or L_24_[2]:IsA("Accessory") then
-						L_24_[2]:Destroy()
-					end
-				end
-			end
+			-- Giữ nguyên Shirt/Pants/Accessory của LocalPlayer (không strip outfit)
 			if L_1_[30] == 2753915549 or L_1_[30] == 4442272183 or L_1_[30] == 7449423635 then
 				local L_25_ = {}
 				L_25_[1] = L_1_[7]:FindFirstChild("Effect") and L_1_[7]["Effect"]:FindFirstChild("Container")
