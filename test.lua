@@ -33,9 +33,9 @@ local gunList   = buildList(SF_Gun,   {})
 
 getgenv()["Configs"] = {
     ["Quest"] = {
-        ["Evo Race V1"] = SF_Misc["Auto V2"] == true,
-        ["Evo Race V2"] = SF_Misc["Auto V3"] == true,
-        ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] == true,
+        ["Evo Race V1"] = SF_Misc["Auto V2"] ~= true,
+        ["Evo Race V2"] = SF_Misc["Auto V3"] ~= tre,
+        ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] ~= true,
         ["Pull Lerver"] = SF_Misc["Pull Lever"] == true,
     },
     ["Sword"] = swordList,
@@ -50,10 +50,10 @@ getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
 getgenv()["SelectedTeam"] = SF["Team"] or "Pirates"
 
 -- Anti Redeem Codes
-getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= false
+getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= true
 
 -- Anti AFK
-getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= false
+getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= true
 
 -- Webhook
 getgenv()["WebhookEnabled"] = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Enabled"]) or false
@@ -150,8 +150,8 @@ DropShadowHolder_1.BackgroundTransparency = 1
 DropShadowHolder_1.BorderColor3 = Color3.fromRGB(27, 42, 53)
 DropShadowHolder_1.Name = "DropShadowHolder"
 DropShadowHolder_1.Parent = CoinCard_1
-DropShadowHolder_1.Position = UDim2.new(0.5, 0, 0.43, 0)
-DropShadowHolder_1.Size = UDim2.new(0, 600, 0, 360)
+DropShadowHolder_1.Position = UDim2.new(0.5, 0, 0.5, 0)
+DropShadowHolder_1.Size = UDim2.new(0, 600, 0, 400)
 DropShadowHolder_1.ZIndex = 1
 DropShadowHolder_1.Selectable = false
 
@@ -431,7 +431,7 @@ DropShadow2Holder2_1.BackgroundColor3 = Color3.fromRGB(163,163,163)
 DropShadow2Holder2_1.BackgroundTransparency = 1
 DropShadow2Holder2_1.BorderSizePixel = 0
 DropShadow2Holder2_1.Position = UDim2.new(0.5, 0,0.0500000007, 0)
-DropShadow2Holder2_1.Size = UDim2.new(0, 420,0, 82)
+DropShadow2Holder2_1.Size = UDim2.new(0, 320,0, 68)
 DropShadow2Holder2_1.ZIndex = 0
 
 local DropShadow2_1 = Instance.new("ImageLabel")
@@ -450,48 +450,46 @@ DropShadow2_1.ImageTransparency = 0.5
 DropShadow2_1.ScaleType = Enum.ScaleType.Slice
 DropShadow2_1.SliceCenter = Rect.new(49, 49, 450, 450)
 
-local StatusMain_1 = Instance.new("Frame")
-StatusMain_1.Name = "Main"
-StatusMain_1.Parent = DropShadow2_1
-StatusMain_1.AnchorPoint = Vector2.new(0.5, 0.5)
-StatusMain_1.BackgroundColor3 = Color3.fromRGB(0,0,0)
-StatusMain_1.BackgroundTransparency = 0.5
-StatusMain_1.BorderColor3 = Color3.fromRGB(0,0,0)
-StatusMain_1.BorderSizePixel = 0
-StatusMain_1.Position = UDim2.new(0.5, 0,0.5, 0)
-StatusMain_1.Size = UDim2.new(1, -20,1, -20)
+local Main_1 = Instance.new("Frame")
+Main_1.Name = "Main"
+Main_1.Parent = DropShadow2_1
+Main_1.AnchorPoint = Vector2.new(0.5, 0.5)
+Main_1.BackgroundColor3 = Color3.fromRGB(0,0,0)
+Main_1.BackgroundTransparency = 0.5
+Main_1.BorderColor3 = Color3.fromRGB(0,0,0)
+Main_1.BorderSizePixel = 0
+Main_1.Position = UDim2.new(0.5, 0,0.5, 0)
+Main_1.Size = UDim2.new(1, -50,1, -55)
 
 local UIStroke_1 = Instance.new("UIStroke")
-UIStroke_1.Parent = StatusMain_1
+UIStroke_1.Parent = Main_1
 UIStroke_1.Color = Color3.fromRGB(0, 200, 255)
 UIStroke_1.Thickness = 2.5
 
 local Top2_1 = Instance.new("TextLabel")
 Top2_1.Name = "Top2"
-Top2_1.Parent = StatusMain_1
+Top2_1.Parent = Main_1
 Top2_1.AnchorPoint = Vector2.new(0.5, 0)
 Top2_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
 Top2_1.BackgroundTransparency = 1
 Top2_1.Position = UDim2.new(0.5, 0,0, 10)
-Top2_1.Size = UDim2.new(0, 400,0, 20)
+Top2_1.Size = UDim2.new(0, 300,0, 18)
 Top2_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Top2_1.Text = "Status: Waiting for available room to join..."
 Top2_1.TextColor3 = Color3.fromRGB(0, 200, 255)
 Top2_1.TextSize = 16
-Top2_1.TextWrapped = false
-Top2_1.TextScaled = false
-Top2_1.ClipsDescendants = false
+Top2_1.TextWrapped = true
 
 local Under_1 = Instance.new("TextLabel")
 Under_1.Name = "Under"
-Under_1.Parent = StatusMain_1
+Under_1.Parent = Main_1
 Under_1.AnchorPoint = Vector2.new(0.5, 0)
 Under_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 Under_1.BackgroundTransparency = 0.9990000128746033
 Under_1.BorderColor3 = Color3.fromRGB(0,0,0)
 Under_1.BorderSizePixel = 0
-Under_1.Position = UDim2.new(0.5, 0,0, 36)
-Under_1.Size = UDim2.new(0, 400,0, 20)
+Under_1.Position = UDim2.new(0.5, 0,0, 30)
+Under_1.Size = UDim2.new(0, 450,0, 18)
 Under_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 Under_1.Text = "Status Farm: N/A"
 Under_1.TextColor3 = Color3.fromRGB(0, 200, 255)
@@ -656,11 +654,8 @@ local function updateUI()
 			local level = plr.Data.Level and plr.Data.Level.Value or "N/A"
 			local frag = plr.Data.Fragments and plr.Data.Fragments.Value or "N/A"
 			local race = plr.Data.Race and plr.Data.Race.Value or "N/A"
-			-- Guard: PlaceId detection chạy sau, cần fallback khi chưa xác định
-			local _threeWorld = Three_World == true
-			local _newWorld = New_World == true
-			local world = _threeWorld and "Third Sea" or (_newWorld and "Second Sea" or "First Sea")
-			local seaEmoji = (_threeWorld or _newWorld) and "✅" or "❌"
+			local world = Three_World and "Third Sea" or (New_World and "Second Sea" or "First Sea")
+			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌")
 			
 			if L_1_.UI_Beli then L_1_.UI_Beli.Text = "Beli: " .. tostring(beli) end
 			if L_1_.UI_Level then L_1_.UI_Level.Text = "Level: " .. tostring(level) .. "    " .. world .. " : " .. seaEmoji end
@@ -832,10 +827,7 @@ task["spawn"](function()
 				elseif L_18_[3]:IsA("SpecialMesh") then
 					L_18_[3]["TextureId"] = ""
 				elseif L_18_[3]:IsA("Shirt") or L_18_[3]:IsA("Pants") or L_18_[3]:IsA("Accessory") then
-					-- Chỉ xóa của NPC/other players, giữ lại của LocalPlayer
-					if L_15_[1] and not L_18_[3]:IsDescendantOf(L_15_[1]) then
-						L_18_[3]:Destroy()
-					end
+					L_18_[3]:Destroy()
 				end
 			end
 			for L_19_forvar0, L_20_forvar1 in pairs(L_15_[4]:GetDescendants()) do
@@ -848,7 +840,15 @@ task["spawn"](function()
 					L_21_[2]["Enabled"] = false
 				end
 			end
-			-- Giữ nguyên Shirt/Pants/Accessory của LocalPlayer (không strip outfit)
+			if L_15_[1] then
+				for L_22_forvar0, L_23_forvar1 in pairs(L_15_[1]:GetDescendants()) do
+					local L_24_ = {}
+					L_24_[3], L_24_[2] = L_22_forvar0, L_23_forvar1
+					if L_24_[2]:IsA("Shirt") or L_24_[2]:IsA("Pants") or L_24_[2]:IsA("Accessory") then
+						L_24_[2]:Destroy()
+					end
+				end
+			end
 			if L_1_[30] == 2753915549 or L_1_[30] == 4442272183 or L_1_[30] == 7449423635 then
 				local L_25_ = {}
 				L_25_[1] = L_1_[7]:FindFirstChild("Effect") and L_1_[7]["Effect"]:FindFirstChild("Container")
@@ -897,7 +897,7 @@ function CheckLevel2()
 	local L_28_ = {}
 	L_28_[2] = (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"]
 	if Old_World then
-		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
+		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
 			Ms = "Bandit"
 			NameQuest = "BanditQuest1"
 			QuestLv = 1
@@ -905,7 +905,7 @@ function CheckLevel2()
 			CFrameQ = CFrame["new"](1059.37195, 15.4495068, 1550.4231, .939700544, 0, -0.341998369, 0, 1, 0, .341998369, 0, .939700544)
 			CFrameMon = CFrame["new"](1353.44885, 3.40935516, 1376.92029, .776053488, -6.97791975e-08, .630666852, 6.99138596e-08, 1, 2.4612488e-08, -0.630666852, 2.49917598e-08, .776053488)
 			Next_Level_X = 10
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 10 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 59 then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 10 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 100 then
 			Ms = "Shanda"
 			NameQuest = "SkyExp1Quest"
 			QuestLv = 2
@@ -8253,18 +8253,18 @@ task["spawn"](function()
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Ectoplasm", "Buy", 3)
 			end
 			-- ===== Buy Haki (SettingFarm["Buy Haki"]) =====
-			if SF_Haki["Enhancement"] == true and not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
+			if SF_Haki["Enhancement"] ~= false and not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Buso")
 				klmdlkgfx = true
 			end
 			if not klmdlkgf and L_1_[24]["Value"] >= 2000 then
-				if SF_Haki["Skyjump"] == true then
+				if SF_Haki["Skyjump"] ~= false then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Geppo")
 				end
-				if SF_Haki["Flash Step"] == true then
+				if SF_Haki["Flash Step"] ~= false then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Soru")
 				end
-				if SF_Haki["Observation"] == true then
+				if SF_Haki["Observation"] ~= false then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("KenTalk", "Buy")
 				end
 				klmdlkgf = true
@@ -8463,4 +8463,3 @@ task["spawn"](function()
 		task["wait"](300) -- 5 phút = 300 giây
 	end
 end)
--- ===== END TSUNAMI HUB WEBHOOK =====
