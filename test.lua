@@ -33,9 +33,9 @@ local gunList   = buildList(SF_Gun,   {})
 
 getgenv()["Configs"] = {
     ["Quest"] = {
-        ["Evo Race V1"] = SF_Misc["Auto V2"] ~= false,
-        ["Evo Race V2"] = SF_Misc["Auto V3"] ~= false,
-        ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] ~= false,
+        ["Evo Race V1"] = SF_Misc["Auto V2"] == true,
+        ["Evo Race V2"] = SF_Misc["Auto V3"] == true,
+        ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] == true,
         ["Pull Lerver"] = SF_Misc["Pull Lever"] == true,
     },
     ["Sword"] = swordList,
@@ -72,17 +72,6 @@ local SF_FruitShop = SF["Sniper Fruit Shop"] or {}
 
 -- ===== END ADAPTER =====
 
-wait(5)
-if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
-	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
-		repeat
-			wait()
-			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", getgenv()["SelectedTeam"] or "Pirates")
-			end
-		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
-	end
-end
 wait(5)
 if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
 	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
@@ -461,25 +450,25 @@ DropShadow2_1.ImageTransparency = 0.5
 DropShadow2_1.ScaleType = Enum.ScaleType.Slice
 DropShadow2_1.SliceCenter = Rect.new(49, 49, 450, 450)
 
-local Main_1 = Instance.new("Frame")
-Main_1.Name = "Main"
-Main_1.Parent = DropShadow2_1
-Main_1.AnchorPoint = Vector2.new(0.5, 0.5)
-Main_1.BackgroundColor3 = Color3.fromRGB(0,0,0)
-Main_1.BackgroundTransparency = 0.5
-Main_1.BorderColor3 = Color3.fromRGB(0,0,0)
-Main_1.BorderSizePixel = 0
-Main_1.Position = UDim2.new(0.5, 0,0.5, 0)
-Main_1.Size = UDim2.new(1, -50,1, -55)
+local StatusMain_1 = Instance.new("Frame")
+StatusMain_1.Name = "Main"
+StatusMain_1.Parent = DropShadow2_1
+StatusMain_1.AnchorPoint = Vector2.new(0.5, 0.5)
+StatusMain_1.BackgroundColor3 = Color3.fromRGB(0,0,0)
+StatusMain_1.BackgroundTransparency = 0.5
+StatusMain_1.BorderColor3 = Color3.fromRGB(0,0,0)
+StatusMain_1.BorderSizePixel = 0
+StatusMain_1.Position = UDim2.new(0.5, 0,0.5, 0)
+StatusMain_1.Size = UDim2.new(1, -50,1, -55)
 
 local UIStroke_1 = Instance.new("UIStroke")
-UIStroke_1.Parent = Main_1
+UIStroke_1.Parent = StatusMain_1
 UIStroke_1.Color = Color3.fromRGB(0, 200, 255)
 UIStroke_1.Thickness = 2.5
 
 local Top2_1 = Instance.new("TextLabel")
 Top2_1.Name = "Top2"
-Top2_1.Parent = Main_1
+Top2_1.Parent = StatusMain_1
 Top2_1.AnchorPoint = Vector2.new(0.5, 0)
 Top2_1.BackgroundColor3 = Color3.fromRGB(163,162,165)
 Top2_1.BackgroundTransparency = 1
@@ -493,7 +482,7 @@ Top2_1.TextWrapped = true
 
 local Under_1 = Instance.new("TextLabel")
 Under_1.Name = "Under"
-Under_1.Parent = Main_1
+Under_1.Parent = StatusMain_1
 Under_1.AnchorPoint = Vector2.new(0.5, 0)
 Under_1.BackgroundColor3 = Color3.fromRGB(255,255,255)
 Under_1.BackgroundTransparency = 0.9990000128746033
@@ -665,8 +654,11 @@ local function updateUI()
 			local level = plr.Data.Level and plr.Data.Level.Value or "N/A"
 			local frag = plr.Data.Fragments and plr.Data.Fragments.Value or "N/A"
 			local race = plr.Data.Race and plr.Data.Race.Value or "N/A"
-			local world = Three_World and "Third Sea" or (New_World and "Second Sea" or "First Sea")
-			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌")
+			-- Guard: PlaceId detection chạy sau, cần fallback khi chưa xác định
+			local _threeWorld = Three_World == true
+			local _newWorld = New_World == true
+			local world = _threeWorld and "Third Sea" or (_newWorld and "Second Sea" or "First Sea")
+			local seaEmoji = (_threeWorld or _newWorld) and "✅" or "❌"
 			
 			if L_1_.UI_Beli then L_1_.UI_Beli.Text = "Beli: " .. tostring(beli) end
 			if L_1_.UI_Level then L_1_.UI_Level.Text = "Level: " .. tostring(level) .. "    " .. world .. " : " .. seaEmoji end
@@ -908,7 +900,7 @@ function CheckLevel2()
 	local L_28_ = {}
 	L_28_[2] = (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"]
 	if Old_World then
-		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
+		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
 			Ms = "Bandit"
 			NameQuest = "BanditQuest1"
 			QuestLv = 1
@@ -916,7 +908,7 @@ function CheckLevel2()
 			CFrameQ = CFrame["new"](1059.37195, 15.4495068, 1550.4231, .939700544, 0, -0.341998369, 0, 1, 0, .341998369, 0, .939700544)
 			CFrameMon = CFrame["new"](1353.44885, 3.40935516, 1376.92029, .776053488, -6.97791975e-08, .630666852, 6.99138596e-08, 1, 2.4612488e-08, -0.630666852, 2.49917598e-08, .776053488)
 			Next_Level_X = 10
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 10 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 100 then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 10 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 59 then
 			Ms = "Shanda"
 			NameQuest = "SkyExp1Quest"
 			QuestLv = 2
@@ -8264,18 +8256,18 @@ task["spawn"](function()
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Ectoplasm", "Buy", 3)
 			end
 			-- ===== Buy Haki (SettingFarm["Buy Haki"]) =====
-			if SF_Haki["Enhancement"] ~= false and not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
+			if SF_Haki["Enhancement"] == true and not klmdlkgfx and L_1_[24]["Value"] >= 1000 then
 				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Buso")
 				klmdlkgfx = true
 			end
 			if not klmdlkgf and L_1_[24]["Value"] >= 2000 then
-				if SF_Haki["Skyjump"] ~= false then
+				if SF_Haki["Skyjump"] == true then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Geppo")
 				end
-				if SF_Haki["Flash Step"] ~= false then
+				if SF_Haki["Flash Step"] == true then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyHaki", "Soru")
 				end
-				if SF_Haki["Observation"] ~= false then
+				if SF_Haki["Observation"] == true then
 					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("KenTalk", "Buy")
 				end
 				klmdlkgf = true
@@ -8344,3 +8336,134 @@ task["spawn"](function()
 	end
 end)
 -- ===== END SNIPER FRUIT SHOP =====
+-- ===== TSUNAMI HUB WEBHOOK - 5 PHÚT GỬI 1 LẦN =====
+task["spawn"](function()
+	-- Chỉ chạy nếu webhook được bật trong config
+	if not getgenv()["WebhookEnabled"] or getgenv()["WebhookUrl"] == "" then return end
+
+	local RS      = game:GetService("ReplicatedStorage")
+	local CommF   = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
+	local Players = game:GetService("Players")
+	local plr     = Players.LocalPlayer
+
+	-- Màu xanh dùng trong code: #0064FF (0, 100, 255) = decimal 25855
+	local EMBED_COLOR = 25855
+
+	local function buildWebhookBody()
+		-- ── Main Status ──
+		local username = plr.Name or "N/A"
+		local level    = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or "N/A"
+		local race     = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Race") and plr.Data.Race.Value) or "N/A"
+		local devilFruit = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("DevilFruit") and plr.Data.DevilFruit.Value) or "N/A"
+
+		-- Lấy số lượng trái đang giữ trong tay (stored fruits)
+		local fruitStored = 0
+		pcall(function()
+			local fruits = L_1_[45]["GetFruits"]()
+			fruitStored = fruits and #fruits or 0
+		end)
+		local fruitDisplay = devilFruit ~= "N/A" and (devilFruit .. " [" .. fruitStored .. "]") or ("None [" .. fruitStored .. "]")
+
+		-- ── Melee list ──
+		local meleeList = {}
+		pcall(function()
+			local meleeNames = {
+				"Black Leg", "Electro", "Fishman Karate",
+				"Dragon Claw", "Superhuman", "Death Step",
+				"Sharkman Karate", "Electric Claw", "Dragon Talon", "Godhuman"
+			}
+			for _, name in ipairs(meleeNames) do
+				if L_1_[45]["gi"](name) then
+					table.insert(meleeList, name)
+				end
+			end
+		end)
+
+		-- ── Inventory Fruits (stored) ──
+		local invFruits = {}
+		pcall(function()
+			local fruits = L_1_[45]["GetFruits"]()
+			if fruits then
+				for _, f in ipairs(fruits) do
+					table.insert(invFruits, f.Name)
+				end
+			end
+		end)
+
+		-- ── Inventory Weapons & Items ──
+		local invItems = {}
+		pcall(function()
+			local inventory = CommF:InvokeServer("getInventory")
+			if type(inventory) == "table" then
+				for _, item in pairs(inventory) do
+					if type(item) == "table" and item["Name"] then
+						local t = item["Type"] or ""
+						if t ~= "Blox Fruit" then
+							table.insert(invItems, item["Name"])
+						end
+					end
+				end
+			end
+		end)
+
+		-- ── Format text helpers ──
+		local function listOrNone(t)
+			if #t == 0 then return "None" end
+			return table.concat(t, ",\n")
+		end
+
+		-- ── Build Discord embed JSON ──
+		local mainStatus = string.format(
+			"```\nUsername : %s,\nLevel : %s,\nRace : %s,\nFruits : %s\n```",
+			username, tostring(level), tostring(race), fruitDisplay
+		)
+
+		local meleeText = "```\n" .. listOrNone(meleeList) .. "\n```"
+		local fruitText = "```\n" .. listOrNone(invFruits) .. "\n```"
+		local itemText  = "```\n" .. listOrNone(invItems)  .. "\n```"
+
+		-- Escape double quotes trong JSON
+		local function escapeJson(s)
+			s = tostring(s)
+			s = s:gsub('\\', '\\\\')
+			s = s:gsub('"', '\\"')
+			s = s:gsub('\n', '\\n')
+			return s
+		end
+
+		local body = '{'
+			.. '"username":"Tsunami Hub",'
+			.. '"avatar_url":"https://media.discordapp.net/attachments/1479872403529007178/1480115872961007746/Tsunami_Hub.png?ex=69ae80d3&is=69ad2f53&hm=b379cd3afbb03aa3681b37e8b2e7dd29c956b3fde63e50f2073a7f6cdaba4a2d&=&format=webp&quality=lossless",'
+			.. '"embeds":[{'
+			.. '"title":"\\uD83C\\uDF0A Tsunami Hub Notification \\uD83C\\uDF0A",'
+			.. '"color":' .. EMBED_COLOR .. ','
+			.. '"fields":['
+			.. '{"name":"**Main Status**","value":"' .. escapeJson(mainStatus) .. '","inline":false},'
+			.. '{"name":"**Melee**","value":"' .. escapeJson(meleeText) .. '","inline":true},'
+			.. '{"name":"**Inventory Fruit**","value":"' .. escapeJson(fruitText) .. '","inline":true},'
+			.. '{"name":"**Inventory**","value":"' .. escapeJson(itemText) .. '","inline":true}'
+			.. '],'
+			.. '"footer":{"text":"Tsunami Hub • Auto Report (5 min)"}'
+			.. '}]}'
+
+		return body
+	end
+
+	-- Gửi ngay lần đầu khi load
+	task["wait"](10) -- đợi script init xong
+	while true do
+		pcall(function()
+			if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+				local body = buildWebhookBody()
+				request({
+					Url     = getgenv()["WebhookUrl"],
+					Method  = "POST",
+					Headers = { ["Content-Type"] = "application/json" },
+					Body    = body
+				})
+			end
+		end)
+		task["wait"](300) -- 5 phút = 300 giây
+	end
+end)
+-- ===== END TSUNAMI HUB WEBHOOK =====
