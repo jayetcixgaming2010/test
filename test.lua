@@ -140,7 +140,7 @@ local UIGradient_3 = Instance.new("UIGradient")
 local DropShadow_1 = Instance.new("ImageLabel")
 
 CoinCard_1.Name = "CoinCard"
-CoinCard_1.Parent = game:GetService("CoreGui")
+CoinCard_1.Parent = L_1_[5]:WaitForChild("PlayerGui")
 CoinCard_1.ResetOnSpawn = false
 CoinCard_1.DisplayOrder = 20
 
@@ -419,7 +419,7 @@ DropShadow_1.ImageColor3 = Color3.fromRGB(0, 0, 0)
 -- // UI Top \\ --
 local Status = Instance.new("ScreenGui")
 Status.Name = "Status"
-Status.Parent = game:GetService("CoreGui")
+Status.Parent = L_1_[5]:WaitForChild("PlayerGui")
 Status.ResetOnSpawn = false
 Status.DisplayOrder = 10
 
@@ -524,7 +524,7 @@ local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
 TsunamiHubBtn.Name = "Tsunami Hub Btn"  
-TsunamiHubBtn.Parent = game:GetService("CoreGui")
+TsunamiHubBtn.Parent = L_1_[5]:WaitForChild("PlayerGui")
 TsunamiHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
 TsunamiHubBtn.DisplayOrder = 10
 TsunamiHubBtn.Enabled = true
