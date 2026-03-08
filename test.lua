@@ -3243,21 +3243,6 @@ L_1_[25] = game:GetService("Workspace")
 L_1_[34] = {}
 L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
-task["spawn"](function()
-	while task["wait"](.5) do
-		L_1_[45]["p"](function()
-			if L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] < 2650 then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Melee", L_1_[35]["Data"]["Points"]["Value"])
-			end
-			if L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] >= 2650 and (L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Defense"]["Level"]["Value"] < 2550) then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Defense", L_1_[35]["Data"]["Points"]["Value"])
-			end
-			if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("Buso")
-			end
-		end)
-	end
-end);
 (getgenv())["Fast Attack"] = true
 L_1_[20] = 0
 task["spawn"](function()
@@ -8247,72 +8232,69 @@ task["spawn"](function()
 		end)
 	end
 end)
--- AUTO STATS--
+-- AUTO STATS (FIXED)
 getgenv().AutoStats = true
-getgenv().MeleeRatio = 0.7  -- 70% Melee
-getgenv().DefenseRatio = 0.3 -- 30% Defense
 
 task.spawn(function()
-    spawn(function() -- UI Loop riêng
-        while task.wait(0.5) do
-            pcall(function()
-                local lp = game.Players.LocalPlayer
-                if lp.Data and L1.UIBeli then
-                    L1.UIBeli.Text = "Beli: " .. (lp.Data.Beli.Value or "NA")
-                    L1.UILevel.Text = "Lv: " .. (lp.Data.Level.Value or "NA")
-                    L1.UIRace.Text = "Race: " .. (lp.Data.Race.Value or "NA")
-                    L1.UIFrag.Text = "Frag: " .. (lp.Data.Fragments.Value or "NA")
-                end
-            end)
-        end
-    end)
-    
-    -- AUTO STATS MAIN LOOP
-    while true do
-        task.wait(0.8)
-        if not getgenv().AutoStats then continue end
-        
-        local lp = game.Players.LocalPlayer
-        local level = lp.Data.Level.Value
-        local points = lp.Data.Points.Value
-        
-        if points > 0 and lp.Data.Stats then
-            local melee = lp.Data.Stats.Melee.Level.Value
-            local defense = lp.Data.Stats.Defense.Level.Value
-            local sword = lp.Data.Stats.Sword.Level.Value
+    while task.wait(0.8) do
+        pcall(function()
+            if not getgenv().AutoStats then return end
+            local lp = game:GetService("Players").LocalPlayer
+            local points = lp.Data.Points.Value
+            if points <= 0 then return end
+            
+            local stats = lp.Data.Stats
+            local melee = stats.Melee.Level.Value
+            local defense = stats.Defense.Level.Value
+            local sword = stats.Sword.Level.Value
             
             local remote = game:GetService("ReplicatedStorage").Remotes.CommF_
             
+            -- Ngưỡng max stat (có thể điều chỉnh theo game)
+            local maxMelee = 2650
+            local maxDefense = 2550
+            local maxSword = 2550
+            
+            local level = lp.Data.Level.Value
+            
             if level < 140 then
-                -- ĐẦU GAME: Melee 70% > Defense 30%
-                if melee < 2800 then
-                    remote:InvokeServer("AddPoint", "Melee", math.floor(points * 0.7))
-                elseif defense < 2800 then
-                    remote:InvokeServer("AddPoint", "Defense", points)
+                -- Giai đoạn đầu: Melee 70%, Defense 30%
+                if melee < maxMelee then
+                    local add = math.floor(points * 0.7)
+                    if add > 0 then
+                        remote:InvokeServer("AddPoint", "Melee", add)
+                    end
+                elseif defense < maxDefense then
+                    remote:InvokeServer("AddPoint", "Defense", points) -- cộng hết phần còn lại
                 end
             else
-                -- LV140+: Melee 50% > Defense 30% > Sword 20%
-                if melee < 2800 then
-                    remote:InvokeServer("AddPoint", "Melee", math.floor(points * 0.5))
-                elseif defense < 2800 then
-                    remote:InvokeServer("AddPoint", "Defense", math.floor(points * 0.3))
-                elseif sword < 2800 then
-                    remote:InvokeServer("AddPoint", "Sword", points)
+                -- Giai đoạn sau: Melee 50%, Defense 30%, Sword 20%
+                if melee < maxMelee then
+                    local add = math.floor(points * 0.5)
+                    if add > 0 then
+                        remote:InvokeServer("AddPoint", "Melee", add)
+                    end
+                elseif defense < maxDefense then
+                    local add = math.floor(points * 0.3)
+                    if add > 0 then
+                        remote:InvokeServer("AddPoint", "Defense", add)
+                    end
+                elseif sword < maxSword then
+                    remote:InvokeServer("AddPoint", "Sword", points) -- cộng hết vào sword
                 end
             end
-        end
+        end)
     end
 end)
 
--- HOTKEY TOGGLE (F4)
+-- HOTKEY TOGGLE (F4) - Giữ nguyên
 game:GetService("UserInputService").InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.F4 then
         getgenv().AutoStats = not getgenv().AutoStats
-        game.StarterGui:SetCore("SendNotification", {
+        game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Tsunami Stats";
             Text = "AutoStats: " .. (getgenv().AutoStats and "ON" or "OFF");
             Duration = 2
         })
     end
 end)
-
