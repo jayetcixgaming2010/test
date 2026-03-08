@@ -8247,3 +8247,72 @@ task["spawn"](function()
 		end)
 	end
 end)
+-- AUTO STATS--
+getgenv().AutoStats = true
+getgenv().MeleeRatio = 0.7  -- 70% Melee
+getgenv().DefenseRatio = 0.3 -- 30% Defense
+
+task.spawn(function()
+    spawn(function() -- UI Loop riêng
+        while task.wait(0.5) do
+            pcall(function()
+                local lp = game.Players.LocalPlayer
+                if lp.Data and L1.UIBeli then
+                    L1.UIBeli.Text = "Beli: " .. (lp.Data.Beli.Value or "NA")
+                    L1.UILevel.Text = "Lv: " .. (lp.Data.Level.Value or "NA")
+                    L1.UIRace.Text = "Race: " .. (lp.Data.Race.Value or "NA")
+                    L1.UIFrag.Text = "Frag: " .. (lp.Data.Fragments.Value or "NA")
+                end
+            end)
+        end
+    end)
+    
+    -- AUTO STATS MAIN LOOP
+    while true do
+        task.wait(0.8)
+        if not getgenv().AutoStats then continue end
+        
+        local lp = game.Players.LocalPlayer
+        local level = lp.Data.Level.Value
+        local points = lp.Data.Points.Value
+        
+        if points > 0 and lp.Data.Stats then
+            local melee = lp.Data.Stats.Melee.Level.Value
+            local defense = lp.Data.Stats.Defense.Level.Value
+            local sword = lp.Data.Stats.Sword.Level.Value
+            
+            local remote = game:GetService("ReplicatedStorage").Remotes.CommF_
+            
+            if level < 140 then
+                -- ĐẦU GAME: Melee 70% > Defense 30%
+                if melee < 2800 then
+                    remote:InvokeServer("AddPoint", "Melee", math.floor(points * 0.7))
+                elseif defense < 2800 then
+                    remote:InvokeServer("AddPoint", "Defense", points)
+                end
+            else
+                -- LV140+: Melee 50% > Defense 30% > Sword 20%
+                if melee < 2800 then
+                    remote:InvokeServer("AddPoint", "Melee", math.floor(points * 0.5))
+                elseif defense < 2800 then
+                    remote:InvokeServer("AddPoint", "Defense", math.floor(points * 0.3))
+                elseif sword < 2800 then
+                    remote:InvokeServer("AddPoint", "Sword", points)
+                end
+            end
+        end
+    end
+end)
+
+-- HOTKEY TOGGLE (F4)
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F4 then
+        getgenv().AutoStats = not getgenv().AutoStats
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Tsunami Stats";
+            Text = "AutoStats: " .. (getgenv().AutoStats and "ON" or "OFF");
+            Duration = 2
+        })
+    end
+end)
+
