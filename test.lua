@@ -132,6 +132,7 @@ CoinCard_1.Name = "CoinCard"
 CoinCard_1.Parent = game:GetService("CoreGui")
 CoinCard_1.ResetOnSpawn = false
 CoinCard_1.DisplayOrder = 20
+CoinCard_1.Enabled = false  -- ẩn mặc định, toggle btn sẽ bật lên
 
 DropShadowHolder_1.AnchorPoint = Vector2.new(0.5, 0.5)
 DropShadowHolder_1.BackgroundColor3 = Color3.fromRGB(163, 163, 163)
@@ -826,7 +827,10 @@ task["spawn"](function()
 					"ColorCorrectionEffec",
 					"t"
 				})) or L_21_[2]:IsA("BloomEffect") or L_21_[2]:IsA("DepthOfFieldEffect") then
-					L_21_[2]["Enabled"] = false
+					-- Bỏ qua blur UI của script (CameraBlur), chỉ tắt effect của game
+					if L_21_[2].Name ~= "CameraBlur" then
+						L_21_[2]["Enabled"] = false
+					end
 				end
 			end
 			if L_15_[1] then
