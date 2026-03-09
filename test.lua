@@ -88,6 +88,7 @@ L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 -- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
@@ -4541,7 +4542,7 @@ task["spawn"](function()
 							Quest = "Twin Hooks"
 							return
 						end
-						if (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") and (not L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor") and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "3") == -2 and Mirror_Fractal_H)) then
+						if (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") and (not L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor") and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "3") == -2 and Mirror_Fractal_H and L_1_[45]["gi"]("Valkyrie Helm"))) then
 							Quest = "Pull Lerver"
 							return
 						end
@@ -6013,16 +6014,37 @@ task["spawn"](function()
 							Quest = "World 2"
 							return
 						end
-						if New_World and (CheckFindWaterKey and (L_1_[24]["Value"] >= 1500 and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TalkTrevor", "1") == 0 and (not L_1_[45]["IsHall"]() and L_1_[45]["IsHeavenly"]())))) then
-							Quest = "TravelZou"
-							return
-						end
-						Quest = nil
-						L_1_[45]["Status"](L_1_[3]({
-							" Status : Auto Farm ",
-							"Level"
-						}))
-						L_1_[39]()
+                        if New_World and (CheckFindWaterKey and (L_1_[24]["Value"] >= 1500 and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TalkTrevor", "1") == 0 and (not L_1_[45]["IsHall"]() and L_1_[45]["IsHeavenly"]())))) then
+                            Quest = "TravelZou"
+                            return
+                        end
+                        -- Kiểm tra boss để gán quest
+                        -- Rip Indra: nếu chưa có Tushita
+                        if not L_1_[45]["gi"]("Tushita") and L_1_[45]["CheckBoss"]("Rip Indra") then
+                            Quest = "Rip Indra"
+                            return
+                        end
+                        -- Darkbeard: nếu chưa có Dark Fragment
+                        if not (L_1_[45]["CheckItem"]("Dark Fragment") >= 1) and L_1_[45]["CheckBoss"]("Darkbeard") then
+                            Quest = "Darkbeard"
+                            return
+                        end
+                        -- Soul Reaper: nếu Yama quest chưa xong (progress < 30 = chưa cần kill Soul Reaper)
+                        if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("EliteHunter", "Progress") < 30 and not L_1_[45]["gi"]("Yama") and L_1_[45]["CheckBoss"]("Soul Reaper") then
+                            Quest = "Soul Reaper"
+                            return
+                        end
+                        -- Dough King: nếu chưa có Mirror Fractal
+                        if not Mirror_Fractal_H and L_1_[45]["CheckBoss"]("Dough King") then
+                            Quest = "Dough King"
+                            return
+                        end
+                        Quest = nil
+                        L_1_[45]["Status"](L_1_[3]({
+                            " Status : Auto Farm ",
+                            "Level"
+                        }))
+                        L_1_[39]()
 					end
 				end
 			end
@@ -7312,7 +7334,148 @@ task["spawn"](function()
 						L_1_[10]:Teleport(L_1_[30], L_1_[35])
 					end
 				until not L_1_[45]["CheckBoss"]("Longma")
+            elseif Quest == "Darkbeard" then
+                if not isBossSpawned("Darkbeard") then
+                    L_1_[45]["Status"]("Đang tìm server có Darkbeard...")
+                    if hopToEventServer("darkbeard") then
+                        return
+                    else
+                        L_1_[45]["Status"]("Không tìm thấy Darkbeard, tiếp tục farm...")
+                        Quest = nil
+                        return
+                    end
+                end
+                -- Code xử lý Darkbeard
+                if L_1_[45]["ffc"](L_1_[40], "Darkbeard") then
+                    for L_257_forvar0, L_258_forvar1 in pairs(L_1_[40]:GetChildren()) do
+                        local L_259_ = {}
+                        L_259_[3], L_259_[1] = L_257_forvar0, L_258_forvar1
+                        if L_259_[1]["Name"] == "Darkbeard" and L_259_[1]["Humanoid"]["Health"] > 0 then
+                            repeat
+                                L_1_[45]["wt"]()
+                                if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+                                    L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
+                                end
+                                L_1_[31](L_259_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
+                                L_1_[14]()
+                            until not L_259_[1]["Parent"] or L_259_[1]["Humanoid"]["Health"] <= 0 or not(getgenv())["AutoFarm"]
+                        end
+                    end
+                elseif L_1_[45]["ffc"](L_1_[7], "Darkbeard") then
+                    for L_260_forvar0, L_261_forvar1 in pairs(L_1_[7]:GetChildren()) do
+                        local L_262_ = {}
+                        L_262_[2], L_262_[1] = L_260_forvar0, L_261_forvar1
+                        if L_262_[1]["Name"] == "Darkbeard" and L_262_[1]["Humanoid"]["Health"] > 0 then
+                            repeat
+                                L_1_[45]["wt"]()
+                                if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+                                    L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
+                                end
+                                L_1_[31](L_262_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
+                                L_1_[14]()
+                            until not L_262_[1]["Parent"] or L_262_[1]["Humanoid"]["Health"] <= 0 or not(getgenv())["AutoFarm"]
+                        end
+                    end
+                end
+
+            elseif Quest == "Rip Indra" then
+                if not isBossSpawned("rip_indra True Form") then
+                    L_1_[45]["Status"]("Đang tìm server có Rip Indra...")
+                    if hopToEventServer("rip_indra") then
+                        return
+                    else
+                        L_1_[45]["Status"]("Không tìm thấy Rip Indra, tiếp tục farm...")
+                        Quest = nil
+                        return
+                    end
+                end
+                -- Code xử lý Rip Indra
+                if L_1_[45]["ffc"](L_1_[40], "rip_indra True Form") then
+                    for L_233_forvar0, L_234_forvar1 in pairs(L_1_[40]:GetChildren()) do
+                        local L_235_ = {}
+                        L_235_[1], L_235_[3] = L_233_forvar0, L_234_forvar1
+                        if L_235_[3]["Name"] == "rip_indra True Form" and L_235_[3]["Humanoid"]["Health"] > 0 then
+                            repeat
+                                L_1_[45]["wt"](.1)
+                                if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+                                    L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
+                                end
+                                L_1_[31](L_235_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
+                                L_1_[14]()
+                            until not L_235_[3]["Parent"] or L_235_[3]["Humanoid"]["Health"] <= 0
+                        end
+                    end
+                elseif L_1_[45]["ffc"](L_1_[7], "rip_indra True Form") then
+                    L_1_[31]((L_1_[7]:FindFirstChild("rip_indra True Form"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
+                end
+
+            elseif Quest == "Soul Reaper" then
+                if not isBossSpawned("Soul Reaper") then
+                    L_1_[45]["Status"]("Đang tìm server có Soul Reaper...")
+                    if hopToEventServer("soul_reaper") then
+                        return
+                    else
+                        L_1_[45]["Status"]("Không tìm thấy Soul Reaper, tiếp tục farm...")
+                        Quest = nil
+                        return
+                    end
+                end
+                -- Code xử lý Soul Reaper (nếu có, bạn có thể copy từ phần khác)
+                if L_1_[45]["ffc"](L_1_[40], "Soul Reaper") then
+                    for _, v in pairs(L_1_[40]:GetChildren()) do
+                        if v.Name == "Soul Reaper" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            repeat
+                                L_1_[45]["wt"]()
+                                L_1_[31](v.HumanoidRootPart.CFrame * CFrame.new(0, -30, 0), 1.5)
+                                L_1_[14]()
+                            until not v.Parent or v.Humanoid.Health <= 0
+                        end
+                    end
+                elseif L_1_[45]["ffc"](L_1_[7], "Soul Reaper") then
+                    L_1_[31]((L_1_[7]:FindFirstChild("Soul Reaper")).HumanoidRootPart.CFrame * CFrame.new(0, 30, 0), 1.5)
+                end
+
+            elseif Quest == "Dough King" then
+                if not isBossSpawned("Dough King") then
+                    L_1_[45]["Status"]("Đang tìm server có Dough King...")
+                    if hopToEventServer("dough_king") then
+                        return
+                    else
+                        L_1_[45]["Status"]("Không tìm thấy Dough King, tiếp tục farm...")
+                        Quest = nil
+                        return
+                    end
+                end
+                -- Code xử lý Dough King (nếu có, bạn có thể copy từ phần khác)
+                if L_1_[45]["ffc"](L_1_[40], "Dough King") then
+                    for _, v in pairs(L_1_[40]:GetChildren()) do
+                        if v.Name == "Dough King" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                            repeat
+                                L_1_[45]["wt"]()
+                                L_1_[31](v.HumanoidRootPart.CFrame * CFrame.new(0, -30, 0), 1.5)
+                                L_1_[14]()
+                            until not v.Parent or v.Humanoid.Health <= 0
+                        end
+                    end
+                elseif L_1_[45]["ffc"](L_1_[7], "Dough King") then
+                    L_1_[31]((L_1_[7]:FindFirstChild("Dough King")).HumanoidRootPart.CFrame * CFrame.new(0, 30, 0), 1.5)
+                end
 			elseif Quest == "Soul Guitar" then
+				-- Skip nếu đã có Soul Guitar
+				if L_1_[45]["gi"]("Soul Guitar") then
+					Quest = nil
+					return
+				end
+				if not isFullMoon() then
+					L_1_[45]["Status"]("Đang tìm server Full Moon...")
+					if hopToEventServer("fullmoon") then
+						return
+					else
+						L_1_[45]["Status"]("Không tìm thấy server Full Moon, tiếp tục farm...")
+						Quest = nil
+						return
+					end
+				end				
 				if L_1_[45]["CheckItem"]("Bones") < 500 then
 					if Three_World then
 						L_1_[45]["FarmBone"](false)
@@ -7509,6 +7672,27 @@ task["spawn"](function()
 					return
 				end
 			elseif Quest == "Pull Lerver" then
+				-- Skip nếu chưa có đủ items
+				if not L_1_[45]["gi"]("Valkyrie Helm") or not Mirror_Fractal_H then
+					L_1_[45]["Status"]("Cần Valkyrie Helm + Mirror Fractal trước!")
+					Quest = nil
+					return
+				end
+				-- Skip nếu đã gạt cần xong
+				if ExSeb then
+					Quest = nil
+					return
+				end
+			if not isMirageIsland() then
+				L_1_[45]["Status"]("Đang tìm server Mirage Island...")
+				if hopToEventServer("mirage") then
+					return
+				else
+					L_1_[45]["Status"]("Không tìm thấy Mirage Island, tiếp tục farm...")
+					Quest = nil
+					return
+				end
+			end
 				if not ExSeb then
 					if (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("RaceV4Progress", "Check") == 1 then
 						local L_599_ = {}
@@ -8158,6 +8342,190 @@ task["spawn"](function()
 	end
 end)
 L_1_[45]["wt"](5)
+-- ==================== API CONFIGURATION ====================
+local API_URL = "https://tsunamiapi.netlify.app/.netlify/functions/events"  -- THAY URL CỦA BẠN
+local WEBHOOK_URL = "https://ptb.discord.com/api/webhooks/1480429535341318237/bHz_15-4fbS-1gBxn46EFNzQqYtDzMZTKCe3TWEEr-ywa4FE8MVGNzo75n77O-_7CBlP"  -- THAY WEBHOOK CỦA BẠN
+local API_TOKEN = "TsunamiAPI1234@#"  -- THAY TOKEN
+
+-- ==================== EVENT DETECTION FUNCTIONS ====================
+
+-- Kiểm tra Full Moon
+local function isFullMoon()
+    return workspace:FindFirstChild("FullMoon") ~= nil
+end
+
+-- Kiểm tra Mirage Island
+local function isMirageIsland()
+    return workspace.Map:FindFirstChild("MysticIsland") ~= nil or
+           workspace.Map:FindFirstChild("Mirage") ~= nil
+end
+
+-- Kiểm tra boss có tồn tại không
+local function isBossSpawned(bossName)
+    return L_1_[40]:FindFirstChild(bossName) ~= nil or
+           L_1_[7]:FindFirstChild(bossName) ~= nil
+end
+
+-- Gửi thông báo lên Discord qua webhook
+local function sendDiscordNotification(content, title, color)
+    local embed = {
+        title = title or "Thông báo",
+        description = content,
+        color = color or 65280,
+        footer = { text = "Tsunami Hub" },
+        timestamp = DateTime.now():ToIsoDate()
+    }
+    local data = { content = "", embeds = { embed } }
+    local json = HttpService:JSONEncode(data)
+    
+    pcall(function()
+        if request then
+            request({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = json
+            })
+        elseif syn and syn.request then
+            syn.request({
+                Url = WEBHOOK_URL,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = json
+            })
+        else
+            HttpService:PostAsync(WEBHOOK_URL, json, Enum.HttpContentType.ApplicationJson)
+        end
+    end)
+end
+
+-- Gửi job ID lên API Netlify
+local function reportEventToAPI(eventType, jobId)
+    local data = { type = eventType, job_id = jobId, token = API_TOKEN }
+    local json = HttpService:JSONEncode(data)
+    
+    pcall(function()
+        if request then
+            request({
+                Url = API_URL,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = json
+            })
+        elseif syn and syn.request then
+            syn.request({
+                Url = API_URL,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = json
+            })
+        else
+            HttpService:PostAsync(API_URL, json, Enum.HttpContentType.ApplicationJson)
+        end
+    end)
+end
+
+-- Lấy danh sách server từ API theo loại event
+local function getServersByEventType(eventType)
+    local url = API_URL .. "?type=" .. eventType
+    local response
+    
+    pcall(function()
+        if request then
+            response = request({ Url = url, Method = "GET" }).Body
+        elseif syn and syn.request then
+            response = syn.request({ Url = url, Method = "GET" }).Body
+        else
+            response = HttpService:GetAsync(url)
+        end
+    end)
+    
+    if response then
+        return HttpService:JSONDecode(response)
+    end
+    return {}
+end
+
+-- Teleport đến server có event
+local function hopToEventServer(eventType)
+    local servers = getServersByEventType(eventType)
+    for _, jobId in ipairs(servers) do
+        if jobId ~= game.JobId then
+            getgenv().waitingForEvent = eventType
+            L_1_[10]:TeleportToPlaceInstance(L_1_[30], jobId, L_1_[5])
+            return true
+        end
+    end
+    return false
+end
+
+-- ==================== AUTO REPORT LOOP ====================
+task.spawn(function()
+    local reportedEvents = {}
+    
+    while task.wait(5) do
+        pcall(function()
+            -- Báo cáo Full Moon
+            if isFullMoon() and not reportedEvents.fullmoon then
+                sendDiscordNotification("🌕 **Full Moon** xuất hiện!\nJob ID: `" .. game.JobId .. "`", "Full Moon", 16766720)
+                reportEventToAPI("fullmoon", game.JobId)
+                reportedEvents.fullmoon = true
+                task.delay(1800, function() reportedEvents.fullmoon = nil end)
+            end
+            
+            -- Báo cáo Mirage Island
+            if isMirageIsland() and not reportedEvents.mirage then
+                sendDiscordNotification("🏝️ **Mirage Island** xuất hiện!\nJob ID: `" .. game.JobId .. "`", "Mirage", 16753920)
+                reportEventToAPI("mirage", game.JobId)
+                reportedEvents.mirage = true
+                task.delay(1800, function() reportedEvents.mirage = nil end)
+            end
+            
+            -- Báo cáo các boss
+            local bosses = {
+                {name = "rip_indra True Form", type = "rip_indra", color = 16711680},
+                {name = "Darkbeard", type = "darkbeard", color = 0},
+                {name = "Soul Reaper", type = "soul_reaper", color = 16744576},
+                {name = "Dough King", type = "dough_king", color = 16711935}
+            }
+            
+            for _, boss in ipairs(bosses) do
+                if isBossSpawned(boss.name) and not reportedEvents[boss.type] then
+                    sendDiscordNotification("👾 **" .. boss.name .. "** vừa xuất hiện!\nJob ID: `" .. game.JobId .. "`", boss.name, boss.color)
+                    reportEventToAPI(boss.type, game.JobId)
+                    reportedEvents[boss.type] = true
+                    task.delay(1800, function() reportedEvents[boss.type] = nil end)
+                end
+            end
+        end)
+    end
+end)
+
+-- ==================== TELEPORT HANDLER ====================
+-- Xử lý sau khi teleport
+task.spawn(function()
+    if getgenv().waitingForEvent then
+        local eventType = getgenv().waitingForEvent
+        getgenv().waitingForEvent = nil
+        
+        task.wait(5)  -- Đợi game load
+        
+        -- Set quest tương ứng
+        if eventType == "fullmoon" then
+            if isFullMoon() then Quest = "Soul Guitar" end
+        elseif eventType == "mirage" then
+            if isMirageIsland() then Quest = "Pull Lerver" end
+        elseif eventType == "rip_indra" then
+            if isBossSpawned("rip_indra True Form") then Quest = "Rip Indra" end
+        elseif eventType == "darkbeard" then
+            if isBossSpawned("Darkbeard") then Quest = "Darkbeard" end
+        elseif eventType == "dough_king" then
+            if isBossSpawned("Dough King") then Quest = "Dough King" end
+        elseif eventType == "soul_reaper" then
+            if isBossSpawned("Soul Reaper") then Quest = "Soul Reaper" end
+        end
+    end
+end)
 _G["Ew"] = false
 Ewx = false
 task["spawn"](function()
