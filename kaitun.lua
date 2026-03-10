@@ -83,8 +83,8 @@ L_1_[17] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Fragments")
 L_1_[1] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Beli")
 L_1_[48] = require(L_1_[7]["Modules"]["Net"])
 L_1_[16] = game:GetService("Lighting")
-L_1_[2] = game:service("VirtualInputManager")
-L_1_[33] = game:service("VirtualUser")
+L_1_[2] = game:GetService("VirtualInputManager")
+L_1_[33] = game:GetService("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
@@ -132,6 +132,7 @@ CoinCard_1.Name = "CoinCard"
 CoinCard_1.Parent = game:GetService("CoreGui")
 CoinCard_1.ResetOnSpawn = false
 CoinCard_1.DisplayOrder = 20
+CoinCard_1.Enabled = false  -- ẩn mặc định
 
 DropShadowHolder_1.AnchorPoint = Vector2.new(0.5, 0.5)
 DropShadowHolder_1.BackgroundColor3 = Color3.fromRGB(163, 163, 163)
@@ -689,28 +690,25 @@ task.spawn(function()
 	end
 end)
 
--- Định nghĩa lại hàm Status (cập nhật thanh trạng thái dưới cùng)
-L_1_[45]["Status"] = function(text)
-	pcall(function()
-		if L_1_.UI_BottomStatus then
-			L_1_.UI_BottomStatus.Text = "Status Farm: " .. text
-		end
-	end)
-end
-
--- Đặt trạng thái ban đầu
-L_1_[45]["Status"]("Idle")
-
 -- ========== KẾT THÚC UI MỚI ==========
 
 task["spawn"](function()
 	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
-		L_1_[7]["Effect"]:Destroy()
-		for L_2_forvar0, L_3_forvar1 in pairs(getconnections(L_1_[5]["PlayerGui"]["Main"]["Settings"]["Buttons"]["FastModeButton"]["Activated"])) do
-			local L_4_ = {}
-			L_4_[2], L_4_[3] = L_2_forvar0, L_3_forvar1
-			L_4_[3]["Function"]()
-		end
+		pcall(function()
+			if L_1_[7]:FindFirstChild("Effect") then
+				L_1_[7]["Effect"]:Destroy()
+			end
+		end)
+		pcall(function()
+			-- getconnections() không support trên Delta X, bọc pcall
+			if getconnections then
+				for L_2_forvar0, L_3_forvar1 in pairs(getconnections(L_1_[5]["PlayerGui"]["Main"]["Settings"]["Buttons"]["FastModeButton"]["Activated"])) do
+					local L_4_ = {}
+					L_4_[2], L_4_[3] = L_2_forvar0, L_3_forvar1
+					L_4_[3]["Function"]()
+				end
+			end
+		end)
 	end
 end)
 wait(2)
@@ -826,7 +824,9 @@ task["spawn"](function()
 					"ColorCorrectionEffec",
 					"t"
 				})) or L_21_[2]:IsA("BloomEffect") or L_21_[2]:IsA("DepthOfFieldEffect") then
-					L_21_[2]["Enabled"] = false
+					if L_21_[2].Name ~= "CameraBlur" then
+						L_21_[2]["Enabled"] = false
+					end
 				end
 			end
 			if L_15_[1] then
@@ -2986,17 +2986,15 @@ setmetatable(L_1_[45], {
 							if L_133_[1]["Name"] == "ErrorPrompt" then
 								if L_133_[1]["Visible"] then
 									if L_133_[1]["TitleFrame"]["ErrorTitle"]["Text"] == "Teleport Failed" then
-										L_133_[1]["Visible"] = false
-										task.wait(3)  -- cooldown trước khi hop lại
 										HopLowServer()
+										L_133_[1]["Visible"] = false
 									end
 								end;
 								(L_133_[1]:GetPropertyChangedSignal("Visible")):Connect(function()
 									if L_133_[1]["Visible"] then
 										if L_133_[1]["TitleFrame"]["ErrorTitle"]["Text"] == "Teleport Failed" then
-											L_133_[1]["Visible"] = false
-											task.wait(3)  -- cooldown trước khi hop lại
 											HopLowServer()
+											L_133_[1]["Visible"] = false
 										end
 									end
 								end)
@@ -3178,14 +3176,18 @@ setmetatable(L_1_[45], {
 							end
 						end
 					end
-					sethiddenproperty(L_154_[3], "SimulationRadius", math["huge"])
+					pcall(function() if sethiddenproperty then sethiddenproperty(L_154_[3], "SimulationRadius", math["huge"]) end end)
 				end)
 			end
 		elseif L_60_[3] == "Status" then
 			return function(L_167_arg0)
 				local L_168_ = {}
 				L_168_[2] = L_167_arg0
-				L_1_[26]["Text"] = L_168_[2]
+				pcall(function()
+					if L_1_.UI_BottomStatus then
+						L_1_.UI_BottomStatus.Text = "Status Farm: " .. tostring(L_168_[2])
+					end
+				end)
 			end
 		elseif L_60_[3] == "GetQuest" then
 			return function(L_169_arg0)
@@ -7553,7 +7555,7 @@ task["spawn"](function()
 									L_583_[2], L_583_[1] = L_581_forvar0, L_582_forvar1
 									if (L_583_[1]["HumanoidRootPart"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 500 then
 										L_583_[1]["HumanoidRootPart"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 0, 20)
-										sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"])
+										pcall(function() if sethiddenproperty then sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"]) end end)
 									end
 								end
 								wait(1)
@@ -7846,7 +7848,7 @@ task["spawn"](function()
 								L_610_[2], L_610_[3] = L_608_forvar0, L_609_forvar1
 								if L_610_[3]:FindFirstChild("HumanoidRootPart") and (L_610_[3]["HumanoidRootPart"]["Position"] - Vector3["new"](-13347.6982, 332.378143, -7652.27783))["Magnitude"] > 10 then
 									L_610_[3]["HumanoidRootPart"]["CFrame"] = CFrame["new"](-13347.6982, 332.378143, -7652.27783)
-									sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"])
+									pcall(function() if sethiddenproperty then sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"]) end end)
 								end
 							end
 							L_1_[31](CFrame["new"](-13347.6982, 332.378143, -7652.27783, -0.97929436, 4.50812898e-08, -0.202441484, 4.58302409e-08, 1, 9.8789521e-10, .202441484, -8.31050162e-09, -0.97929436), 1.5)
@@ -8368,6 +8370,20 @@ local function isBossSpawned(bossName)
            L_1_[7]:FindFirstChild(bossName) ~= nil
 end
 
+-- Helper HTTP request tương thích Delta X / Synapse / vanilla
+local function httpRequest(options)
+    if http and http.request then
+        return http.request(options)
+    elseif http_request then
+        return http_request(options)
+    elseif request then
+        return request(options)
+    elseif syn and syn.request then
+        return syn.request(options)
+    end
+    return nil
+end
+
 -- Gửi thông báo lên Discord qua webhook
 local function sendDiscordNotification(content, title, color)
     local embed = {
@@ -8379,23 +8395,14 @@ local function sendDiscordNotification(content, title, color)
     }
     local data = { content = "", embeds = { embed } }
     local json = HttpService:JSONEncode(data)
-    
     pcall(function()
-        if request then
-            request({
-                Url = WEBHOOK_URL,
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = json
-            })
-        elseif syn and syn.request then
-            syn.request({
-                Url = WEBHOOK_URL,
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = json
-            })
-        else
+        local res = httpRequest({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = json
+        })
+        if not res then
             HttpService:PostAsync(WEBHOOK_URL, json, Enum.HttpContentType.ApplicationJson)
         end
     end)
@@ -8405,23 +8412,14 @@ end
 local function reportEventToAPI(eventType, jobId)
     local data = { type = eventType, job_id = jobId, token = API_TOKEN }
     local json = HttpService:JSONEncode(data)
-    
     pcall(function()
-        if request then
-            request({
-                Url = API_URL,
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = json
-            })
-        elseif syn and syn.request then
-            syn.request({
-                Url = API_URL,
-                Method = "POST",
-                Headers = { ["Content-Type"] = "application/json" },
-                Body = json
-            })
-        else
+        local res = httpRequest({
+            Url = API_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = json
+        })
+        if not res then
             HttpService:PostAsync(API_URL, json, Enum.HttpContentType.ApplicationJson)
         end
     end)
@@ -8431,17 +8429,14 @@ end
 local function getServersByEventType(eventType)
     local url = API_URL .. "?type=" .. eventType
     local response
-    
     pcall(function()
-        if request then
-            response = request({ Url = url, Method = "GET" }).Body
-        elseif syn and syn.request then
-            response = syn.request({ Url = url, Method = "GET" }).Body
+        local res = httpRequest({ Url = url, Method = "GET" })
+        if res then
+            response = res.Body
         else
             response = HttpService:GetAsync(url)
         end
     end)
-    
     if response then
         return HttpService:JSONDecode(response)
     end
@@ -8449,25 +8444,12 @@ local function getServersByEventType(eventType)
 end
 
 -- Teleport đến server có event
-local _lastHopTime = 0
 local function hopToEventServer(eventType)
-    -- Cooldown 15 giây tránh spam teleport
-    if tick() - _lastHopTime < 15 then return false end
-    
     local servers = getServersByEventType(eventType)
     for _, jobId in ipairs(servers) do
         if jobId ~= game.JobId then
-            _lastHopTime = tick()
             getgenv().waitingForEvent = eventType
-            local ok, err = pcall(function()
-                L_1_[10]:TeleportToPlaceInstance(L_1_[30], jobId, L_1_[5])
-            end)
-            if not ok then
-                -- Teleport thất bại, xóa waitingForEvent
-                getgenv().waitingForEvent = nil
-                _lastHopTime = 0
-                return false
-            end
+            L_1_[10]:TeleportToPlaceInstance(L_1_[30], jobId, L_1_[5])
             return true
         end
     end
@@ -8517,32 +8499,27 @@ task.spawn(function()
 end)
 
 -- ==================== TELEPORT HANDLER ====================
--- Xử lý sau khi teleport (đợi game load hoàn toàn rồi mới check)
+-- Xử lý sau khi teleport
 task.spawn(function()
-    task.wait(10)  -- Đợi game load xong hoàn toàn
     if getgenv().waitingForEvent then
         local eventType = getgenv().waitingForEvent
         getgenv().waitingForEvent = nil
-
-        -- Retry tối đa 5 lần, mỗi 2 giây nếu event chưa xuất hiện
-        local maxRetry = 5
-        for i = 1, maxRetry do
-            local found = false
-            if eventType == "fullmoon" then
-                if isFullMoon() then Quest = "Soul Guitar" found = true end
-            elseif eventType == "mirage" then
-                if isMirageIsland() then Quest = "Pull Lerver" found = true end
-            elseif eventType == "rip_indra" then
-                if isBossSpawned("rip_indra True Form") then Quest = "Rip Indra" found = true end
-            elseif eventType == "darkbeard" then
-                if isBossSpawned("Darkbeard") then Quest = "Darkbeard" found = true end
-            elseif eventType == "dough_king" then
-                if isBossSpawned("Dough King") then Quest = "Dough King" found = true end
-            elseif eventType == "soul_reaper" then
-                if isBossSpawned("Soul Reaper") then Quest = "Soul Reaper" found = true end
-            end
-            if found then break end
-            task.wait(2)
+        
+        task.wait(5)  -- Đợi game load
+        
+        -- Set quest tương ứng
+        if eventType == "fullmoon" then
+            if isFullMoon() then Quest = "Soul Guitar" end
+        elseif eventType == "mirage" then
+            if isMirageIsland() then Quest = "Pull Lerver" end
+        elseif eventType == "rip_indra" then
+            if isBossSpawned("rip_indra True Form") then Quest = "Rip Indra" end
+        elseif eventType == "darkbeard" then
+            if isBossSpawned("Darkbeard") then Quest = "Darkbeard" end
+        elseif eventType == "dough_king" then
+            if isBossSpawned("Dough King") then Quest = "Dough King" end
+        elseif eventType == "soul_reaper" then
+            if isBossSpawned("Soul Reaper") then Quest = "Soul Reaper" end
         end
     end
 end)
