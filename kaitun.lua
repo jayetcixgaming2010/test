@@ -7,49 +7,59 @@ if not game:IsLoaded() then
 	until game:IsLoaded()
 end;
 local env = getgenv and getgenv() or _G
-env.Configs = { 
+Quest = nil
+Stop_Fast_Attack = false
+Mirror_Fractal_H = false
+ExSeb = false
+env.Configs = SettingFarm or {
 	["Quest"] = {
 		["Evo Race V1"] = true,
-		["Evo Race V2"] = true;
+		["Evo Race V2"] = true,
 		["RGB Haki"] = true,
 		["Pull Lerver"] = true
-	};
+	},
 	["Sword"] = {
 		"Dual-Headed Blade",
 		"Smoke Admiral",
 		"Wardens Sword",
 		"Cutlass",
-		"Katana";
-		"Dual Katana";
+		"Katana",
+		"Dual Katana",
 		"Triple Katana",
 		"Iron Mace",
-		"Saber";
+		"Saber",
 		"Pole (1st Form)",
 		"Gravity Blade",
-		"Longsword";
-		"Rengoku";
+		"Longsword",
+		"Rengoku",
 		"Midnight Blade",
 		"Soul Cane",
 		"Bisento",
-		"Yama";
-		"Tushita";
+		"Yama",
+		"Tushita",
 		"Cursed Dual Katana"
-	};
+	},
 	["Gun"] = {
-		"Soul Guitar";
+		"Soul Guitar",
 		"Kabucha",
 		"Venom Bow",
-		"Musket";
+		"Musket",
 		"Flintlock",
 		"Refined Slingshot",
-		"Magma Blaster";
+		"Magma Blaster",
 		"Dual Flintlock",
 		"Cannon",
-		"Bizarre Revolver";
+		"Bizarre Revolver",
 		"Bazooka"
-	};
+	},
 	["FPS Booster"] = false
 }
+-- Cấu hình mặc định (có thể ghi đè bằng SettingFarm nếu có)
+env.SelectedTeam = env.SelectedTeam or "Pirates"
+env.AutoRedeemCode = env.AutoRedeemCode ~= false  -- mặc định bật
+env.AntiAFK = env.AntiAFK ~= false                -- mặc định bật
+env.WebhookEnabled = env.WebhookEnabled or false
+env.WebhookUrl = env.WebhookUrl or "https://ptb.discord.com/api/webhooks/1480429535341318237/bHz_15-4fbS-1gBxn46EFNzQqYtDzMZTKCe3TWEEr-ywa4FE8MVGNzo75n77O-_7CBlP"
 wait(5)
 local plr = game:GetService("Players").LocalPlayer
 local playerGui = plr.PlayerGui
@@ -60,7 +70,7 @@ if mainGui then
         repeat
             task.wait()
             if chooseTeam.Visible then
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", getgenv().SelectedTeam or "Pirates")
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", env.SelectedTeam or "Pirates")
             end
         until plr.Team ~= nil and game:IsLoaded()
     end
@@ -8371,7 +8381,8 @@ end)
 L_1_[45]["wt"](5)
 -- ==================== API CONFIGURATION ====================
 local API_URL = "https://tsunamiapi.netlify.app/.netlify/functions/events"  -- THAY URL CỦA BẠN
-local WEBHOOK_URL = "https://ptb.discord.com/api/webhooks/1480429535341318237/bHz_15-4fbS-1gBxn46EFNzQqYtDzMZTKCe3TWEEr-ywa4FE8MVGNzo75n77O-_7CBlP"  -- THAY WEBHOOK CỦA BẠN
+local WEBHOOK_URL = env.WebhookUrl or "https://ptb.discord.com/api/webhooks/1480429535341318237/bHz_15-4fbS-1gBxn46EFNzQqYtDzMZTKCe3TWEEr-ywa4FE8MVGNzo75n77O-_7CBlP"  -- THAY WEBHOOK CỦA BẠN
+local ENABLE_AUTO_REPORT = env.WebhookEnabled or false  -- BẬT/TẮT TÍNH NĂNG AUTO REPORT
 local API_TOKEN = "TsunamiAPI1234@#"  -- THAY TOKEN
 
 -- ==================== EVENT DETECTION FUNCTIONS ====================
