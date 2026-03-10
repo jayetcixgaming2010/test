@@ -36,7 +36,7 @@ getgenv()["Configs"] = {
         ["Evo Race V1"] = SF_Misc["Auto V2"] == true,
         ["Evo Race V2"] = SF_Misc["Auto V3"] == true,
         ["RGB Haki"] = SF_Misc["Auto Fully Fighting Style"] == true,
-        ["Pull Lerver"] = SF_Misc["Pull Lever"] == true,
+        ["Pull Lever"] = SF_Misc["Pull Lever"] == true,
     },
     ["Sword"] = swordList,
     ["Gun"]   = gunList,
@@ -50,10 +50,10 @@ getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
 getgenv()["SelectedTeam"] = SF["Team"] or "Pirates"
 
 -- Anti Redeem Codes
-getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= true
+getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] == true
 
 -- Anti AFK
-getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= true
+getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] == true
 
 -- Webhook
 getgenv()["WebhookEnabled"] = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Enabled"]) or false
@@ -100,7 +100,15 @@ L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
-
+-- Khai báo biến toàn cục để tránh warning
+ExSeb = false
+Mirror_Fractal_H = false
+Unlock_Tushita_Quest = false
+CheckFindWaterKey = false
+Black_Leg_C = false
+Electro_C = false
+Fishman_Karate_C = false
+-- ... thêm các biến khác nếu cần
 -- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
 
@@ -504,7 +512,7 @@ DiscordLabel.BorderSizePixel = 0
 DiscordLabel.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
 DiscordLabel.Size = UDim2.new(0, 210,0, 50)
 DiscordLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-DiscordLabel.Text = "discord.gg/DuAp7VwVG3"
+DiscordLabel.Text = "discord.gg/3bS7hjJ9es"
 DiscordLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
 DiscordLabel.TextSize = 16
 
@@ -2682,7 +2690,11 @@ L_1_[31] = function(L_32_arg0, L_33_arg1, L_34_arg2)
 			{
 				Vector3["new"](-2953.31, 41.01, 2099.17);
 				"Old_World"
-			}
+			};
+			{ 
+				Vector3.new(-12330, 600, -6549),
+				"Three_World" 
+			},
 		}
 		for L_37_forvar0, L_38_forvar1 in pairs(L_36_[1]) do
 			local L_39_ = {}
@@ -3284,21 +3296,104 @@ L_1_[25] = game:GetService("Workspace")
 L_1_[34] = {}
 L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
-task["spawn"](function()
-	while task["wait"](.5) do
-		L_1_[45]["p"](function()
-			if L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] < 2650 then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Melee", L_1_[35]["Data"]["Points"]["Value"])
-			end
-			if L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] >= 2650 and (L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Defense"]["Level"]["Value"] < 2550) then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Defense", L_1_[35]["Data"]["Points"]["Value"])
-			end
-			if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("Buso")
-			end
-		end)
-	end
-end);
+task.spawn(function()
+    -- Bộ đếm số điểm Melee đã cộng
+    if not getgenv().meleeCount then getgenv().meleeCount = 0 end
+
+    while task.wait(1) do
+        L_1_[45]["p"](function()
+            local plr = L_1_[35]
+            if not plr then return end
+            local data = plr:FindFirstChild("Data")
+            if not data then return end
+            local points = data:FindFirstChild("Points")
+            if not points or points.Value <= 0 then return end
+            local stats = data:FindFirstChild("Stats")
+            if not stats then return end
+
+            -- In ra các tên stat để kiểm tra (chỉ chạy 1 lần)
+            if not getgenv().statsChecked then
+                print("===== CÁC STAT CÓ TRONG GAME =====")
+                for _, child in pairs(stats:GetChildren()) do
+                    if child:IsA("IntValue") then
+                        print(child.Name)
+                    end
+                end
+                getgenv().statsChecked = true
+            end
+
+            local melee = stats:FindFirstChild("Melee")
+            local defense = stats:FindFirstChild("Defense")
+            local sword = stats:FindFirstChild("Sword")
+            if not (melee and defense and sword) then
+                -- Nếu không tìm thấy, thử tên viết thường
+                melee = stats:FindFirstChild("melee")
+                defense = stats:FindFirstChild("defense")
+                sword = stats:FindFirstChild("sword")
+            end
+            if not (melee and defense and sword) then
+                print("⚠️ Không tìm thấy Melee/Defense/Sword, auto stats tạm dừng")
+                return
+            end
+
+            local meleeLv = melee:FindFirstChild("Level")
+            local defenseLv = defense:FindFirstChild("Level")
+            local swordLv = sword:FindFirstChild("Level")
+            if not (meleeLv and defenseLv and swordLv) then return end
+
+            local commF = L_1_[46]["Remotes"]["CommF_"]
+
+            local function addOne(stat)
+                if stat == "Melee" then
+                    commF:InvokeServer("AddPoint", "Melee", 1)
+                    meleeLv = melee:FindFirstChild("Level")
+                    getgenv().meleeCount = getgenv().meleeCount + 1
+                    print("[Stats] +1 Melee")
+                elseif stat == "Defense" then
+                    commF:InvokeServer("AddPoint", "Defense", 1)
+                    defenseLv = defense:FindFirstChild("Level")
+                    print("[Stats] +1 Defense")
+                elseif stat == "Sword" then
+                    commF:InvokeServer("AddPoint", "Sword", 1)
+                    swordLv = sword:FindFirstChild("Level")
+                    print("[Stats] +1 Sword")
+                end
+            end
+
+            -- Khi Melee chưa max
+            if meleeLv.Value < 2800 then
+                while points.Value > 0 do
+                    addOne("Melee")
+                    points = data:FindFirstChild("Points")
+                    if getgenv().meleeCount % 10 == 0 and defenseLv.Value < 2800 and points.Value > 0 then
+                        addOne("Defense")
+                        points = data:FindFirstChild("Points")
+                    end
+                end
+                return
+            end
+
+            -- Melee đã max, luân phiên 2 Defense : 1 Sword
+            local cycleStep = 0
+            while points.Value > 0 do
+                if defenseLv.Value < 2800 and cycleStep < 2 then
+                    addOne("Defense")
+                    cycleStep = cycleStep + 1
+                elseif swordLv.Value < 2800 then
+                    addOne("Sword")
+                    cycleStep = 0
+                else
+                    break
+                end
+                points = data:FindFirstChild("Points")
+            end
+
+            if plr.Character and not plr.Character:FindFirstChild("HasBuso") then
+                commF:InvokeServer("Buso")
+            end
+        end)
+    end
+end)
 (getgenv())["Fast Attack"] = true
 L_1_[20] = 0
 task["spawn"](function()
@@ -4598,7 +4693,7 @@ task["spawn"](function()
 							return
 						end
 						if (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") and (not L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor") and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "3") == -2 and Mirror_Fractal_H)) then
-							Quest = "Pull Lerver"
+							Quest = "Pull Lever"
 							return
 						end
 						if L_1_[50]() then
@@ -7370,25 +7465,27 @@ task["spawn"](function()
 				until not L_1_[45]["CheckBoss"]("Longma")
 				elseif Quest == "Soul Guitar" then
 					if L_1_[45]["CheckItem"]("Bones") < 500 then
-						-- Nếu chưa có đủ 500 Bones, chuyển đến Haunted Castle để farm
 						if Three_World then
-							-- Kiểm tra xem đã ở Haunted Castle chưa
 							local hauntedPos = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625)
-							if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
-								-- Teleport đến gần khu vực
+							if L_1_[35].Character and L_1_[35].Character:FindFirstChild("HumanoidRootPart") then
+								if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
+									L_1_[31](hauntedPos, 1.5)
+								else
+									L_1_[45]["FarmBone"](false)
+								end
+							else
+								task.wait(1)
+							end
 								L_1_[31](hauntedPos, 1.5)
 							else
-								-- Farm bone
 								L_1_[45]["FarmBone"](false)
 							end
 						else
-							-- Nếu chưa ở Third Sea, tự động đi đến
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 							TleP = true
 							wait(50)
 						end
 					elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
-						-- Farm Ectoplasm ở Second Sea (Ship)
 						if New_World then
 							local shipPos = CFrame.new(921.30249023438, 125.400390625, 32937.34375)
 							if (shipPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
@@ -7553,7 +7650,7 @@ task["spawn"](function()
 				elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("HornedMan", "Bet") == 1 then
 					return
 				end
-			elseif Quest == "Pull Lerver" then
+			elseif Quest == "Pull Lever" then
 				if not ExSeb then
 					if (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("RaceV4Progress", "Check") == 1 then
 						local L_599_ = {}
@@ -8448,7 +8545,7 @@ task["spawn"](function()
 
 		local body = '{'
 			.. '"username":"Tsunami Hub",'
-			.. '"avatar_url":"https://media.discordapp.net/attachments/1479872403529007178/1480115872961007746/Tsunami_Hub.png?ex=69ae80d3&is=69ad2f53&hm=b379cd3afbb03aa3681b37e8b2e7dd29c956b3fde63e50f2073a7f6cdaba4a2d&=&format=webp&quality=lossless",'
+			.. '"avatar_url":"https://media.discordapp.net/attachments/1480070582526804070/1480070663728398509/Tsunami_Hub.png?ex=69b1a278&is=69b050f8&hm=d1fff7b23b2c500758a41c5b4c14d4c89ab90954fc6e6cd239e1ed8779c87bdf&=&format=webp&quality=lossless",'
 			.. '"embeds":[{'
 			.. '"title":"\\uD83C\\uDF0A Tsunami Hub Notification \\uD83C\\uDF0A",'
 			.. '"color":' .. EMBED_COLOR .. ','
