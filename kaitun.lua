@@ -6,7 +6,8 @@ if not game:IsLoaded() then
 		game["Loaded"]:Wait()
 	until game:IsLoaded()
 end;
-(getgenv())["Configs"] = {
+local env = getgenv and getgenv() or _G
+env.Configs = { 
 	["Quest"] = {
 		["Evo Race V1"] = true,
 		["Evo Race V2"] = true;
@@ -50,26 +51,21 @@ end;
 	["FPS Booster"] = false
 }
 wait(5)
-if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
-	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
-		repeat
-			wait()
-			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", "Pirates")
-			end
-		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
-	end
-end
-wait(5)
-if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
-	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
-		repeat
-			wait()
-			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", "Pirates")
-			end
-		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
-	end
+local plr = game:GetService("Players").LocalPlayer
+local playerGui = plr.PlayerGui
+
+-- Tìm GUI chính (thường là "Main")
+local mainGui = playerGui:FindFirstChild("Main") or playerGui:FindFirstChild("Main (minimal)")
+if mainGui then
+    local chooseTeam = mainGui:FindFirstChild("ChooseTeam")
+    if chooseTeam then
+        repeat
+            task.wait()
+            if chooseTeam.Visible then
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", "Pirates")
+            end
+        until plr.Team ~= nil and game:IsLoaded()
+    end
 end
 L_1_[29] = game:GetService("Players")
 L_1_[5] = L_1_[29]["LocalPlayer"]
@@ -129,7 +125,7 @@ local UIGradient_3 = Instance.new("UIGradient")
 local DropShadow_1 = Instance.new("ImageLabel")
 
 CoinCard_1.Name = "CoinCard"
-CoinCard_1.Parent = game:GetService("CoreGui")
+CoinCard_1.Parent = playerGui
 CoinCard_1.ResetOnSpawn = false
 CoinCard_1.DisplayOrder = 20
 CoinCard_1.Enabled = false  -- ẩn mặc định
@@ -409,7 +405,7 @@ DropShadow_1.ImageColor3 = Color3.fromRGB(0, 0, 0)
 -- // UI Top \\ --
 local Status = Instance.new("ScreenGui")
 Status.Name = "Status"
-Status.Parent = game:GetService("CoreGui")
+Status.Parent = playerGui
 Status.ResetOnSpawn = false
 Status.DisplayOrder = 10
 
@@ -514,7 +510,7 @@ local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
 TsunamiHubBtn.Name = "Tsunami Hub Btn"  
-TsunamiHubBtn.Parent = game:GetService("CoreGui")
+TsunamiHubBtn.Parent = playerGui
 TsunamiHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
 TsunamiHubBtn.DisplayOrder = 10
 TsunamiHubBtn.Enabled = true
