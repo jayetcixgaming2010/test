@@ -3259,6 +3259,8 @@ L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
 (getgenv())["Fast Attack"] = true
 L_1_[20] = 0
+
+-- ===== FAST ATTACK (ĐÃ SỬA LỖI CÚ PHÁP) =====
 task["spawn"](function()
 	while task["wait"](L_1_[20]) do
 		if (getgenv())["Fast Attack"] and not Stop_Fast_Attack then
@@ -3401,51 +3403,56 @@ task["spawn"](function()
 						}) .. tostring(L_182_[9]))
 					end
 				else
-					-- Nếu không có getrenv, bỏ qua fast attack (không crash)
 					warn("Fast Attack không khả dụng do thiếu getrenv")
 				end
 			end
-for L_195_forvar0, L_196_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")) do
-	local L_197_ = {}
-	L_197_[1], L_197_[3] = L_195_forvar0, L_196_forvar1
-	if L_197_[3]["Type"] == "Material" then
-		if L_197_[3]["Name"] == "Mirror Fractal" then
-			Mirror_Fractal_H = true
+			-- Các tác vụ nền (vẫn giữ nguyên logic, đã đặt trong while)
+			for L_195_forvar0, L_196_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")) do
+				local L_197_ = {}
+				L_197_[1], L_197_[3] = L_195_forvar0, L_196_forvar1
+				if L_197_[3]["Type"] == "Material" then
+					if L_197_[3]["Name"] == "Mirror Fractal" then
+						Mirror_Fractal_H = true
+					end
+				end
+			end
+			L_1_[35]["PlayerGui"]["Notifications"]["Enabled"] = false
+			if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+				["StorageName"] = "Pure Red";
+				["Type"] = "AuraSkin";
+				["Context"] = "Equip"
+			}) ~= false then
+				Pure_Red_H = true
+			end
+			if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+				["StorageName"] = "Snow White";
+				["Type"] = "AuraSkin",
+				["Context"] = "Equip"
+			}) ~= false then
+				Snow_White = true
+			end
+			if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+				["StorageName"] = "Snow White";
+				["Type"] = "AuraSkin";
+				["Context"] = "Equip"
+			}) ~= false then
+				Winter_Sky = true
+			end
+			if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+				["StorageName"] = "Rainbow Saviour";
+				["Type"] = "AuraSkin";
+				["Context"] = "Equip"
+			}) ~= false then
+				Rainbow_Saviour = true
+			end
+			if Three_World and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TushitaProgress"))["OpenedDoor"] then
+				Unlock_Tushita_Quest = true
+			end
 		end
 	end
-end
-L_1_[35]["PlayerGui"]["Notifications"]["Enabled"] = false
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Pure Red";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Pure_Red_H = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Snow White";
-	["Type"] = "AuraSkin",
-	["Context"] = "Equip"
-}) ~= false then
-	Snow_White = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Snow White";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Winter_Sky = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Rainbow Saviour";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Rainbow_Saviour = true
-end
-if Three_World and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TushitaProgress"))["OpenedDoor"] then
-	Unlock_Tushita_Quest = true
-end
+end)
+-- ===== KẾT THÚC FAST ATTACK =====
+
 L_1_[39] = function()
 	local L_198_ = {}
 	if Three_World then
