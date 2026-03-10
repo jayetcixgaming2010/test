@@ -65,16 +65,16 @@ local plr = game:GetService("Players").LocalPlayer
 local playerGui = plr.PlayerGui
 local mainGui = playerGui:FindFirstChild("Main") or playerGui:FindFirstChild("Main (minimal)")
 if mainGui then
-    local chooseTeam = mainGui:FindFirstChild("ChooseTeam")
-    if chooseTeam then
-        repeat
-            task.wait()
-            if chooseTeam.Visible then
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", env.SelectedTeam or "Pirates")
-            end
-        until plr.Team ~= nil and game:IsLoaded()
-    end
-end
+	local chooseTeam then
+		if choose Team then
+			repeat task.wait(0.1)
+			until chooseTeam.Visible == true or plr.Team ~= nil
+		if chooseTeam.Visible then
+			ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", env.SelectedTeam or "Pirates")
+			end
+		task.wait(2)
+	end
+end	
 L_1_[29] = game:GetService("Players")
 L_1_[5] = L_1_[29]["LocalPlayer"]
 L_1_[30] = game["PlaceId"]
@@ -99,7 +99,7 @@ local Lighting = game:GetService("Lighting")
 
 local blur = Instance.new("BlurEffect")
 blur.Name = "CameraBlur"
-blur.Size = 24
+blur.Size = 0
 blur.Parent = Lighting
 
 -- // UI Large \\ --
@@ -326,6 +326,18 @@ FragLabel.Size = UDim2.new(0, 33, 0, 18)
 FragLabel.Selectable = false
 FragLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 FragLabel.Text = "Frag: N/A"
+-- AUTO UPDATE STATS
+task.spawn(function()
+    while task.wait(2) do
+        pcall(function()
+            local data = plr.Data
+            if BeliLabel_1 then BeliLabel_1.Text = "Beli: " .. data.Beli.Value end
+            if LevelLabel_1 then LevelLabel_1.Text = "Level: " .. data.Level.Value end
+            if RaceLabel_1 then RaceLabel_1.Text = "Race: " .. data.Race.Value end
+            if FragLabel then FragLabel.Text = "Frag: " .. data.Fragments.Value end
+        end)
+    end
+end)
 FragLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 FragLabel.TextSize = 16
 FragLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -592,35 +604,16 @@ local faded = false
 local fadeInTween = TweenService:Create(dutdit, tweenInfo, {BackgroundTransparency = 0.25})  
 local fadeOutTween = TweenService:Create(dutdit, tweenInfo, {BackgroundTransparency = 0})  
 
-TextButton.MouseButton1Down:Connect(  
-    function()  
-        if zoomedIn then  
-            TweenService:Create(ImageLabel, tweenInfo, {Size = originalSize}):Play()  
-        else  
-            TweenService:Create(ImageLabel, tweenInfo, {Size = zoomedSize}):Play()  
-        end  
-        zoomedIn = not zoomedIn  
+TextButton.MouseButton1Down:Connect(function()
+    zoomedIn = not zoomedIn
+    local targetSize = zoomedIn and originalSize or zoomedSize
+    TweenService:Create(ImageLabel, tweenInfo, {Size = targetSize}):Play()
+    
+    CoinCard_1.Enabled = not CoinCard_1.Enabled
+    blur.Size = CoinCard_1.Enabled and 24 or 0
+    print("Menu:", CoinCard_1.Enabled and "ON" or "OFF")
+end)
 
-        if faded then  
-            fadeOutTween:Play()  
-        else  
-            fadeInTween:Play()  
-        end  
-        faded = not faded  
-        
-        if CoinCard_1.Enabled == false then
-            CoinCard_1.Enabled = true
-        else
-            CoinCard_1.Enabled = false
-        end
-        
-        if blur.Size == 24 then
-            blur.Size = 0
-        else
-            blur.Size = 24
-        end
-    end  
-)
 
 task["spawn"](function()
 	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
