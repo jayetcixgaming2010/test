@@ -3102,17 +3102,11 @@ setmetatable(L_1_[45], {
 							end
 						end
 					end
-					pcall(function() if sethiddenproperty then sethiddenproperty(L_154_[3], "SimulationRadius", math["huge"]) end end)
-				end)
-			end
-		elseif L_60_[3] == "Status" then
-			return function(L_167_arg0)
-				local L_168_ = {}
-				L_168_[2] = L_167_arg0
-				pcall(function()
-					if L_1_.UI_BottomStatus then
-						L_1_.UI_BottomStatus.Text = "Status Farm: " .. tostring(L_168_[2])
-					end
+					pcall(function()
+						if sethiddenproperty then
+							sethiddenproperty(L_154_[3], "SimulationRadius", math["huge"])
+						end
+					end)
 				end)
 			end
 		elseif L_60_[3] == "GetQuest" then
@@ -3151,7 +3145,9 @@ setmetatable(L_1_[45], {
 					wait()
 					L_1_[31](L_1_[19]["Map"]["HeavenlyDimension"][L_172_[2]]["CFrame"], 1.5)
 				until (L_1_[19]["Map"]["HeavenlyDimension"][L_172_[2]]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 7
-				fireproximityprompt(workspace["Map"]["HeavenlyDimension"][L_172_[2]]["ProximityPrompt"])
+				if fireproximityprompt then
+					fireproximityprompt(workspace["Map"]["HeavenlyDimension"][L_172_[2]]["ProximityPrompt"])
+				end
 				wait(.5)
 			end
 		elseif L_60_[3] == "GetTorchX" then
@@ -3241,6 +3237,16 @@ task.spawn(function()
 end)
 
 -- ========== KẾT THÚC UI MỚI ==========
+-- Định nghĩa lại hàm Status (cập nhật thanh trạng thái dưới cùng)
+L_1_[45]["Status"] = function(text)
+    pcall(function()
+        if L_1_.UI_BottomStatus then
+            L_1_.UI_BottomStatus.Text = "Status Farm: " .. text
+        end
+    end)
+end
+-- Đặt trạng thái ban đầu
+L_1_[45]["Status"]("Idle")
 L_1_[27] = game:GetService("Players")
 L_1_[46] = game:GetService("ReplicatedStorage")
 L_1_[25] = game:GetService("Workspace")
@@ -4681,7 +4687,9 @@ task["spawn"](function()
 												if (L_1_[35]["Backpack"]:FindFirstChild("Special Microchip") or L_1_[35]["Character"]:FindFirstChild("Special Microchip")) and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 													if L_1_[30] == 4442272183 and L_1_[35]["Character"]["Humanoid"]["Health"] > 0 then
 														local L_328_ = {}
-														fireclickdetector(L_1_[19]["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"], 1)
+														if fireclickdetector then
+															fireclickdetector(L_1_[19]["Map"]["CircleIsland"]["RaidSummon2"]["Button"]["Main"]["ClickDetector"], 1)
+														end
 														L_328_[2] = 0
 														repeat
 															L_328_[2] = L_328_[2] + 1
@@ -7147,7 +7155,9 @@ task["spawn"](function()
 								L_554_[3]["Parent"] = L_1_[35]["Backpack"]
 							end
 						end
-						fireclickdetector(L_1_[19]["Map"]["Waterfall"]["SealedKatana"]["Hitbox"]["ClickDetector"], 1)
+						if fireclickdetector then
+							fireclickdetector(L_1_[19]["Map"]["Waterfall"]["SealedKatana"]["Hitbox"]["ClickDetector"], 1)
+						end
 					end
 				else
 					L_1_[31](L_1_[19]["Map"]["Waterfall"]["SealedKatana"]["Hitbox"]["CFrame"], 1.5)
@@ -7554,7 +7564,11 @@ task["spawn"](function()
 									L_583_[2], L_583_[1] = L_581_forvar0, L_582_forvar1
 									if (L_583_[1]["HumanoidRootPart"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 500 then
 										L_583_[1]["HumanoidRootPart"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 0, 20)
-										pcall(function() if sethiddenproperty then sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"]) end end)
+										pcall(function()
+											if sethiddenproperty then
+												sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"])
+											end
+										end)										
 									end
 								end
 								wait(1)
@@ -7847,7 +7861,11 @@ task["spawn"](function()
 								L_610_[2], L_610_[3] = L_608_forvar0, L_609_forvar1
 								if L_610_[3]:FindFirstChild("HumanoidRootPart") and (L_610_[3]["HumanoidRootPart"]["Position"] - Vector3["new"](-13347.6982, 332.378143, -7652.27783))["Magnitude"] > 10 then
 									L_610_[3]["HumanoidRootPart"]["CFrame"] = CFrame["new"](-13347.6982, 332.378143, -7652.27783)
-									pcall(function() if sethiddenproperty then sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"]) end end)
+									pcall(function() 
+										if sethiddenproperty then 
+											sethiddenproperty(L_1_[35], "SimulationRadius", math["huge"]) 
+										end 
+									end)									
 								end
 							end
 							L_1_[31](CFrame["new"](-13347.6982, 332.378143, -7652.27783, -0.97929436, 4.50812898e-08, -0.202441484, 4.58302409e-08, 1, 9.8789521e-10, .202441484, -8.31050162e-09, -0.97929436), 1.5)
@@ -8315,14 +8333,18 @@ end)
 task["spawn"](function()
 	while task["wait"]() do
 		if L_1_[25]["Map"]:FindFirstChild("Heavenly") then
-			fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch1"]["ProximityPrompt"])
-			fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch2"]["ProximityPrompt"])
-			fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch3"]["ProximityPrompt"])
+			if fireproximityprompt then
+				fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch1"]["ProximityPrompt"])
+				fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch2"]["ProximityPrompt"])
+				fireproximityprompt(L_1_[25]["Map"]["HeavenlyDimension"]["Torch3"]["ProximityPrompt"])
+			end
 		end
 		if L_1_[25]["Map"]:FindFirstChild("HellDimension") then
-			fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch1"]["ProximityPrompt"])
-			fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch2"]["ProximityPrompt"])
-			fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch3"]["ProximityPrompt"])
+			if fireproximityprompt then
+				fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch1"]["ProximityPrompt"])
+				fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch2"]["ProximityPrompt"])
+				fireproximityprompt(L_1_[25]["Map"]["HellDimension"]["Torch3"]["ProximityPrompt"])
+			end
 		end
 	end
 end)
