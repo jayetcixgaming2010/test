@@ -53,8 +53,6 @@ env.Configs = {
 wait(5)
 local plr = game:GetService("Players").LocalPlayer
 local playerGui = plr.PlayerGui
-
--- Tìm GUI chính (thường là "Main")
 local mainGui = playerGui:FindFirstChild("Main") or playerGui:FindFirstChild("Main (minimal)")
 if mainGui then
     local chooseTeam = mainGui:FindFirstChild("ChooseTeam")
@@ -62,7 +60,7 @@ if mainGui then
         repeat
             task.wait()
             if chooseTeam.Visible then
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", "Pirates")
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", getgenv().SelectedTeam or "Pirates")
             end
         until plr.Team ~= nil and game:IsLoaded()
     end
@@ -125,7 +123,7 @@ local UIGradient_3 = Instance.new("UIGradient")
 local DropShadow_1 = Instance.new("ImageLabel")
 
 CoinCard_1.Name = "CoinCard"
-CoinCard_1.Parent = playerGui
+CoinCard_1.Parent = L_1_[5]:WaitForChild("PlayerGui")
 CoinCard_1.ResetOnSpawn = false
 CoinCard_1.DisplayOrder = 20
 CoinCard_1.Enabled = false  -- ẩn mặc định
@@ -405,7 +403,7 @@ DropShadow_1.ImageColor3 = Color3.fromRGB(0, 0, 0)
 -- // UI Top \\ --
 local Status = Instance.new("ScreenGui")
 Status.Name = "Status"
-Status.Parent = playerGui
+Status.Parent = L_1_[5]:WaitForChild("PlayerGui")
 Status.ResetOnSpawn = false
 Status.DisplayOrder = 10
 
@@ -510,7 +508,7 @@ local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
 TsunamiHubBtn.Name = "Tsunami Hub Btn"  
-TsunamiHubBtn.Parent = playerGui
+TsunamiHubBtn.Parent = L_1_[5]:WaitForChild("PlayerGui")
 TsunamiHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling  
 TsunamiHubBtn.DisplayOrder = 10
 TsunamiHubBtn.Enabled = true
@@ -3310,95 +3308,93 @@ task["spawn"](function()
 					end
 				end, warn)
 			else
-				local L_182_ = {}
-				assert(getrenv, L_1_[3]({
-					"Exploit not supporte";
-					"d"
-				}))
-				L_182_[11] = game:GetService("CollectionService")
-				L_182_[2] = game:GetService("ReplicatedStorage")
-				L_182_[8] = game:GetService("Players")
-				L_182_[6] = L_182_[8]["LocalPlayer"]
-				L_182_[3] = debug["getupvalue"]((getrenv())["_G"]["SendHitsToServer"], 1)
-				L_182_[5] = L_182_[2]["Modules"]["Net"]["RE/RegisterAttack"]
-				L_182_[4] = function()
-					local L_183_ = {}
-					L_183_[3] = L_182_[11]:GetTagged("BasicMob")
-					if #L_183_[3] == 0 then
-						return nil
+				if getrenv then
+					local L_182_ = {}
+					L_182_[11] = game:GetService("CollectionService")
+					L_182_[2] = game:GetService("ReplicatedStorage")
+					L_182_[8] = game:GetService("Players")
+					L_182_[6] = L_182_[8]["LocalPlayer"]
+					L_182_[3] = debug["getupvalue"]((getrenv())["_G"]["SendHitsToServer"], 1)
+					L_182_[5] = L_182_[2]["Modules"]["Net"]["RE/RegisterAttack"]
+					L_182_[4] = function()
+						local L_183_ = {}
+						L_183_[3] = L_182_[11]:GetTagged("BasicMob")
+						if #L_183_[3] == 0 then
+							return nil
+						end
+						L_183_[4] = {}
+						L_183_[2] = L_182_[6]["Character"] and L_182_[6]["Character"]["PrimaryPart"]["Position"]
+						if not L_183_[2] then
+							return nil
+						end
+						for L_184_forvar0, L_185_forvar1 in pairs(L_183_[3]) do
+							local L_186_ = {}
+							L_186_[1], L_186_[4] = L_184_forvar0, L_185_forvar1
+							L_186_[5] = L_186_[4]:FindFirstChildOfClass("Humanoid")
+							L_186_[3] = L_186_[4]["PrimaryPart"]
+							if L_186_[5] and (L_186_[5]["Health"] > 0 and L_186_[3]) then
+								local L_187_ = {}
+								L_187_[1] = (L_186_[3]["Position"] - L_183_[2])["Magnitude"]
+								if L_187_[1] <= 100 then
+									L_183_[4][#L_183_[4] + 1] = {
+										["mob"] = L_186_[4];
+										["distance"] = L_187_[1]
+									}
+								end
+							end
+						end
+						if #L_183_[4] == 0 then
+							return nil
+						end
+						table["sort"](L_183_[4], function(L_188_arg0, L_189_arg1)
+							local L_190_ = {}
+							L_190_[1], L_190_[2] = L_188_arg0, L_189_arg1
+							return L_190_[1]["distance"] < L_190_[2]["distance"]
+						end)
+						return #L_183_[4] > 2 and {
+							L_183_[4][1],
+							L_183_[4][2]
+						} or L_183_[4]
 					end
-					L_183_[4] = {}
-					L_183_[2] = L_182_[6]["Character"] and L_182_[6]["Character"]["PrimaryPart"]["Position"]
-					if not L_183_[2] then
-						return nil
-					end
-					for L_184_forvar0, L_185_forvar1 in pairs(L_183_[3]) do
-						local L_186_ = {}
-						L_186_[1], L_186_[4] = L_184_forvar0, L_185_forvar1
-						L_186_[5] = L_186_[4]:FindFirstChildOfClass("Humanoid")
-						L_186_[3] = L_186_[4]["PrimaryPart"]
-						if L_186_[5] and (L_186_[5]["Health"] > 0 and L_186_[3]) then
-							local L_187_ = {}
-							L_187_[1] = (L_186_[3]["Position"] - L_183_[2])["Magnitude"]
-							if L_187_[1] <= 100 then
-								L_183_[4][#L_183_[4] + 1] = {
-									["mob"] = L_186_[4];
-									["distance"] = L_187_[1]
+					L_182_[1] = function()
+						local L_191_ = {}
+						L_191_[3] = L_182_[4]()
+						if not L_191_[3] then
+							return
+						end
+						L_191_[2] = {}
+						for L_192_forvar0, L_193_forvar1 in pairs(L_191_[3]) do
+							local L_194_ = {}
+							L_194_[4], L_194_[2] = L_192_forvar0, L_193_forvar1
+							L_194_[1] = L_194_[2]["mob"]:FindFirstChild("HumanoidRootPart")
+							if L_194_[1] then
+								L_191_[2][#L_191_[2] + 1] = {
+									L_194_[2]["mob"];
+									L_194_[1]
 								}
 							end
 						end
-					end
-					if #L_183_[4] == 0 then
-						return nil
-					end
-					table["sort"](L_183_[4], function(L_188_arg0, L_189_arg1)
-						local L_190_ = {}
-						L_190_[1], L_190_[2] = L_188_arg0, L_189_arg1
-						return L_190_[1]["distance"] < L_190_[2]["distance"]
-					end)
-					return #L_183_[4] > 2 and {
-						L_183_[4][1],
-						L_183_[4][2]
-					} or L_183_[4]
-				end
-				L_182_[1] = function()
-					local L_191_ = {}
-					L_191_[3] = L_182_[4]()
-					if not L_191_[3] then
-						return
-					end
-					L_191_[2] = {}
-					for L_192_forvar0, L_193_forvar1 in pairs(L_191_[3]) do
-						local L_194_ = {}
-						L_194_[4], L_194_[2] = L_192_forvar0, L_193_forvar1
-						L_194_[1] = L_194_[2]["mob"]:FindFirstChild("HumanoidRootPart")
-						if L_194_[1] then
-							L_191_[2][#L_191_[2] + 1] = {
-								L_194_[2]["mob"];
-								L_194_[1]
-							}
+						if #L_191_[2] > 0 then
+							L_182_[5]:FireServer(0 / 0)
+							coroutine["resume"](L_182_[3], L_191_[2][1][2], {
+								table["unpack"](L_191_[2], 2)
+							})
 						end
 					end
-					if #L_191_[2] > 0 then
-						L_182_[5]:FireServer(0 / 0)
-						coroutine["resume"](L_182_[3], L_191_[2][1][2], {
-							table["unpack"](L_191_[2], 2)
-						})
+					L_182_[7], L_182_[9] = pcall(function()
+						L_182_[1]()
+					end)
+					if not L_182_[7] then
+						warn(L_1_[3]({
+							"Error in Combat scri",
+							"pt: "
+						}) .. tostring(L_182_[9]))
 					end
-				end
-				L_182_[7], L_182_[9] = pcall(function()
-					L_182_[1]()
-				end)
-				if not L_182_[7] then
-					warn(L_1_[3]({
-						"Error in Combat scri",
-						"pt: "
-					}) .. tostring(L_182_[9]))
+				else
+					-- Nếu không có getrenv, bỏ qua fast attack (không crash)
+					warn("Fast Attack không khả dụng do thiếu getrenv")
 				end
 			end
-		end
-	end
-end)
 for L_195_forvar0, L_196_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")) do
 	local L_197_ = {}
 	L_197_[1], L_197_[3] = L_195_forvar0, L_196_forvar1
@@ -8318,6 +8314,16 @@ task["spawn"](function()
 				L_1_[28] = L_1_[28] + L_1_[36]
 				if L_1_[28] >= 30 and (Quest ~= "Cursed Dual Katana" and (Quest ~= "Evo Race V2" and (Quest ~= "Evo Race V1" and not SROP))) then
 					L_1_[45]["HopLowServer"](9)
+					if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+						pcall(function()
+							request({
+								Url = getgenv()["WebhookUrl"],
+								Method = "POST",
+								Headers = { ["Content-Type"] = "application/json" },
+								Body = '{"content":"[Kaitun] HopServer triggered - stuck detected"}'
+							})
+						end)
+					end
 				end
 			else
 				L_1_[28] = 0
@@ -8679,4 +8685,143 @@ game:GetService("UserInputService").InputBegan:Connect(function(input)
             Duration = 2
         })
     end
+end)
+
+-- ===== ANTI AFK & AUTO HOP KHI KẸT =====
+task.spawn(function()
+    if not getgenv().AntiAFK then
+        getgenv().AntiAFK = true  -- mặc định bật, có thể tắt qua config
+    end
+    while getgenv().AntiAFK and task.wait(150) do
+        L_1_[2]:SendKeyEvent(true, "Space", false, game)
+        wait(0.5)
+        L_1_[2]:SendKeyEvent(false, "Space", false, game)
+    end
+end)
+
+-- ===== TSUNAMI HUB WEBHOOK - 5 PHÚT GỬI 1 LẦN =====
+task.spawn(function()
+    -- Chỉ chạy nếu webhook được bật trong config
+    if not getgenv()["WebhookEnabled"] or getgenv()["WebhookUrl"] == "" then return end
+
+    local RS      = game:GetService("ReplicatedStorage")
+    local CommF   = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
+    local Players = game:GetService("Players")
+    local plr     = Players.LocalPlayer
+
+    -- Màu xanh #0064FF (0,100,255) = decimal 25855
+    local EMBED_COLOR = 25855
+
+    local function buildWebhookBody()
+        -- Main Status
+        local username = plr.Name or "N/A"
+        local level    = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or "N/A"
+        local race     = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Race") and plr.Data.Race.Value) or "N/A"
+        local devilFruit = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("DevilFruit") and plr.Data.DevilFruit.Value) or "N/A"
+
+        -- Số lượng trái đang giữ trong kho
+        local fruitStored = 0
+        pcall(function()
+            local fruits = L_1_[45]["GetFruits"]()
+            fruitStored = fruits and #fruits or 0
+        end)
+        local fruitDisplay = devilFruit ~= "N/A" and (devilFruit .. " [" .. fruitStored .. "]") or ("None [" .. fruitStored .. "]")
+
+        -- Danh sách Melee đã học
+        local meleeList = {}
+        pcall(function()
+            local meleeNames = {
+                "Black Leg", "Electro", "Fishman Karate",
+                "Dragon Claw", "Superhuman", "Death Step",
+                "Sharkman Karate", "Electric Claw", "Dragon Talon", "Godhuman"
+            }
+            for _, name in ipairs(meleeNames) do
+                if L_1_[45]["gi"](name) then
+                    table.insert(meleeList, name)
+                end
+            end
+        end)
+
+        -- Trái cây trong inventory (stored)
+        local invFruits = {}
+        pcall(function()
+            local fruits = L_1_[45]["GetFruits"]()
+            if fruits then
+                for _, f in ipairs(fruits) do
+                    table.insert(invFruits, f.Name)
+                end
+            end
+        end)
+
+        -- Vũ khí & items khác (không phải trái)
+        local invItems = {}
+        pcall(function()
+            local inventory = CommF:InvokeServer("getInventory")
+            if type(inventory) == "table" then
+                for _, item in pairs(inventory) do
+                    if type(item) == "table" and item["Name"] then
+                        local t = item["Type"] or ""
+                        if t ~= "Blox Fruit" then
+                            table.insert(invItems, item["Name"])
+                        end
+                    end
+                end
+            end
+        end)
+
+        local function listOrNone(t)
+            if #t == 0 then return "None" end
+            return table.concat(t, ",\n")
+        end
+
+        local mainStatus = string.format(
+            "```\nUsername : %s,\nLevel : %s,\nRace : %s,\nFruits : %s\n```",
+            username, tostring(level), tostring(race), fruitDisplay
+        )
+        local meleeText = "```\n" .. listOrNone(meleeList) .. "\n```"
+        local fruitText = "```\n" .. listOrNone(invFruits) .. "\n```"
+        local itemText  = "```\n" .. listOrNone(invItems)  .. "\n```"
+
+        local function escapeJson(s)
+            s = tostring(s)
+            s = s:gsub('\\', '\\\\')
+            s = s:gsub('"', '\\"')
+            s = s:gsub('\n', '\\n')
+            return s
+        end
+
+		local body = '{'
+			.. '"username":"Tsunami Hub",'
+			.. '"avatar_url":"https://media.discordapp.net/attachments/1479872403529007178/1480115872961007746/Tsunami_Hub.png?ex=69ae80d3&is=69ad2f53&hm=b379cd3afbb03aa3681b37e8b2e7dd29c956b3fde63e50f2073a7f6cdaba4a2d&=&format=webp&quality=lossless",'
+			.. '"embeds":[{'
+			.. '"title":"\\uD83C\\uDF0A Tsunami Hub Notification \\uD83C\\uDF0A",'
+			.. '"color":' .. EMBED_COLOR .. ','
+			.. '"fields":['
+			.. '{"name":"**Main Status**","value":"' .. escapeJson(mainStatus) .. '","inline":false},'
+			.. '{"name":"**Melee**","value":"' .. escapeJson(meleeText) .. '","inline":true},'
+			.. '{"name":"**Inventory Fruit**","value":"' .. escapeJson(fruitText) .. '","inline":true},'
+			.. '{"name":"**Inventory**","value":"' .. escapeJson(itemText) .. '","inline":true}'
+			.. '],'
+			.. '"footer":{"text":"Tsunami Hub • Auto Report (5 min)"}'
+			.. '}]}'
+
+		return body
+	end
+
+	-- Gửi ngay lần đầu khi load
+	task["wait"](10) -- đợi script init xong
+	while true do
+		pcall(function()
+			if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
+				local body = buildWebhookBody()
+				request({
+					Url     = getgenv()["WebhookUrl"],
+					Method  = "POST",
+					Headers = { ["Content-Type"] = "application/json" },
+					Body    = body
+				})
+			end
+		end)
+		task["wait"](300) -- 5 phút = 300 giây
+	end
 end)
