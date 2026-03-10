@@ -100,15 +100,6 @@ L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
--- Khai báo biến toàn cục để tránh warning
-ExSeb = false
-Mirror_Fractal_H = false
-Unlock_Tushita_Quest = false
-CheckFindWaterKey = false
-Black_Leg_C = false
-Electro_C = false
-Fishman_Karate_C = false
--- ... thêm các biến khác nếu cần
 -- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
 
@@ -2691,10 +2682,6 @@ L_1_[31] = function(L_32_arg0, L_33_arg1, L_34_arg2)
 				Vector3["new"](-2953.31, 41.01, 2099.17);
 				"Old_World"
 			};
-			{ 
-				Vector3.new(-12330, 600, -6549),
-				"Three_World" 
-			},
 		}
 		for L_37_forvar0, L_38_forvar1 in pairs(L_36_[1]) do
 			local L_39_ = {}
@@ -3297,8 +3284,14 @@ L_1_[34] = {}
 L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
 task.spawn(function()
-    -- Bộ đếm số điểm Melee đã cộng
-    if not getgenv().meleeCount then getgenv().meleeCount = 0 end
+    -- Lấy config
+    local config = getgenv().StatsConfig or {Enabled = true, Priority = {"Melee","Defense","Sword"}, MeleeDefenseRatio = 10, AfterMaxDefenseSwordRatio = {2,1}}
+    if not config.Enabled then return end
+
+    -- Bộ đếm Melee
+    if not getgenv().meleeCount then
+        getgenv().meleeCount = 0
+    end
 
     while task.wait(1) do
         L_1_[45]["p"](function()
@@ -3311,83 +3304,74 @@ task.spawn(function()
             local stats = data:FindFirstChild("Stats")
             if not stats then return end
 
-            -- In ra các tên stat để kiểm tra (chỉ chạy 1 lần)
-            if not getgenv().statsChecked then
-                print("===== CÁC STAT CÓ TRONG GAME =====")
-                for _, child in pairs(stats:GetChildren()) do
-                    if child:IsA("IntValue") then
-                        print(child.Name)
+            -- Lấy level các chỉ số
+            local statLevels = {}
+            for _, statName in ipairs(config.Priority) do
+                local stat = stats:FindFirstChild(statName)
+                if stat then
+                    local lv = stat:FindFirstChild("Level")
+                    if lv then
+                        statLevels[statName] = lv.Value
+                    else
+                        statLevels[statName] = 2800  -- coi như max nếu không có level? 
                     end
+                else
+                    statLevels[statName] = 2800
                 end
-                getgenv().statsChecked = true
             end
-
-            local melee = stats:FindFirstChild("Melee")
-            local defense = stats:FindFirstChild("Defense")
-            local sword = stats:FindFirstChild("Sword")
-            if not (melee and defense and sword) then
-                -- Nếu không tìm thấy, thử tên viết thường
-                melee = stats:FindFirstChild("melee")
-                defense = stats:FindFirstChild("defense")
-                sword = stats:FindFirstChild("sword")
-            end
-            if not (melee and defense and sword) then
-                print("⚠️ Không tìm thấy Melee/Defense/Sword, auto stats tạm dừng")
-                return
-            end
-
-            local meleeLv = melee:FindFirstChild("Level")
-            local defenseLv = defense:FindFirstChild("Level")
-            local swordLv = sword:FindFirstChild("Level")
-            if not (meleeLv and defenseLv and swordLv) then return end
 
             local commF = L_1_[46]["Remotes"]["CommF_"]
 
             local function addOne(stat)
+                commF:InvokeServer("AddPoint", stat, 1)
+                -- Refresh points
+                points = data:FindFirstChild("Points")
+                -- Refresh level
+                local s = stats:FindFirstChild(stat)
+                if s then
+                    local lv = s:FindFirstChild("Level")
+                    if lv then
+                        statLevels[stat] = lv.Value
+                    end
+                end
                 if stat == "Melee" then
-                    commF:InvokeServer("AddPoint", "Melee", 1)
-                    meleeLv = melee:FindFirstChild("Level")
                     getgenv().meleeCount = getgenv().meleeCount + 1
-                    print("[Stats] +1 Melee")
-                elseif stat == "Defense" then
-                    commF:InvokeServer("AddPoint", "Defense", 1)
-                    defenseLv = defense:FindFirstChild("Level")
-                    print("[Stats] +1 Defense")
-                elseif stat == "Sword" then
-                    commF:InvokeServer("AddPoint", "Sword", 1)
-                    swordLv = sword:FindFirstChild("Level")
-                    print("[Stats] +1 Sword")
                 end
             end
 
-            -- Khi Melee chưa max
-            if meleeLv.Value < 2800 then
+            -- Xác định trạng thái
+            local meleeLv = statLevels["Melee"] or 2800
+            local defenseLv = statLevels["Defense"] or 2800
+            local swordLv = statLevels["Sword"] or 2800
+
+            -- Trường hợp Melee chưa max
+            if meleeLv < 2800 then
                 while points.Value > 0 do
                     addOne("Melee")
-                    points = data:FindFirstChild("Points")
-                    if getgenv().meleeCount % 10 == 0 and defenseLv.Value < 2800 and points.Value > 0 then
+                    if getgenv().meleeCount % config.MeleeDefenseRatio == 0 and defenseLv < 2800 and points.Value > 0 then
                         addOne("Defense")
-                        points = data:FindFirstChild("Points")
                     end
                 end
                 return
             end
 
-            -- Melee đã max, luân phiên 2 Defense : 1 Sword
+            -- Trường hợp Melee đã max
+            local defStep = config.AfterMaxDefenseSwordRatio[1] or 2
+            local swordStep = config.AfterMaxDefenseSwordRatio[2] or 1
             local cycleStep = 0
             while points.Value > 0 do
-                if defenseLv.Value < 2800 and cycleStep < 2 then
+                if defenseLv < 2800 and cycleStep < defStep then
                     addOne("Defense")
                     cycleStep = cycleStep + 1
-                elseif swordLv.Value < 2800 then
+                elseif swordLv < 2800 then
                     addOne("Sword")
                     cycleStep = 0
                 else
                     break
                 end
-                points = data:FindFirstChild("Points")
             end
 
+            -- Buso
             if plr.Character and not plr.Character:FindFirstChild("HasBuso") then
                 commF:InvokeServer("Buso")
             end
@@ -7467,15 +7451,7 @@ task["spawn"](function()
 					if L_1_[45]["CheckItem"]("Bones") < 500 then
 						if Three_World then
 							local hauntedPos = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625)
-							if L_1_[35].Character and L_1_[35].Character:FindFirstChild("HumanoidRootPart") then
-								if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
-									L_1_[31](hauntedPos, 1.5)
-								else
-									L_1_[45]["FarmBone"](false)
-								end
-							else
-								task.wait(1)
-							end
+							if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
 								L_1_[31](hauntedPos, 1.5)
 							else
 								L_1_[45]["FarmBone"](false)
