@@ -921,16 +921,28 @@ elseif L_1_[30] == 4442272183 then
 elseif L_1_[30] == 7449423635 then
 	Three_World = true
 end
-if Quest then
-    if Quest == "Cursed Dual Katana" and L_1_[24].Value < 2800 then
-        Quest = nil
-        print("Reset CDK quest – level chưa đủ 2800")
-    elseif Quest == "Soul Guitar" and L_1_[24].Value < 2000 then
-        Quest = nil
-    elseif Quest == "Godhuman" and L_1_[24].Value < 1100 then
-        Quest = nil
+-- Tự động reset quest nếu level chưa đủ
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if Quest then
+                local level = L_1_[24].Value
+                if Quest == "Cursed Dual Katana" and level < 2800 then
+                    Quest = nil
+                    print("Reset CDK quest – level chưa đủ 2800")
+                elseif Quest == "Soul Guitar" and level < 2000 then
+                    Quest = nil
+                elseif Quest == "Godhuman" and level < 1100 then
+                    Quest = nil
+                elseif Quest == "Pull Lerver" and level < 2000 then  -- điều chỉnh level nếu cần
+                    Quest = nil
+                elseif Quest == "RGB" and level < 2000 then
+                    Quest = nil
+                end
+            end
+        end)
     end
-end
+end)
 L_1_[22] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Level")
 function CheckLevel2()
 	local L_28_ = {}
