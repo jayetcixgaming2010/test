@@ -4173,48 +4173,6 @@ L_1_[39] = function()
 				until (L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or not(getgenv())["AutoFarm"] or Quest ~= nil
 			end
 		end
-	elseif L_1_[24]["Value"] >= 2800 and Three_World then
-		SROP = false
-		if L_1_[45]["ffc"](L_1_[7], "Cake Prince") then
-			for L_278_forvar0, L_279_forvar1 in pairs(L_1_[7]:GetChildren()) do
-				local L_280_ = {}
-				L_280_[1], L_280_[2] = L_278_forvar0, L_279_forvar1
-				if L_280_[2]["Name"] == "Cake Prince" and (L_280_[2]:FindFirstChild("Humanoid") and (L_280_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
-					L_1_[31](L_280_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
-				end
-			end
-		elseif L_1_[45]["ffc"](L_1_[40], "Cake Prince") then
-			for L_281_forvar0, L_282_forvar1 in pairs(L_1_[40]:GetChildren()) do
-				local L_283_ = {}
-				L_283_[1], L_283_[2] = L_281_forvar0, L_282_forvar1
-				if L_283_[2]["Name"] == "Cake Prince" and (L_283_[2]:FindFirstChild("Humanoid") and (L_283_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
-					L_1_[31](L_283_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
-				end
-			end
-		else
-			if tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == "nil" or tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == nil then
-				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
-			end
-			if L_1_[45]["ffc"](L_1_[40], "Cookie Crafter") or L_1_[45]["ffc"](L_1_[40], "Cake Guard") or L_1_[45]["ffc"](L_1_[40], "Baking Staff") or L_1_[45]["ffc"](L_1_[40], "Head Baker") then
-				for L_284_forvar0, L_285_forvar1 in pairs(L_1_[40]:GetChildren()) do
-					local L_286_ = {}
-					L_286_[1], L_286_[2] = L_284_forvar0, L_285_forvar1
-					if L_286_[2]["Name"] == "Cookie Crafter" or L_286_[2]["Name"] == "Cake Guard" or L_286_[2]["Name"] == "Baking Staff" or L_286_[2]["Name"] == "Head Baker" then
-						repeat
-							L_1_[45]["wt"]()
-							L_1_[31](L_286_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
-							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
-							end
-							L_1_[45]["BN"](L_286_[2]["Name"])
-							L_1_[14]()
-						until L_286_[2]["Humanoid"]["Health"] <= 0 or not L_1_[40]:FindFirstChild(Enemy) or not(L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or Quest ~= nil
-					end
-				end
-			else
-				L_1_[31](CFrame["new"](-2091.9118652344, 70.008842468262, -12142.8359375), 1.5)
-			end
-		end
 	end
 end
 L_1_[38] = function()
