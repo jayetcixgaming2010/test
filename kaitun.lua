@@ -1,5 +1,5 @@
 -- KaitunLoader.lua - Main Script
--- Config được load từ SettingFarm (Config.lua)
+-- Config Ä‘Æ°á»£c load tá»« SettingFarm (Config.lua)
 local L_1_ = {}
 L_1_[3] = table["concat"]
 if not game:IsLoaded() then
@@ -8,13 +8,13 @@ if not game:IsLoaded() then
 	until game:IsLoaded()
 end
 
--- ===== ADAPTER: Chuyển SettingFarm -> Configs =====
+-- ===== ADAPTER: Chuyá»ƒn SettingFarm -> Configs =====
 local SF = getgenv().SettingFarm or {}
 local SF_Sword = SF["Sword"] or {}
 local SF_Gun   = SF["Gun"]   or {}
 local SF_Misc  = SF["Misc"]  or {}
 
--- Build Configs.Sword (array chỉ gồm những item = true)
+-- Build Configs.Sword (array chá»‰ gá»“m nhá»¯ng item = true)
 local function buildList(tbl, nameMap)
     local result = {}
     for k, v in pairs(tbl) do
@@ -43,7 +43,7 @@ getgenv()["Configs"] = {
     ["FPS Booster"] = SF_Misc["FPS Boost"] == false,
 }
 
--- Tween Speed (dùng cho L_1_[31] teleport)
+-- Tween Speed (dÃ¹ng cho L_1_[31] teleport)
 getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
 
 -- Team
@@ -101,7 +101,7 @@ L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
 
--- ================= UI MỚI =================
+-- ================= UI Má»šI =================
 local Lighting = game:GetService("Lighting")
 
 local blur = Instance.new("BlurEffect")
@@ -124,13 +124,13 @@ local ItemLabel1_2 = Instance.new("TextLabel")
 local BeliLabel_1 = Instance.new("TextLabel")
 local LevelLabel_1 = Instance.new("TextLabel")
 local RaceLabel_1 = Instance.new("TextLabel")
-local GodHumanLabel = Instance.new("TextLabel")   -- thay cho TextLabel_1 cũ
-local PullLeverLabel = Instance.new("TextLabel")  -- thay cho TextLabel_2 cũ
-local ValkyrieLabel = Instance.new("TextLabel")   -- thay cho TextLabel_3 cũ
-local MirrorLabel = Instance.new("TextLabel")     -- thay cho TextLabel_4 cũ
-local SkullGuitarLabel = Instance.new("TextLabel") -- thay cho TextLabel_5 cũ
-local FragLabel = Instance.new("TextLabel")       -- thay cho TextLabel_6 cũ
-local CDKLabel = Instance.new("TextLabel")        -- thay cho TextLabel_7 cũ
+local GodHumanLabel = Instance.new("TextLabel")   -- thay cho TextLabel_1 cÅ©
+local PullLeverLabel = Instance.new("TextLabel")  -- thay cho TextLabel_2 cÅ©
+local ValkyrieLabel = Instance.new("TextLabel")   -- thay cho TextLabel_3 cÅ©
+local MirrorLabel = Instance.new("TextLabel")     -- thay cho TextLabel_4 cÅ©
+local SkullGuitarLabel = Instance.new("TextLabel") -- thay cho TextLabel_5 cÅ©
+local FragLabel = Instance.new("TextLabel")       -- thay cho TextLabel_6 cÅ©
+local CDKLabel = Instance.new("TextLabel")        -- thay cho TextLabel_7 cÅ©
 local Top_1 = Instance.new("TextLabel")
 local UIGradient_1 = Instance.new("UIGradient")
 local Under_1 = Instance.new("TextLabel")
@@ -246,7 +246,7 @@ LevelLabel_1.Position = UDim2.new(0.07000000029802322, 0, 0.3499999940395355, 0)
 LevelLabel_1.Size = UDim2.new(0, 0, 0, 18)
 LevelLabel_1.Selectable = false
 LevelLabel_1.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-LevelLabel_1.Text = "Level: N/A    Third Sea : ❌"
+LevelLabel_1.Text = "Level: N/A    Third Sea : âŒ"
 LevelLabel_1.TextColor3 = Color3.fromRGB(255, 255, 255)
 LevelLabel_1.TextSize = 16
 LevelLabel_1.TextXAlignment = Enum.TextXAlignment.Left
@@ -271,7 +271,7 @@ GodHumanLabel.Position = UDim2.new(0.07000000029802322, 0, 0.800000011920929, 0)
 GodHumanLabel.Size = UDim2.new(0, 0, 0, 18)
 GodHumanLabel.Selectable = false
 GodHumanLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-GodHumanLabel.Text = "🔴 GodHuman"
+GodHumanLabel.Text = "ðŸ”´ GodHuman"
 GodHumanLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 GodHumanLabel.TextSize = 16
 GodHumanLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -283,7 +283,7 @@ PullLeverLabel.Position = UDim2.new(0.75, 0, 0.8999999761581421, 0)
 PullLeverLabel.Size = UDim2.new(0, 0, 0, 18)
 PullLeverLabel.Selectable = false
 PullLeverLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-PullLeverLabel.Text = "🔴 Pull Lever"
+PullLeverLabel.Text = "ðŸ”´ Pull Lever"
 PullLeverLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 PullLeverLabel.TextSize = 16
 PullLeverLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -295,7 +295,7 @@ ValkyrieLabel.Position = UDim2.new(0.75, 0, 0.800000011920929, 0)
 ValkyrieLabel.Size = UDim2.new(0, 0, 0, 18)
 ValkyrieLabel.Selectable = false
 ValkyrieLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-ValkyrieLabel.Text = "🔴 Valkyrie Helm"
+ValkyrieLabel.Text = "ðŸ”´ Valkyrie Helm"
 ValkyrieLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 ValkyrieLabel.TextSize = 16
 ValkyrieLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -307,7 +307,7 @@ MirrorLabel.Position = UDim2.new(0.4000000059604645, 0, 0.8999999761581421, 0)
 MirrorLabel.Size = UDim2.new(0, 0, 0, 18)
 MirrorLabel.Selectable = false
 MirrorLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-MirrorLabel.Text = "🔴 Mirror Fractal"
+MirrorLabel.Text = "ðŸ”´ Mirror Fractal"
 MirrorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 MirrorLabel.TextSize = 16
 MirrorLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -319,7 +319,7 @@ SkullGuitarLabel.Position = UDim2.new(0.07000000029802322, 0, 0.8999999761581421
 SkullGuitarLabel.Size = UDim2.new(0, 0, 0, 18)
 SkullGuitarLabel.Selectable = false
 SkullGuitarLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-SkullGuitarLabel.Text = "🔴 Skull Guitar"
+SkullGuitarLabel.Text = "ðŸ”´ Skull Guitar"
 SkullGuitarLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 SkullGuitarLabel.TextSize = 16
 SkullGuitarLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -343,7 +343,7 @@ CDKLabel.Position = UDim2.new(0.4000000059604645, 0, 0.800000011920929, 0)
 CDKLabel.Size = UDim2.new(0, 0, 0, 18)
 CDKLabel.Selectable = false
 CDKLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-CDKLabel.Text = "🔴 Curse Dual Katana"
+CDKLabel.Text = "ðŸ”´ Curse Dual Katana"
 CDKLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 CDKLabel.TextSize = 16
 CDKLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -548,7 +548,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0  
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)  
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)  
-ImageLabel.Image = "rbxassetid://80900795508277"  -- icon của bạn
+ImageLabel.Image = "rbxassetid://80900795508277"  -- icon cá»§a báº¡n
 ImageLabel.ZIndex = 6
 
 TextButton.Parent = dutdit  
@@ -576,7 +576,7 @@ tooltip.Visible = false
 tooltip.ZIndex = 10
 tooltip.RichText = true
 
--- Hiệu ứng hover
+-- Hiá»‡u á»©ng hover
 dutdit.MouseEnter:Connect(function()
     tooltip.Visible = true
     L_1_[6]:Create(dutdit, TweenInfo.new(0.2), {Size = UDim2.new(0, 55, 0, 55)}):Play()
@@ -634,8 +634,8 @@ L_1_.UI_BottomStatus = Under_1
 L_1_.UI_Beli = BeliLabel_1
 L_1_.UI_Level = LevelLabel_1
 L_1_.UI_Race = RaceLabel_1
-L_1_.UI_Frag = FragLabel          -- gán đúng label Frag
-L_1_.UI_GodHuman = GodHumanLabel   -- gán đúng label GodHuman
+L_1_.UI_Frag = FragLabel          -- gÃ¡n Ä‘Ãºng label Frag
+L_1_.UI_GodHuman = GodHumanLabel   -- gÃ¡n Ä‘Ãºng label GodHuman
 L_1_.UI_PullLever = PullLeverLabel
 L_1_.UI_Valkyrie = ValkyrieLabel
 L_1_.UI_MirrorFractal = MirrorLabel
@@ -645,7 +645,7 @@ L_1_.UI_Item1 = ItemLabel1_1
 L_1_.UI_Item2 = ItemLabel2_1
 L_1_.UI_Item3 = ItemLabel1_2
 
--- Hàm cập nhật UI định kỳ
+-- HÃ m cáº­p nháº­t UI Ä‘á»‹nh ká»³
 local function updateUI()
 	pcall(function()
 		local plr = L_1_[5]
@@ -655,29 +655,29 @@ local function updateUI()
 			local frag = plr.Data.Fragments and plr.Data.Fragments.Value or "N/A"
 			local race = plr.Data.Race and plr.Data.Race.Value or "N/A"
 			local world = Three_World and "Third Sea" or (New_World and "Second Sea" or "First Sea")
-			local seaEmoji = Three_World and "✅" or (New_World and "✅" or "❌")
+			local seaEmoji = Three_World and "âœ…" or (New_World and "âœ…" or "âŒ")
 			
 			if L_1_.UI_Beli then L_1_.UI_Beli.Text = "Beli: " .. tostring(beli) end
 			if L_1_.UI_Level then L_1_.UI_Level.Text = "Level: " .. tostring(level) .. "    " .. world .. " : " .. seaEmoji end
 			if L_1_.UI_Race then L_1_.UI_Race.Text = "Race: " .. tostring(race) end
 			if L_1_.UI_Frag then L_1_.UI_Frag.Text = "Frag: " .. tostring(frag) end
 			
-			-- Luôn kiểm tra trực tiếp từ inventory bằng hàm gi
+			-- LuÃ´n kiá»ƒm tra trá»±c tiáº¿p tá»« inventory báº±ng hÃ m gi
 			local godhuman   = L_1_[45]["gi"] and L_1_[45]["gi"]("Godhuman")
-			local pullLever  = ExSeb or false      -- ExSeb sẽ được cập nhật riêng
+			local pullLever  = ExSeb or false      -- ExSeb sáº½ Ä‘Æ°á»£c cáº­p nháº­t riÃªng
 			local valkyrie   = L_1_[45]["gi"] and L_1_[45]["gi"]("Valkyrie Helm")
 			local mirror     = L_1_[45]["gi"] and L_1_[45]["gi"]("Mirror Fractal")
 			local soulGuitar = L_1_[45]["gi"] and L_1_[45]["gi"]("Soul Guitar")
 			local cdk        = L_1_[45]["gi"] and L_1_[45]["gi"]("Cursed Dual Katana")
 			
-			if L_1_.UI_GodHuman then L_1_.UI_GodHuman.Text = (godhuman and "🟢" or "🔴") .. " GodHuman" end
-			if L_1_.UI_PullLever then L_1_.UI_PullLever.Text = (pullLever and "🟢" or "🔴") .. " Pull Lever" end
-			if L_1_.UI_Valkyrie then L_1_.UI_Valkyrie.Text = (valkyrie and "🟢" or "🔴") .. " Valkyrie Helm" end
-			if L_1_.UI_MirrorFractal then L_1_.UI_MirrorFractal.Text = (mirror and "🟢" or "🔴") .. " Mirror Fractal" end
-			if L_1_.UI_SkullGuitar then L_1_.UI_SkullGuitar.Text = (soulGuitar and "🟢" or "🔴") .. " Skull Guitar" end
-			if L_1_.UI_CDK then L_1_.UI_CDK.Text = (cdk and "🟢" or "🔴") .. " Curse Dual Katana" end
+			if L_1_.UI_GodHuman then L_1_.UI_GodHuman.Text = (godhuman and "ðŸŸ¢" or "ðŸ”´") .. " GodHuman" end
+			if L_1_.UI_PullLever then L_1_.UI_PullLever.Text = (pullLever and "ðŸŸ¢" or "ðŸ”´") .. " Pull Lever" end
+			if L_1_.UI_Valkyrie then L_1_.UI_Valkyrie.Text = (valkyrie and "ðŸŸ¢" or "ðŸ”´") .. " Valkyrie Helm" end
+			if L_1_.UI_MirrorFractal then L_1_.UI_MirrorFractal.Text = (mirror and "ðŸŸ¢" or "ðŸ”´") .. " Mirror Fractal" end
+			if L_1_.UI_SkullGuitar then L_1_.UI_SkullGuitar.Text = (soulGuitar and "ðŸŸ¢" or "ðŸ”´") .. " Skull Guitar" end
+			if L_1_.UI_CDK then L_1_.UI_CDK.Text = (cdk and "ðŸŸ¢" or "ðŸ”´") .. " Curse Dual Katana" end
 			
-			-- Lấy toàn bộ inventory (thay cho GetFruits)
+			-- Láº¥y toÃ n bá»™ inventory (thay cho GetFruits)
 			local allItems = {}
 			pcall(function()
 				local invData = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")
@@ -690,7 +690,7 @@ local function updateUI()
 				end
 			end)
 
-			-- Hiển thị 3 item đầu
+			-- Hiá»ƒn thá»‹ 3 item Ä‘áº§u
 			for i = 1, 3 do
 				local label = L_1_["UI_Item"..i]
 				if label then
@@ -701,36 +701,36 @@ local function updateUI()
 	end)
 end
 
--- Vòng lặp cập nhật trạng thái Pull Lever (ExSeb) và các item đặc biệt
+-- VÃ²ng láº·p cáº­p nháº­t tráº¡ng thÃ¡i Pull Lever (ExSeb) vÃ  cÃ¡c item Ä‘áº·c biá»‡t
 task.spawn(function()
 	while task.wait(10) do
 		pcall(function()
 			if Three_World then
-				-- Kiểm tra tiến độ Race V4 (ExSeb = true khi progress == 4)
+				-- Kiá»ƒm tra tiáº¿n Ä‘á»™ Race V4 (ExSeb = true khi progress == 4)
 				local progress = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("RaceV4Progress", "Check")
 				if progress == 4 then
 					ExSeb = true
 				end
 			end
 			
-			-- Cập nhật Mirror Fractal (nếu dùng biến toàn cục)
+			-- Cáº­p nháº­t Mirror Fractal (náº¿u dÃ¹ng biáº¿n toÃ n cá»¥c)
 			if L_1_[45]["gi"]("Mirror Fractal") then
 				Mirror_Fractal_H = true
 			end
 			
-			-- Có thể thêm các item khác nếu cần
+			-- CÃ³ thá»ƒ thÃªm cÃ¡c item khÃ¡c náº¿u cáº§n
 		end)
 	end
 end)
 
--- Vòng lặp cập nhật UI
+-- VÃ²ng láº·p cáº­p nháº­t UI
 task.spawn(function()
 	while task.wait(1) do
 		updateUI()
 	end
 end)
 
--- Định nghĩa lại hàm Status (cập nhật thanh trạng thái dưới cùng)
+-- Äá»‹nh nghÄ©a láº¡i hÃ m Status (cáº­p nháº­t thanh tráº¡ng thÃ¡i dÆ°á»›i cÃ¹ng)
 L_1_[45]["Status"] = function(text)
 	pcall(function()
 		if L_1_.UI_BottomStatus then
@@ -738,10 +738,10 @@ L_1_[45]["Status"] = function(text)
 		end
 	end)
 end
--- Đặt trạng thái ban đầu
+-- Äáº·t tráº¡ng thÃ¡i ban Ä‘áº§u
 L_1_[45]["Status"]("Idle")
 
--- ========== KẾT THÚC UI MỚI ==========
+-- ========== Káº¾T THÃšC UI Má»šI ==========
 
 task["spawn"](function()
 	if (getgenv())["Configs"] and (getgenv())["Configs"]["FPS Booster"] then
@@ -912,7 +912,7 @@ task["spawn"](function()
 end)
 
 L_1_[43] = game:GetService("CoreGui")
--- Đã xóa phần tạo Status_UI cũ
+-- ÄÃ£ xÃ³a pháº§n táº¡o Status_UI cÅ©
 
 if L_1_[30] == 2753915549 then
 	Old_World = true
@@ -1954,6 +1954,26 @@ function CheckLevel2()
 				Next_Level_X = 9999
 			end
 			SelectMonster = "Skull Slayer"
+		end
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 2800 then
+			local L_29_ = {}
+			Ms = "Baking Staff"
+			NameQuest = "CakeQuest2"
+			QuestLv = 1
+			NameMon = "Baking Staff"
+			CFrameQ = CFrame["new"](-1928.31763, 37.7296638, -12840.626)
+			CFrameMon = CFrame["new"](-1818.3479003906, 93.412757873535, -12887.66015625)
+			SelectMonster = "Cookie Crafter"
+			L_29_[1] = tostring(string["match"](tostring(game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+"))
+			if L_29_[1] == "nil" or L_29_[1] == nil then
+				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
+				Cake_Prince_S:Set(L_1_[3]({
+					" Cake Prince : Boss ",
+					"Spawn"
+				}))
+			else
+				Cake_Prince_S:Set(" Cake Prince : " .. L_29_[1])
+			end
 		end
 	end
 end
@@ -4692,7 +4712,7 @@ task["spawn"](function()
 							Quest = "Pull Lerver"
 							return
 						end
-						if L_1_[50]() then
+						if L_1_[24]["Value"] >= 2800 and L_1_[50]() then
 							Quest = "Cursed Dual Katana"
 							return
 						end
@@ -7461,25 +7481,25 @@ task["spawn"](function()
 				until not L_1_[45]["CheckBoss"]("Longma")
 				elseif Quest == "Soul Guitar" then
 					if L_1_[45]["CheckItem"]("Bones") < 500 then
-						-- Nếu chưa có đủ 500 Bones, chuyển đến Haunted Castle để farm
+						-- Náº¿u chÆ°a cÃ³ Ä‘á»§ 500 Bones, chuyá»ƒn Ä‘áº¿n Haunted Castle Ä‘á»ƒ farm
 						if Three_World then
-							-- Kiểm tra xem đã ở Haunted Castle chưa
+							-- Kiá»ƒm tra xem Ä‘Ã£ á»Ÿ Haunted Castle chÆ°a
 							local hauntedPos = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625)
 							if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
-								-- Teleport đến gần khu vực
+								-- Teleport Ä‘áº¿n gáº§n khu vá»±c
 								L_1_[31](hauntedPos, 1.5)
 							else
 								-- Farm bone
 								L_1_[45]["FarmBone"](false)
 							end
 						else
-							-- Nếu chưa ở Third Sea, tự động đi đến
+							-- Náº¿u chÆ°a á»Ÿ Third Sea, tá»± Ä‘á»™ng Ä‘i Ä‘áº¿n
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 							TleP = true
 							wait(50)
 						end
 					elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
-						-- Farm Ectoplasm ở Second Sea (Ship)
+						-- Farm Ectoplasm á»Ÿ Second Sea (Ship)
 						if New_World then
 							local shipPos = CFrame.new(921.30249023438, 125.400390625, 32937.34375)
 							if (shipPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
@@ -7488,7 +7508,7 @@ task["spawn"](function()
 									L_1_[31](shipPos, 1.5)
 								until (L_1_[35].Character.HumanoidRootPart.Position - shipPos.Position).Magnitude <= 3
 							else
-								-- Tìm enemy gần nhất để farm Ectoplasm
+								-- TÃ¬m enemy gáº§n nháº¥t Ä‘á»ƒ farm Ectoplasm
 								Monster = nil
 								for range = 1500, 0, -300 do
 									L_1_[45]["GetMonster"](range)
@@ -7514,20 +7534,20 @@ task["spawn"](function()
 						TleP = true
 						wait(50)
 					else
-						-- Bắt đầu làm quest Soul Guitar
-						-- Kiểm tra trạng thái màu nước
+						-- Báº¯t Ä‘áº§u lÃ m quest Soul Guitar
+						-- Kiá»ƒm tra tráº¡ng thÃ¡i mÃ u nÆ°á»›c
 						local swampWater = workspace.Map:FindFirstChild("Haunted Castle") and workspace.Map["Haunted Castle"]:FindFirstChild("SwampWater")
 						if swampWater and tostring(swampWater.BrickColor) == "Maroon" then
-							-- Nước màu đỏ => cần kill 6 Living Zombie
+							-- NÆ°á»›c mÃ u Ä‘á» => cáº§n kill 6 Living Zombie
 							local progress = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")
 							if progress and progress.Swamp == false then
-								-- Đến vị trí Swamp
+								-- Äáº¿n vá»‹ trÃ­ Swamp
 								L_1_[31](CFrame.new(-10147.779296875, 138.6266784668, 5939.5600585938), 1.5)
 								wait(1)
 								get_mon = {}
-								L_1_[45]["GetMon_Soul"]()  -- lấy danh sách Living Zombie
+								L_1_[45]["GetMon_Soul"]()  -- láº¥y danh sÃ¡ch Living Zombie
 								if #get_mon >= 6 then
-									-- Gom enemy lại
+									-- Gom enemy láº¡i
 									for _, enemy in pairs(workspace.Enemies:GetChildren()) do
 										if enemy.Name == "Living Zombie" and enemy.Humanoid.Health > 0 then
 											enemy.HumanoidRootPart.CFrame = L_1_[35].Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 20)
@@ -7539,10 +7559,10 @@ task["spawn"](function()
 								end
 							end
 						elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check") ~= nil then
-							-- Các bước khác của puzzle
+							-- CÃ¡c bÆ°á»›c khÃ¡c cá»§a puzzle
 							local prog = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")
 							if not Quest_Soul_Guitar then
-								-- Đến vị trí bắt đầu puzzle
+								-- Äáº¿n vá»‹ trÃ­ báº¯t Ä‘áº§u puzzle
 								L_1_[31](CFrame.new(-9680.7412109375, 6.1591067314148, 6346.1552734375), 1.5)
 								wait(1)
 								for k, v in pairs(prog) do
@@ -7559,7 +7579,7 @@ task["spawn"](function()
 								Quest_Soul_Guitar = true
 							end
 						elseif swampWater and tostring(swampWater.BrickColor) ~= "Maroon" then
-							-- Nước không đỏ => tương tác với gravestone
+							-- NÆ°á»›c khÃ´ng Ä‘á» => tÆ°Æ¡ng tÃ¡c vá»›i gravestone
 							if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2) == true then
 								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("gravestoneEvent", 2, true)
 							else
@@ -8442,9 +8462,9 @@ task["spawn"](function()
 	end
 end)
 -- ===== END SNIPER FRUIT SHOP =====
--- ===== TSUNAMI HUB WEBHOOK - 5 PHÚT GỬI 1 LẦN =====
+-- ===== TSUNAMI HUB WEBHOOK - 5 PHÃšT Gá»¬I 1 Láº¦N =====
 task["spawn"](function()
-	-- Chỉ chạy nếu webhook được bật trong config
+	-- Chá»‰ cháº¡y náº¿u webhook Ä‘Æ°á»£c báº­t trong config
 	if not getgenv()["WebhookEnabled"] or getgenv()["WebhookUrl"] == "" then return end
 
 	local RS      = game:GetService("ReplicatedStorage")
@@ -8452,17 +8472,17 @@ task["spawn"](function()
 	local Players = game:GetService("Players")
 	local plr     = Players.LocalPlayer
 
-	-- Màu xanh dùng trong code: #0064FF (0, 100, 255) = decimal 25855
+	-- MÃ u xanh dÃ¹ng trong code: #0064FF (0, 100, 255) = decimal 25855
 	local EMBED_COLOR = 25855
 
 	local function buildWebhookBody()
-		-- ── Main Status ──
+		-- â”€â”€ Main Status â”€â”€
 		local username = plr.Name or "N/A"
 		local level    = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Level") and plr.Data.Level.Value) or "N/A"
 		local race     = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("Race") and plr.Data.Race.Value) or "N/A"
 		local devilFruit = (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("DevilFruit") and plr.Data.DevilFruit.Value) or "N/A"
 
-		-- Lấy số lượng trái đang giữ trong tay (stored fruits)
+		-- Láº¥y sá»‘ lÆ°á»£ng trÃ¡i Ä‘ang giá»¯ trong tay (stored fruits)
 		local fruitStored = 0
 		pcall(function()
 			local fruits = L_1_[45]["GetFruits"]()
@@ -8470,7 +8490,7 @@ task["spawn"](function()
 		end)
 		local fruitDisplay = devilFruit ~= "N/A" and (devilFruit .. " [" .. fruitStored .. "]") or ("None [" .. fruitStored .. "]")
 
-		-- ── Melee list ──
+		-- â”€â”€ Melee list â”€â”€
 		local meleeList = {}
 		pcall(function()
 			local meleeNames = {
@@ -8485,7 +8505,7 @@ task["spawn"](function()
 			end
 		end)
 
-		-- ── Inventory Fruits (stored) ──
+		-- â”€â”€ Inventory Fruits (stored) â”€â”€
 		local invFruits = {}
 		pcall(function()
 			local fruits = L_1_[45]["GetFruits"]()
@@ -8496,7 +8516,7 @@ task["spawn"](function()
 			end
 		end)
 
-		-- ── Inventory Weapons & Items ──
+		-- â”€â”€ Inventory Weapons & Items â”€â”€
 		local invItems = {}
 		pcall(function()
 			local inventory = CommF:InvokeServer("getInventory")
@@ -8512,13 +8532,13 @@ task["spawn"](function()
 			end
 		end)
 
-		-- ── Format text helpers ──
+		-- â”€â”€ Format text helpers â”€â”€
 		local function listOrNone(t)
 			if #t == 0 then return "None" end
 			return table.concat(t, ",\n")
 		end
 
-		-- ── Build Discord embed JSON ──
+		-- â”€â”€ Build Discord embed JSON â”€â”€
 		local mainStatus = string.format(
 			"```\nUsername : %s,\nLevel : %s,\nRace : %s,\nFruits : %s\n```",
 			username, tostring(level), tostring(race), fruitDisplay
@@ -8549,14 +8569,14 @@ task["spawn"](function()
 			.. '{"name":"**Inventory Fruit**","value":"' .. escapeJson(fruitText) .. '","inline":true},'
 			.. '{"name":"**Inventory**","value":"' .. escapeJson(itemText) .. '","inline":true}'
 			.. '],'
-			.. '"footer":{"text":"Tsunami Hub • Auto Report (5 min)"}'
+			.. '"footer":{"text":"Tsunami Hub â€¢ Auto Report (5 min)"}'
 			.. '}]}'
 
 		return body
 	end
 
-	-- Gửi ngay lần đầu khi load
-	task["wait"](10) -- đợi script init xong
+	-- Gá»­i ngay láº§n Ä‘áº§u khi load
+	task["wait"](10) -- Ä‘á»£i script init xong
 	while true do
 		pcall(function()
 			if getgenv()["WebhookEnabled"] and getgenv()["WebhookUrl"] ~= "" then
@@ -8569,6 +8589,6 @@ task["spawn"](function()
 				})
 			end
 		end)
-		task["wait"](300) -- 5 phút = 300 giây
+		task["wait"](300) -- 5 phÃºt = 300 giÃ¢y
 	end
 end)
