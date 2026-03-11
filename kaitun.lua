@@ -1866,23 +1866,141 @@ function CheckLevel2()
 			end
 			SelectMonster = "Candy Pirate"
 		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 2550 then
-			local L_29_ = {}
-			Ms = "Baking Staff"
-			NameQuest = "CakeQuest2"
-			QuestLv = 1
-			NameMon = "Baking Staff"
-			CFrameQ = CFrame["new"](-1928.31763, 37.7296638, -12840.626)
-			CFrameMon = CFrame["new"](-1818.3479003906, 93.412757873535, -12887.66015625)
-			SelectMonster = "Cookie Crafter"
-			L_29_[1] = tostring(string["match"](tostring(game["ReplicatedStorage"]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+"))
-			if L_29_[1] == "nil" or L_29_[1] == nil then
-				(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
-				Cake_Prince_S:Set(L_1_[3]({
-					" Cake Prince : Boss ",
-					"Spawn"
-				}))
+			-- Xử lý level từ 2550 trở lên với nhiều mốc khác nhau
+			local level = game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"]
+			
+			if level >= 2550 and level <= 2574 then
+				Ms = "Baking Staff"
+				NameQuest = "CakeQuest2"
+				QuestLv = 1
+				NameMon = "Baking Staff"
+				CFrameQ = CFrame.new(-1928.31763, 37.7296638, -12840.626)
+				CFrameMon = CFrame.new(-1818.3479003906, 93.412757873535, -12887.66015625)
+				SelectMonster = "Cookie Crafter"
+			elseif level >= 2575 and level <= 2599 then
+				Ms = "Head Baker"
+				NameQuest = "CakeQuest2"
+				QuestLv = 2
+				NameMon = "Head Baker"
+				CFrameQ = CFrame.new(-1927.91602, 37.7981339, -12842.5391)
+				CFrameMon = CFrame.new(-2216.1882324219, 82.884521484375, -12869.293945312)
+				SelectMonster = "Baking Staff"
+			elseif level >= 2600 and level <= 2624 then
+				Ms = "Cocoa Warrior"
+				NameQuest = "ChocQuest1"
+				QuestLv = 1
+				NameMon = "Cocoa Warrior"
+				CFrameQ = CFrame.new(233.22836303711, 29.876001358032, -12201.233398438)
+				CFrameMon = CFrame.new(-21.553283691406, 80.574996948242, -12352.387695312)
+				SelectMonster = "Cocoa Warrior"
+			elseif level >= 2625 and level <= 2649 then
+				Ms = "Chocolate Bar Battler"
+				NameQuest = "ChocQuest1"
+				QuestLv = 2
+				NameMon = "Chocolate Bar Battler"
+				CFrameQ = CFrame.new(233.22836303711, 29.876001358032, -12201.233398438)
+				CFrameMon = CFrame.new(582.59057617188, 77.188095092773, -12463.162109375)
+				SelectMonster = "Cocoa Warrior"
+			elseif level >= 2650 and level <= 2674 then
+				Ms = "Sweet Thief"
+				NameQuest = "ChocQuest2"
+				QuestLv = 1
+				NameMon = "Sweet Thief"
+				CFrameQ = CFrame.new(150.50663757324, 30.693693161011, -12774.502929688)
+				CFrameMon = CFrame.new(165.1884765625, 76.058853149414, -12600.836914062)
+				SelectMonster = "Sweet Thief"
+			elseif level >= 2675 and level <= 2699 then
+				Ms = "Candy Rebel"
+				NameQuest = "ChocQuest2"
+				QuestLv = 2
+				NameMon = "Candy Rebel"
+				CFrameQ = CFrame.new(150.50663757324, 30.693693161011, -12774.502929688)
+				CFrameMon = CFrame.new(134.86563110352, 77.247680664062, -12876.547851562)
+				SelectMonster = "Sweet Thief"
+			elseif level >= 2700 and level <= 2724 then
+				Ms = "Candy Pirate"
+				NameQuest = "CandyQuest1"
+				QuestLv = 1
+				NameMon = "Candy Pirate"
+				CFrameQ = CFrame.new(-1167, 60, -14491)
+				CFrameMon = CFrame.new(-1310.5003662109, 26.016523361206, -14562.404296875)
+				SelectMonster = "Candy Pirate"
+			elseif level >= 2725 and level <= 2749 then
+				Ms = "Snow Demon"
+				NameQuest = "CandyQuest1"
+				QuestLv = 2
+				NameMon = "Snow Demon"
+				CFrameQ = CFrame.new(-1167, 60, -14491)
+				CFrameMon = CFrame.new(-880.20062255859, 71.247764587402, -14538.609375)
+				SelectMonster = "Candy Pirate"
+			elseif level >= 2750 and level <= 2774 then
+				Ms = "Isle Outlaw"
+				NameQuest = "TikiQuest1"
+				QuestLv = 1
+				NameMon = "Isle Outlaw"
+				CFrameQ = CFrame.new(-16547.748046875, 61.135334014893, -173.41360473633)
+				CFrameMon = CFrame.new(-16442.814453125, 116.13899993896, -264.46377563477)
+				SelectMonster = "Isle Outlaw"
+			elseif level >= 2775 and level <= 2799 then
+				Ms = "Island Boy"
+				NameQuest = "TikiQuest1"
+				QuestLv = 2
+				NameMon = "Island Boy"
+				CFrameQ = CFrame.new(-16547.748046875, 61.135334014893, -173.41360473633)
+				CFrameMon = CFrame.new(-16901.26171875, 84.067565917969, -192.88906860352)
+				SelectMonster = "Isle Outlaw"
+			elseif level >= 2800 and level <= 2824 then
+				Ms = "Sun-kissed Warrior"
+				NameQuest = "TikiQuest2"
+				QuestLv = 1
+				NameMon = "Sun-kissed Warrior"
+				CFrameQ = CFrame.new(-16539.078125, 55.686328887939, 1051.5738525391)
+				CFrameMon = CFrame.new(-16051.969726562, 54.797149658203, 1084.67578125)
+				SelectMonster = "Sun-kissed Warrior"
+			elseif level >= 2825 and level <= 2849 then
+				Ms = "Isle Champion"
+				NameQuest = "TikiQuest2"
+				QuestLv = 2
+				NameMon = "Isle Champion"
+				CFrameQ = CFrame.new(-16539.078125, 55.686328887939, 1051.5738525391)
+				CFrameMon = CFrame.new(-16619.37109375, 129.98481750488, 1071.2355957031)
+				SelectMonster = "Sun-kissed Warrior"
+			elseif level >= 2850 and level <= 2874 then
+				Ms = "Serpent Hunter"
+				NameQuest = "TikiQuest3"
+				QuestLv = 1
+				NameMon = "Serpent Hunter"
+				CFrameQ = CFrame.new(-16666.5703125, 105.29138183594, 1576.6925048828)
+				CFrameMon = CFrame.new(-16474.5703125, 124.32273864746, 1619.248046875)
+				SelectMonster = "Serpent Hunter"
+			elseif level >= 2875 and level <= 2899 then
+				Ms = "Skull Slayer"
+				NameQuest = "TikiQuest3"
+				QuestLv = 2
+				NameMon = "Skull Slayer"
+				CFrameQ = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625)
+				CFrameMon = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875)
+				SelectMonster = "Serpent Hunter"
 			else
-				Cake_Prince_S:Set(" Cake Prince : " .. L_29_[1])
+				-- Trên 2900, có thể tiếp tục với các khu vực mới hoặc lặp lại boss
+				Ms = "Skull Slayer" -- tạm thời
+				NameQuest = "TikiQuest3"
+				QuestLv = 2
+				NameMon = "Skull Slayer"
+				CFrameQ = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625)
+				CFrameMon = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875)
+				SelectMonster = "Serpent Hunter"
+			end
+			
+			-- Đoạn xử lý Cake Prince (giữ nguyên)
+			local L_29_ = {}
+			L_29_[1] = tostring(string.match(tostring(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")), "%d+"))
+			if L_29_[1] == "nil" or L_29_[1] == nil then
+				game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
+				-- Cake_Prince_S:Set(...) -- cần định nghĩa trước, nếu không có thì comment
+				-- Cake_Prince_S:Set(" Cake Prince : Boss Spawn")
+			else
+				-- Cake_Prince_S:Set(" Cake Prince : " .. L_29_[1])
 			end
 		end
 	end
@@ -4083,7 +4201,7 @@ L_1_[39] = function()
 				until (L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or not(getgenv())["AutoFarm"] or Quest ~= nil
 			end
 		end
-	elseif L_1_[24]["Value"] >= 2650 and Three_World then
+	elseif L_1_[24]["Value"] >= 2800 and Three_World then
 		SROP = false
 		if L_1_[45]["ffc"](L_1_[7], "Cake Prince") then
 			for L_278_forvar0, L_279_forvar1 in pairs(L_1_[7]:GetChildren()) do
