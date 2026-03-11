@@ -50,10 +50,10 @@ getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
 getgenv()["SelectedTeam"] = SF["Team"] or "Pirates"
 
 -- Anti Redeem Codes
-getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] == true
+getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= true
 
 -- Anti AFK
-getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] == true
+getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= true
 
 -- Webhook
 getgenv()["WebhookEnabled"] = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Enabled"]) or false
@@ -100,6 +100,7 @@ L_1_[33] = game:service("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
+
 -- ================= UI MỚI =================
 local Lighting = game:GetService("Lighting")
 
@@ -503,7 +504,7 @@ DiscordLabel.BorderSizePixel = 0
 DiscordLabel.Position = UDim2.new(0.5, 0,-0.0250000004, 0)
 DiscordLabel.Size = UDim2.new(0, 210,0, 50)
 DiscordLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-DiscordLabel.Text = "discord.gg/3bS7hjJ9es"
+DiscordLabel.Text = "discord.gg/DuAp7VwVG3"
 DiscordLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
 DiscordLabel.TextSize = 16
 
@@ -2608,14 +2609,35 @@ L_1_[8] = function()
 		QuestNumber = 1
 		QuestPos = CFrame["new"](-16666.5703125, 105.29138183594, 1576.6925048828)
 		EnemyPos = CFrame["new"](-16474.5703125, 124.32273864746, 1619.248046875)
-	elseif Three_World and (L_1_[22]["Value"] >= 2575 and L_1_[22]["Value"] <= 2650) then
-		Enemy = "Skull Slayer"
-		NameEnemy = "Skull Slayer"
-		QuestName = "TikiQuest3"
-		QuestNumber = 2
-		QuestPos = CFrame["new"](-16666.5703125, 105.29138183594, 1576.6925048828)
-		EnemyPos = CFrame["new"](-16778.7852, 232.283752, 1442.08325, -0.992449045, -5.54140511e-10, -0.12265785, -2.84580609e-10, 1, -2.21517649e-09, .12265785, -2.16354379e-09, -0.992449045)
-	end
+    elseif Three_World and (L_1_[22]["Value"] >= 2575 and L_1_[22]["Value"] <= 2599) then
+        Enemy = "Skull Slayer";
+		NameEnemy = "Skull Slayer";
+        NameQuest = "TikiQuest3";
+        QuestNumber = 2;
+        QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
+        EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
+    elseif Three_World and (L_1_[22]["Value"] >= 2600 and L_1_[22]["Value"] <= 2624) then
+        Enemy = "Skull Slayer";
+        NameQuest = "TikiQuest3";
+        NameEnemy = "Skull Slayer";
+        QuestNumber = 2;
+        QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
+        EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
+    elseif Three_World and (L_1_[22]["Value"] >= 2625 and L_1_[22]["Value"] <= 2649) then
+        Enemy = "Skull Slayer";
+        NameQuest = "TikiQuest3";
+        NameEnemy = "Skull Slayer";
+        QuestNumber = 2;
+        QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
+        EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
+    elseif Three_World and (L_1_[22]["Value"] >= 2650 and L_1_[22]["Value"] <= 2750) then
+        Enemy = "Skull Slayer";
+        NameQuest = "TikiQuest3";
+        NameEnemy = "Skull Slayer";
+		QuestNumber = 2;
+        QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
+        EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
+    end
 end
 function TPZ(L_30_arg0)
 	local L_31_ = {}
@@ -2681,7 +2703,7 @@ L_1_[31] = function(L_32_arg0, L_33_arg1, L_34_arg2)
 			{
 				Vector3["new"](-2953.31, 41.01, 2099.17);
 				"Old_World"
-			};
+			}
 		}
 		for L_37_forvar0, L_38_forvar1 in pairs(L_36_[1]) do
 			local L_39_ = {}
@@ -3283,101 +3305,21 @@ L_1_[25] = game:GetService("Workspace")
 L_1_[34] = {}
 L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
-task.spawn(function()
-    -- Lấy config
-    local config = getgenv().StatsConfig or {Enabled = true, Priority = {"Melee","Defense","Sword"}, MeleeDefenseRatio = 10, AfterMaxDefenseSwordRatio = {2,1}}
-    if not config.Enabled then return end
-
-    -- Bộ đếm Melee
-    if not getgenv().meleeCount then
-        getgenv().meleeCount = 0
-    end
-
-    while task.wait(1) do
-        L_1_[45]["p"](function()
-            local plr = L_1_[35]
-            if not plr then return end
-            local data = plr:FindFirstChild("Data")
-            if not data then return end
-            local points = data:FindFirstChild("Points")
-            if not points or points.Value <= 0 then return end
-            local stats = data:FindFirstChild("Stats")
-            if not stats then return end
-
-            -- Lấy level các chỉ số
-            local statLevels = {}
-            for _, statName in ipairs(config.Priority) do
-                local stat = stats:FindFirstChild(statName)
-                if stat then
-                    local lv = stat:FindFirstChild("Level")
-                    if lv then
-                        statLevels[statName] = lv.Value
-                    else
-                        statLevels[statName] = 2800  -- coi như max nếu không có level? 
-                    end
-                else
-                    statLevels[statName] = 2800
-                end
-            end
-
-            local commF = L_1_[46]["Remotes"]["CommF_"]
-
-            local function addOne(stat)
-                commF:InvokeServer("AddPoint", stat, 1)
-                -- Refresh points
-                points = data:FindFirstChild("Points")
-                -- Refresh level
-                local s = stats:FindFirstChild(stat)
-                if s then
-                    local lv = s:FindFirstChild("Level")
-                    if lv then
-                        statLevels[stat] = lv.Value
-                    end
-                end
-                if stat == "Melee" then
-                    getgenv().meleeCount = getgenv().meleeCount + 1
-                end
-            end
-
-            -- Xác định trạng thái
-            local meleeLv = statLevels["Melee"] or 2800
-            local defenseLv = statLevels["Defense"] or 2800
-            local swordLv = statLevels["Sword"] or 2800
-
-            -- Trường hợp Melee chưa max
-            if meleeLv < 2800 then
-                while points.Value > 0 do
-                    addOne("Melee")
-                    if getgenv().meleeCount % config.MeleeDefenseRatio == 0 and defenseLv < 2800 and points.Value > 0 then
-                        addOne("Defense")
-                    end
-                end
-                return
-            end
-
-            -- Trường hợp Melee đã max
-            local defStep = config.AfterMaxDefenseSwordRatio[1] or 2
-            local swordStep = config.AfterMaxDefenseSwordRatio[2] or 1
-            local cycleStep = 0
-            while points.Value > 0 do
-                if defenseLv < 2800 and cycleStep < defStep then
-                    addOne("Defense")
-                    cycleStep = cycleStep + 1
-                elseif swordLv < 2800 then
-                    addOne("Sword")
-                    cycleStep = 0
-                else
-                    break
-                end
-            end
-
-            -- Buso
-            if plr.Character and not plr.Character:FindFirstChild("HasBuso") then
-                commF:InvokeServer("Buso")
-            end
-        end)
-    end
-end)
+task["spawn"](function()
+	while task["wait"](.5) do
+		L_1_[45]["p"](function()
+			if L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] < 2800 then
+				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Melee", L_1_[35]["Data"]["Points"]["Value"])
+			end
+			if L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] >= 2800 and (L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Defense"]["Level"]["Value"] < 2700) then
+				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Defense", L_1_[35]["Data"]["Points"]["Value"])
+			end
+			if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("Buso")
+			end
+		end)
+	end
+end);
 (getgenv())["Fast Attack"] = true
 L_1_[20] = 0
 task["spawn"](function()
@@ -4677,7 +4619,7 @@ task["spawn"](function()
 							return
 						end
 						if (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") and (not L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor") and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "3") == -2 and Mirror_Fractal_H)) then
-							Quest = "Pull Lever"
+							Quest = "Pull Lerver"
 							return
 						end
 						if L_1_[50]() then
@@ -7449,19 +7391,25 @@ task["spawn"](function()
 				until not L_1_[45]["CheckBoss"]("Longma")
 				elseif Quest == "Soul Guitar" then
 					if L_1_[45]["CheckItem"]("Bones") < 500 then
+						-- Nếu chưa có đủ 500 Bones, chuyển đến Haunted Castle để farm
 						if Three_World then
+							-- Kiểm tra xem đã ở Haunted Castle chưa
 							local hauntedPos = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625)
 							if (hauntedPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
+								-- Teleport đến gần khu vực
 								L_1_[31](hauntedPos, 1.5)
 							else
+								-- Farm bone
 								L_1_[45]["FarmBone"](false)
 							end
 						else
+							-- Nếu chưa ở Third Sea, tự động đi đến
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 							TleP = true
 							wait(50)
 						end
 					elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
+						-- Farm Ectoplasm ở Second Sea (Ship)
 						if New_World then
 							local shipPos = CFrame.new(921.30249023438, 125.400390625, 32937.34375)
 							if (shipPos.Position - L_1_[35].Character.HumanoidRootPart.Position).Magnitude > 3000 then
@@ -7626,7 +7574,7 @@ task["spawn"](function()
 				elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("HornedMan", "Bet") == 1 then
 					return
 				end
-			elseif Quest == "Pull Lever" then
+			elseif Quest == "Pull Lerver" then
 				if not ExSeb then
 					if (game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer("RaceV4Progress", "Check") == 1 then
 						local L_599_ = {}
