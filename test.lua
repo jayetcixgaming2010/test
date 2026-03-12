@@ -1,698 +1,653 @@
 --[[
-    Tên Script: Khfresh Hub v27 - Titan Fishing Ultimate
-    Cập nhật v27:
-      - Dùng đúng remote path: ReplicatedStorage.Communication.Events / .Functions
-      - Auto Farm hook __namecall để sync số START/RELEASE/DAMAGE/SKILL tự động
-      - Auto Sell dùng remote trực tiếp (không cần đứng gần NPC)
-      - Auto Roll Skill dùng remote trực tiếp (không cần teleport)
-      - Giữ nguyên UI WindUI + tên Khfresh Hub
+    Tên Script: Khfresh Hub v23 - Fixed & Optimized
+    Mô tả: Script hỗ trợ tự động câu cá và teleport trong game.
+    Đã sửa lỗi: Auto Farm, Dropdown skill, Teleport dùng Tween với tốc độ 310 studs/s
+              Thêm nút Auto Use VIP Skill, điểm Sell Fish, Store, Auto Spin từ xa
 --]]
 
-local Players           = game:GetService("Players")
-local RunService        = game:GetService("RunService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local TweenService      = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+local Stats = game:GetService("Stats")
+local TeleportService = game:GetService("TeleportService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CoreGui           = game:GetService("CoreGui")
-local AssetService      = game:GetService("AssetService")
+local AssetService = game:GetService("AssetService")
+local ContextActionService = game:GetService("ContextActionService")
+local TweenService = game:GetService("TweenService")
 
-local player    = Players.LocalPlayer
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 local guiParent = gethui and gethui() or CoreGui
 
--- ==================== WINDUI ====================
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-if not WindUI then warn("Không thể tải WindUI.") return end
+-- Tải và khởi tạo thư viện WindUI
+local WindUI
+local success, result = pcall(function()
+    local windUIContent = game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua")
+    WindUI = loadstring(windUIContent)()
+end)
 
+if not (success and WindUI) then
+    warn("Không thể tải WindUI. Script sẽ không hoạt động.")
+    return
+end
+
+-- Tạo cửa sổ chính
 local Window = WindUI:CreateWindow({
-    Author = "Khfresh",
-    Folder = "KhfreshHub_TitanFishing",
-    Icon   = "rbxassetid://97028818666741",
-    Size   = UDim2.fromOffset(640, 580),
-    Theme  = "Dark",
-    Title  = "Khfresh Hub - Titan Fishing Ultimate"
+    Author = "AwesomeKhfresh",
+    Folder = "KhfreshHub_V23",
+    Icon = "rbxassetid://97028818666741",
+    Size = UDim2.fromOffset(560, 460),
+    Theme = "Dark",
+    Title = "Khfresh Hub v23 - Optimized"
 })
 
--- ==================== REMOTE PATH ====================
--- Game dùng: ReplicatedStorage.Communication.Events & .Functions
-local Communication = ReplicatedStorage:WaitForChild("Communication", 10)
-local Events        = Communication and Communication:WaitForChild("Events", 10)
-local Functions     = Communication and Communication:WaitForChild("Functions", 10)
-
--- Cache tất cả remote để dùng nhanh
-local Remote = {}
-if Events then
-    for _, v in ipairs(Events:GetDescendants()) do
-        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-            Remote[v.Name] = v
-        end
-    end
-end
-if Functions then
-    for _, v in ipairs(Functions:GetDescendants()) do
-        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-            Remote[v.Name] = v
-        end
-    end
-end
-
--- Debug: in ra danh sách remote tìm được
-print("=== [KhfreshHub] Remotes found ===")
-for name, _ in pairs(Remote) do print(" -", name) end
-print("==================================")
-
--- ==================== BIẾN ====================
-local autoFarmEnabled   = false
-local autoSellEnabled   = false
-local autoRollEnabled   = false
-local autoBuyRodEnabled = false
-local fpsBoostEnabled   = false
-local targetRarity      = "Legendary"
-local tweenSpeed        = 310
-local reelDelay         = 0.05
-local sellInterval      = 10
-local catchCount        = 0
-local customX, customY, customZ = 0, 0, 0
-
--- Giá trị sync từ hook (sẽ tự fill khi Sync)
-local syncedStart   = nil
-local syncedRelease = nil
-local syncedDamage  = nil
-local syncedSkill   = nil
-
+-- Biến toàn cục
+local autoFarmEnabled = false
+local autoSkillEnabled = false
+local selectedSkills = {}
 local farmThread = nil
-local rollThread = nil
+local skillThread = nil
+local clickDelay = 0.5
+local tweenSpeed = 310 -- tốc độ mặc định (studs/s)
 
--- ==================== TIỆN ÍCH ====================
-local function getHRP()
-    local c = player.Character
-    return c and c:FindFirstChild("HumanoidRootPart")
-end
-
-local function snapTo(cf)
-    local hrp = getHRP()
-    if hrp then hrp.CFrame = cf end
-end
-
-local function teleportTo(cf)
-    local hrp = getHRP()
-    if not hrp then return end
-    local dist = (hrp.Position - cf.Position).Magnitude
-    local dur  = math.max(dist / tweenSpeed, 0.05)
-    local tw   = TweenService:Create(hrp, TweenInfo.new(dur, Enum.EasingStyle.Linear), {CFrame = cf})
-    tw:Play(); tw.Completed:Wait()
-end
-
-local function findGui(keywords, class)
-    class = class or "TextButton"
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return nil end
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj:IsA(class) and obj.Visible then
-            local src = (obj.Name .. " " .. (pcall(function() return obj.Text end) and obj.Text or "")):lower()
-            for _, kw in ipairs(keywords) do
-                if src:find(kw:lower()) then return obj end
+-- Hàm tìm Fishing Button
+local function findFishingButton()
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if playerGui then
+        for _, gui in ipairs(playerGui:GetDescendants()) do
+            if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                if gui.Name:lower():find("fish") or gui.Name:lower():find("cast") then
+                    return gui
+                end
             end
         end
     end
+    
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Part") and obj:FindFirstChild("ClickDetector") then
+            if obj.Name:lower():find("fish") or obj.Name:lower():find("water") then
+                return obj
+            end
+        end
+    end
+    
     return nil
 end
 
-local function clickGui(btn)
-    if not btn then return end
-    pcall(function() btn:Click() end)
-end
-
--- Fire RemoteEvent theo tên (tìm trong cache)
-local function fireRemote(name, ...)
-    local r = Remote[name]
-    if r then
-        if r:IsA("RemoteEvent") then
-            pcall(function() r:FireServer(...) end)
-            return true
-        elseif r:IsA("RemoteFunction") then
-            local ok, res = pcall(function() return r:InvokeServer(...) end)
-            return ok and res
-        end
-    end
-    return false
-end
-
--- ==================== HOOK __namecall ĐỂ SYNC ====================
--- Khi player bấm Sync trong game gốc, hook sẽ bắt được args
--- và lưu lại để dùng cho auto farm
-local hookedNamecall
-if hookmetamethod then
-    hookedNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        local args   = {...}
-
-        -- Bắt InvokeServer / FireServer từ remote trong Communication
-        if (method == "InvokeServer" or method == "FireServer") then
-            local ok, fullName = pcall(function() return self:GetFullName() end)
-            if ok and fullName and fullName:find("Communication") then
-                -- In ra để debug
-                -- print("[Hook]", fullName, method, table.unpack(args))
-
-                -- Nếu remote liên quan fishing → lưu args
-                local lname = self.Name:lower()
-                if lname:find("fish") or lname:find("cast") or lname:find("reel") or lname:find("start") then
-                    -- Lưu các số tự động phát hiện
-                    for i, v in ipairs(args) do
-                        if type(v) == "number" then
-                            if i == 1 then syncedStart   = v end
-                            if i == 2 then syncedRelease = v end
-                            if i == 3 then syncedDamage  = v end
-                            if i == 4 then syncedSkill   = v end
-                        end
-                    end
-                end
-            end
-        end
-
-        return hookedNamecall(self, ...)
-    end)
-end
-
--- ==================== SYNC SERVER ====================
--- Bắt chước nút "Sync" của LuvHub: gọi remote Sync/Init để lấy số
-local function doSync()
-    -- Thử các tên remote sync phổ biến trong game
-    local syncNames = {"Sync", "Init", "Initialize", "SyncFishing", "SyncShop", "GetData", "Connect"}
-    for _, name in ipairs(syncNames) do
-        local r = Remote[name]
-        if r then
-            pcall(function()
-                if r:IsA("RemoteFunction") then
-                    local res = r:InvokeServer()
-                    if type(res) == "table" then
-                        -- Parse kết quả nếu có số
-                        for k, v in pairs(res) do
-                            local kl = tostring(k):lower()
-                            if kl:find("start") then syncedStart = v end
-                            if kl:find("release") then syncedRelease = v end
-                            if kl:find("damage") then syncedDamage = v end
-                            if kl:find("skill") then syncedSkill = v end
-                        end
-                    end
-                elseif r:IsA("RemoteEvent") then
-                    r:FireServer()
-                end
-            end)
-        end
-    end
-    Window:Notify({Title = "Sync", Content = "Đã sync server!", Duration = 2})
-end
-
--- ==================== AUTO FARM ====================
-local function isInReelPhase()
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return false end
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj.Visible then
-            local n = obj.Name:lower()
-            if n:find("reel") or n:find("pull") or n:find("minigame") or n:find("progress") then
-                return true
-            end
-        end
-    end
-    return false
-end
-
-local function spamClick(maxDur)
-    local t = tick()
-    while tick() - t < maxDur and autoFarmEnabled do
-        if not isInReelPhase() then break end
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true,  game, 1)
-        task.wait(reelDelay)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
-        task.wait(reelDelay)
-    end
-end
-
-local function doCast()
-    -- Thử remote Cast trực tiếp
-    local castNames = {"Cast", "CastLine", "StartFishing", "Throw", "Fish", "StartCast"}
-    for _, name in ipairs(castNames) do
-        if fireRemote(name) then return true end
-    end
-    -- Fallback: click GUI button
-    local castBtn = findGui({"cast", "fish", "throw", "bait", "start"})
-    if castBtn then clickGui(castBtn); return true end
-    return false
-end
-
-local function doReel()
-    -- Thử remote Reel trực tiếp với synced values
-    local reelNames = {"Reel", "Pull", "ReelFish", "StartReel", "Damage", "Attack"}
-    for _, name in ipairs(reelNames) do
-        if syncedStart then
-            -- Kirim args yang di-sync
-            if fireRemote(name, syncedStart, syncedRelease, syncedDamage, syncedSkill) then
-                return true
-            end
+-- Hàm mô phỏng click (ưu tiên :Click() không di chuột)
+local function simulateClick(target)
+    if not target then return false end
+    
+    if target:IsA("GuiButton") then
+        local success, err = pcall(function()
+            target:Click()
+        end)
+        if success then 
+            return true 
         else
-            if fireRemote(name) then return true end
+            local pos = target.AbsolutePosition + (target.AbsoluteSize / 2)
+            VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 1)
+            task.wait(0.05)
+            VirtualInputManager:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 1)
+            return true
+        end
+    elseif target:IsA("Part") and target:FindFirstChild("ClickDetector") then
+        local detector = target:FindFirstChild("ClickDetector")
+        if detector then
+            fireclickdetector(detector)
+            return true
         end
     end
-    -- Fallback: spam click
-    spamClick(12)
-    return true
+    
+    return false
 end
 
-local function doSell()
-    -- Jual via remote langsung
-    local sellNames = {"SellFish", "Sell", "SellAll", "SellOne", "SellAllFish"}
-    local sold = false
-    for _, name in ipairs(sellNames) do
-        if fireRemote(name) then sold = true; break end
-    end
-
-    if not sold then
-        -- Fallback: teleport ke NPC, click GUI
-        local savedCF = getHRP() and getHRP().CFrame
-        local sellCF  = CFrame.new(208.996, 22.445, 59.334)
-        snapTo(sellCF)
-        task.wait(0.5)
-        local sellBtn = findGui({"sell all", "sell", "jual", "confirm"})
-        if sellBtn then clickGui(sellBtn) end
-        task.wait(0.3)
-        if savedCF then snapTo(savedCF) end
-    end
-
-    catchCount = 0
-    Window:Notify({Title = "Auto Sell", Content = "Đã bán cá!", Duration = 2})
-end
-
+-- Auto Farm Loop
 local function autoFarmLoop()
     while autoFarmEnabled do
-        -- 1. Cast
-        doCast()
-
-        -- 2. Chờ bite (GUI reel xuất hiện, timeout 15s)
-        local biteTimer = 0
-        local bitten    = false
-        while biteTimer < 15 and autoFarmEnabled do
-            if isInReelPhase() then bitten = true; break end
-            task.wait(0.25); biteTimer = biteTimer + 0.25
+        local fishingButton = findFishingButton()
+        if fishingButton then
+            simulateClick(fishingButton)
         end
-
-        -- 3. Reel
-        if bitten then
-            doReel()
-            -- Chờ reel kết thúc
-            local endT = 0
-            while isInReelPhase() and endT < 8 and autoFarmEnabled do
-                task.wait(0.2); endT = endT + 0.2
-            end
-            catchCount = catchCount + 1
-        end
-
-        -- 4. Auto Sell
-        if autoSellEnabled and catchCount >= sellInterval then
-            doSell()
-        end
-
-        task.wait(0.3)
+        task.wait(clickDelay)
     end
 end
 
--- ==================== AUTO ROLL (REMOTE LANGSUNG) ====================
-local rarityRank = {Common = 1, Rare = 2, Epic = 3, Legendary = 4, Mythical = 5}
-
-local function getRarityFromText(text)
-    text = text:lower()
-    if text:find("mythic")  then return "Mythical"
-    elseif text:find("legend") then return "Legendary"
-    elseif text:find("epic")   then return "Epic"
-    elseif text:find("rare")   then return "Rare"
-    elseif text:find("common") then return "Common" end
-    return nil
-end
-
-local function tryRollRemote()
-    -- Thử tất cả tên remote liên quan spin/skill book
-    local rollNames = {
-        "SpinSkill", "RollSkill", "Spin", "Roll", "Gacha",
-        "DrawSkill", "GetSkill", "RerollSkill", "SkillSpin",
-        "SpinBook", "RollBook", "Innate", "InnateRoll"
-    }
-    for _, name in ipairs(rollNames) do
-        local r = Remote[name]
-        if r then
-            local ok, res = pcall(function()
-                if r:IsA("RemoteFunction") then
-                    return r:InvokeServer()
-                else
-                    r:FireServer()
-                    return true
-                end
-            end)
-            if ok then
-                -- Coba parse hasil rarity dari response
-                if type(res) == "string" then
-                    return getRarityFromText(res)
-                elseif type(res) == "table" then
-                    for k, v in pairs(res) do
-                        if type(v) == "string" then
-                            local r2 = getRarityFromText(v)
-                            if r2 then return r2 end
-                        end
-                    end
-                end
-                return true -- fired tapi ga ada hasil rarity
-            end
-        end
+local function startAutoFarm()
+    if farmThread then
+        task.cancel(farmThread)
+        farmThread = nil
     end
-    return nil
+    farmThread = task.spawn(autoFarmLoop)
 end
 
-local function readRarityFromGui()
-    local pg = player:FindFirstChild("PlayerGui")
-    if not pg then return nil end
-    for _, obj in ipairs(pg:GetDescendants()) do
-        if obj:IsA("TextLabel") and obj.Visible then
-            local r = getRarityFromText(obj.Text)
-            if r then return r end
-        end
-    end
-    return nil
+local function stopAutoFarm()
+    autoFarmEnabled = false
+    farmThread = nil
 end
 
-local SKILLBOOK_CF = CFrame.new(120.668, 67.663, -41.885)
-
-local function autoRollLoop()
-    while autoRollEnabled do
-        local hrp    = getHRP()
-        if not hrp then task.wait(1); continue end
-        local savedCF = hrp.CFrame
-
-        -- 1. Coba remote langsung dulu (tidak perlu teleport)
-        local remoteResult = tryRollRemote()
-
-        local gotRarity = nil
-
-        if remoteResult then
-            -- Remote berhasil
-            if type(remoteResult) == "string" then
-                gotRarity = remoteResult
-            end
-            task.wait(2) -- tunggu animasi
-            gotRarity = gotRarity or readRarityFromGui()
-        else
-            -- Remote gagal → snap ke NPC, click, balik
-            snapTo(SKILLBOOK_CF)
-            task.wait(0.2)
-
-            -- Click ClickDetector NPC
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("ClickDetector") then
-                    local n = (obj.Parent and obj.Parent.Name or ""):lower()
-                    if n:find("skill") or n:find("book") or n:find("spin") then
-                        pcall(fireclickdetector, obj)
-                        break
-                    end
+-- Auto Skill Loop
+local function autoSkillLoop()
+    while autoSkillEnabled do
+        if #selectedSkills > 0 then
+            for _, skill in ipairs(selectedSkills) do
+                local keyCode = Enum.KeyCode[skill]
+                if keyCode then
+                    VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+                    task.wait(0.2)
                 end
             end
-            task.wait(0.5)
-
-            -- Click tombol spin di GUI
-            local spinBtn = findGui({"spin", "roll", "draw", "gacha", "quay", "reroll", "summon"})
-            if spinBtn then
-                clickGui(spinBtn)
-                task.wait(2.5)
-                gotRarity = readRarityFromGui()
-            end
-
-            -- Tutup popup
-            local closeBtn = findGui({"close", "ok", "back", "cancel", "tiếp", "continue", "exit"})
-            if closeBtn then clickGui(closeBtn) end
-            task.wait(0.2)
-
-            -- Balik ke posisi semula
-            snapTo(savedCF)
         end
-
-        -- 2. Cek apakah sudah mencapai target
-        if gotRarity then
-            local rank   = rarityRank[gotRarity] or 0
-            local target = rarityRank[targetRarity] or 4
-            Window:Notify({
-                Title   = "Auto Roll",
-                Content = "Roll ra: " .. gotRarity,
-                Duration = 2
-            })
-            if rank >= target then
-                Window:Notify({
-                    Title   = "Auto Roll ✅",
-                    Content = "Đạt " .. gotRarity .. "! Dừng roll.",
-                    Duration = 6
-                })
-                autoRollEnabled = false
-                break
-            end
-        end
-
-        task.wait(0.5)
+        task.wait(1)
     end
 end
 
--- ==================== FPS BOOST ====================
-local defaultFX = {}
-local function applyFpsBoost()
-    local L = game:GetService("Lighting")
-    defaultFX = {GlobalShadows = L.GlobalShadows, FogEnd = L.FogEnd, ShadowSoftness = L.ShadowSoftness}
-    L.GlobalShadows  = false
-    L.FogEnd         = 9e9
-    L.ShadowSoftness = 0
-    for _, fx in ipairs(L:GetChildren()) do
-        if fx:IsA("PostEffect") or fx:IsA("Atmosphere") then pcall(fx.Destroy, fx) end
+local function startAutoSkill()
+    if skillThread then
+        task.cancel(skillThread)
+        skillThread = nil
     end
-    pcall(function() settings().Rendering.QualityLevel = Enum.QualityLevel.Level01 end)
-    Window:Notify({Title = "FPS Boost", Content = "Đã bật!", Duration = 2})
-end
-local function removeFpsBoost()
-    local L = game:GetService("Lighting")
-    pcall(function()
-        L.GlobalShadows  = defaultFX.GlobalShadows or true
-        L.FogEnd         = defaultFX.FogEnd or 100000
-        L.ShadowSoftness = defaultFX.ShadowSoftness or 0.5
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-    end)
-    Window:Notify({Title = "FPS Boost", Content = "Đã tắt.", Duration = 2})
+    skillThread = task.spawn(autoSkillLoop)
 end
 
--- ==================== TELEPORT POINTS ====================
-local teleportPoints = {
-    ["Island 1"]   = CFrame.new(282,    29.8,   51.2),
-    ["Island 2"]   = CFrame.new(1491.4, 25.6,  -451.1),
-    ["Island 3"]   = CFrame.new(990,    28.1,   1272),
-    ["Island 4"]   = CFrame.new(631.4,  28.1,  -846.7),
-    ["Island 5"]   = CFrame.new(-337.1, 29.9,   829.6),
-    ["Skill Book"] = CFrame.new(120.668, 67.663, -41.885),
-    ["Skill Shop"] = CFrame.new(208.996, 22.445,  59.334),
-    ["Sell Fish"]  = CFrame.new(208.996, 22.445,  59.334),
-    ["Store"]      = CFrame.new(168.837, 23.990,  73.590),
-}
+local function stopAutoSkill()
+    autoSkillEnabled = false
+    skillThread = nil
+end
 
--- ==================== GUI TABS ====================
-
--- TAB: FISHING
+-- Tab Fishing
 local FishingTab = Window:Tab({Icon = "fish", Title = "Fishing"})
-
-FishingTab:Button({
-    Title = "🔄 Sync Server",
-    Description = "Sync remote trước khi dùng Auto Farm",
-    Callback = function() doSync() end
-})
 
 FishingTab:Toggle({
     Title = "Auto Farm",
-    Description = "Tự động cast → reel → sell",
+    Description = "Tự động Click vào FishingButton",
     Value = false,
-    Callback = function(v)
-        autoFarmEnabled = v
-        if v then farmThread = task.spawn(autoFarmLoop)
-        else if farmThread then pcall(task.cancel, farmThread) end end
+    Callback = function(value)
+        autoFarmEnabled = value
+        if autoFarmEnabled then
+            startAutoFarm()
+            Window:Notify({Title = "Khfresh Hub", Content = "Auto Farm đã được bật!", Duration = 3})
+        else
+            stopAutoFarm()
+            Window:Notify({Title = "Khfresh Hub", Content = "Auto Farm đã tắt", Duration = 3})
+        end
     end
 })
+
+FishingTab:Slider({
+    Title = "Click Delay (seconds)",
+    Description = "Thời gian chờ giữa các lần click",
+    Min = 0.1,
+    Max = 2,
+    Default = 0.5,
+    Callback = function(value)
+        clickDelay = value
+    end
+})
+
+local skillOptions = {"Z", "X", "C", "V"}
+local skillDropdown = FishingTab:Dropdown({
+    Title = "Select Skills",
+    Description = "Chọn các phím kỹ năng sẽ tự động sử dụng",
+    Multi = true,
+    Options = skillOptions,
+    Callback = function(values)
+        selectedSkills = values
+        print("Kỹ năng đã chọn:", table.concat(selectedSkills, ", "))
+        if #selectedSkills > 0 then
+            Window:Notify({Title = "Khfresh Hub", Content = "Đã chọn " .. #selectedSkills .. " kỹ năng: " .. table.concat(selectedSkills, ", "), Duration = 3})
+        end
+    end
+})
+
+task.spawn(function()
+    task.wait(0.5)
+    skillDropdown:Refresh(skillOptions, true)
+    if skillDropdown and skillDropdown.Main then
+        skillDropdown.Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    end
+end)
 
 FishingTab:Toggle({
-    Title = "Auto Sell Fish",
-    Description = "Tự động bán sau N lần câu",
+    Title = "Auto Skill",
+    Description = "Tự động sử dụng kỹ năng đã chọn",
     Value = false,
-    Callback = function(v) autoSellEnabled = v end
-})
-
-FishingTab:Slider({
-    Title = "Sell Interval (lần câu)",
-    Min = 1, Max = 30, Default = 10,
-    Callback = function(v) sellInterval = v end
-})
-
-FishingTab:Slider({
-    Title = "Reel Speed (delay giây)",
-    Description = "Nhỏ hơn = spam nhanh hơn",
-    Min = 0.01, Max = 0.3, Default = 0.05,
-    Callback = function(v) reelDelay = v end
-})
-
--- Manual override: set số thủ công nếu cần
-FishingTab:Label({Title = "─── Manual Override (nếu Sync thất bại) ───"})
-
-FishingTab:Input({
-    Title = "Number START",
-    Default = "",
-    Callback = function(v) syncedStart = tonumber(v) end
-})
-FishingTab:Input({
-    Title = "Number RELEASE",
-    Default = "",
-    Callback = function(v) syncedRelease = tonumber(v) end
-})
-FishingTab:Input({
-    Title = "Number DAMAGE",
-    Default = "",
-    Callback = function(v) syncedDamage = tonumber(v) end
-})
-FishingTab:Input({
-    Title = "Number SKILL",
-    Default = "",
-    Callback = function(v) syncedSkill = tonumber(v) end
-})
-
--- TAB: SKILL ROLL
-local SkillTab = Window:Tab({Icon = "zap", Title = "Skill"})
-
-SkillTab:Toggle({
-    Title = "Auto Roll Skill Book",
-    Description = "Roll remote langsung, TIDAK perlu ke NPC",
-    Value = false,
-    Callback = function(v)
-        autoRollEnabled = v
-        if v then rollThread = task.spawn(autoRollLoop)
-        else if rollThread then pcall(task.cancel, rollThread) end end
+    Callback = function(value)
+        autoSkillEnabled = value
+        if autoSkillEnabled then
+            if #selectedSkills == 0 then
+                Window:Notify({Title = "Cảnh báo", Content = "Vui lòng chọn kỹ năng trước!", Duration = 3})
+                autoSkillEnabled = false
+                return
+            end
+            startAutoSkill()
+            Window:Notify({Title = "Khfresh Hub", Content = "Auto Skill đã được bật!", Duration = 3})
+        else
+            stopAutoSkill()
+            Window:Notify({Title = "Khfresh Hub", Content = "Auto Skill đã tắt", Duration = 3})
+        end
     end
 })
 
-SkillTab:Dropdown({
-    Title = "Target Rarity",
-    Options = {"Common", "Rare", "Epic", "Legendary", "Mythical"},
-    Default = "Legendary",
-    Callback = function(v) targetRarity = v end
-})
-
-SkillTab:Button({
-    Title = "Roll 1x (Manual)",
-    Description = "Roll sekali dan lihat hasilnya",
+FishingTab:Button({
+    Title = "Test Find Fishing Button",
+    Description = "Kiểm tra tìm nút câu cá",
     Callback = function()
-        local r = tryRollRemote()
-        task.wait(2)
-        local got = (type(r) == "string" and r) or readRarityFromGui() or "?"
-        Window:Notify({Title = "Roll", Content = "Hasil: " .. got, Duration = 4})
+        local button = findFishingButton()
+        if button then
+            Window:Notify({Title = "Thành công", Content = "Đã tìm thấy Fishing Button: " .. button.ClassName .. " - " .. button.Name, Duration = 5})
+        else
+            Window:Notify({Title = "Thất bại", Content = "Không tìm thấy Fishing Button!", Duration = 3})
+        end
     end
 })
 
--- TAB: TELEPORT
+-- ==================== AUTO USE VIP SKILL ====================
+FishingTab:Button({
+    Title = "Auto Use VIP Skill",
+    Description = "Tự động vào Inventory, chọn cần câu hiện tại và dùng skill VIP nhất",
+    Callback = function()
+        task.spawn(function()
+            Window:Notify({Title = "VIP Skill", Content = "Đang xử lý...", Duration = 2})
+            
+            local function openInventory()
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if not playerGui then return false end
+                for _, gui in ipairs(playerGui:GetDescendants()) do
+                    if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                        local name = gui.Name:lower()
+                        if name:find("inventory") or name:find("bag") or name:find("backpack") then
+                            simulateClick(gui)
+                            task.wait(0.5)
+                            return true
+                        end
+                    end
+                end
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.I, false, game)
+                task.wait(0.1)
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.I, false, game)
+                task.wait(0.5)
+                return true
+            end
+            
+            local function findCurrentRod()
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if not playerGui then return nil end
+                for _, gui in ipairs(playerGui:GetDescendants()) do
+                    if gui:IsA("ImageButton") or gui:IsA("TextButton") then
+                        local itemName = gui.Name:lower()
+                        if itemName:find("rod") or itemName:find("cần") or itemName:find("lean") or itemName:find("reel") then
+                            return gui
+                        end
+                    end
+                end
+                for _, gui in ipairs(playerGui:GetDescendants()) do
+                    if gui:IsA("ImageButton") then
+                        for _, child in ipairs(gui:GetChildren()) do
+                            if child:IsA("TextLabel") and child.Text:lower():find("equipped") then
+                                return gui
+                            end
+                        end
+                    end
+                end
+                return nil
+            end
+            
+            local function selectVipSkill()
+                task.wait(0.5)
+                local playerGui = player:FindFirstChild("PlayerGui")
+                if not playerGui then return false end
+                local skillButtons = {}
+                for _, gui in ipairs(playerGui:GetDescendants()) do
+                    if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+                        local fullText = gui.Name:lower()
+                        local textLabel = gui:FindFirstChild("TextLabel")
+                        if textLabel then
+                            fullText = fullText .. " " .. textLabel.Text:lower()
+                        end
+                        local priority = 0
+                        if fullText:find("vip") or fullText:find("legend") then priority = 4
+                        elseif fullText:find("epic") then priority = 3
+                        elseif fullText:find("rare") then priority = 2
+                        elseif fullText:find("common") then priority = 1
+                        end
+                        if priority > 0 then
+                            table.insert(skillButtons, {button = gui, priority = priority})
+                        end
+                    end
+                end
+                table.sort(skillButtons, function(a, b) return a.priority > b.priority end)
+                if #skillButtons > 0 then
+                    simulateClick(skillButtons[1].button)
+                    task.wait(0.2)
+                    return true
+                end
+                return false
+            end
+            
+            if not openInventory() then
+                Window:Notify({Title = "VIP Skill", Content = "Không thể mở Inventory!", Duration = 3})
+                return
+            end
+            local rod = findCurrentRod()
+            if rod then
+                simulateClick(rod)
+                if selectVipSkill() then
+                    Window:Notify({Title = "VIP Skill", Content = "Đã chọn skill VIP!", Duration = 3})
+                else
+                    Window:Notify({Title = "VIP Skill", Content = "Không tìm thấy skill VIP!", Duration = 3})
+                end
+            else
+                Window:Notify({Title = "VIP Skill", Content = "Không tìm thấy cần câu hiện tại!", Duration = 3})
+            end
+        end)
+    end
+})
+-- ==================== KẾT THÚC AUTO VIP SKILL ====================
+
+-- ==================== TELEPORT TAB (TỐC ĐỘ 310) ====================
 local TeleportTab = Window:Tab({Icon = "map-pinned", Title = "Teleport"})
 
+local function teleportWithTween(target)
+    local character = player.Character
+    if not character then
+        character = player.CharacterAdded:Wait()
+    end
+    
+    local hrp = character:WaitForChild("HumanoidRootPart", 5)
+    if hrp then
+        local destCFrame
+        if typeof(target) == "CFrame" then
+            destCFrame = target
+        else
+            destCFrame = CFrame.new(target)
+        end
+        
+        local distance = (hrp.Position - destCFrame.Position).Magnitude
+        local duration = math.max(distance / tweenSpeed, 0.1)
+        
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+        local goal = {CFrame = destCFrame}
+        local tween = TweenService:Create(hrp, tweenInfo, goal)
+        tween:Play()
+        
+        tween.Completed:Wait()
+        
+        Window:Notify({
+            Title = "Teleport",
+            Content = string.format("Đã dịch chuyển! (%.1f studs)", distance),
+            Duration = 2
+        })
+    else
+        warn("Không thể teleport: Thiếu HumanoidRootPart.")
+    end
+end
+
+-- Hàm tìm nút spin trong GUI
+local function findSpinButton()
+    local playerGui = player:FindFirstChild("PlayerGui")
+    if not playerGui then return nil end
+    for _, gui in ipairs(playerGui:GetDescendants()) do
+        if gui:IsA("TextButton") or gui:IsA("ImageButton") then
+            local txt = gui.Name:lower() .. " " .. (gui:FindFirstChild("TextLabel") and gui:FindFirstChild("TextLabel").Text:lower() or "")
+            if txt:find("spin") or txt:find("roll") or txt:find("gacha") or txt:find("mở") or txt:find("quay") then
+                return gui
+            end
+        end
+    end
+    return nil
+end
+
+-- Thanh trượt điều chỉnh tốc độ
 TeleportTab:Slider({
     Title = "Tween Speed (studs/s)",
-    Min = 50, Max = 2000, Default = 310,
-    Callback = function(v) tweenSpeed = v end
+    Description = "Tốc độ di chuyển (mặc định 310)",
+    Min = 100,
+    Max = 1000,
+    Default = 310,
+    Callback = function(value)
+        tweenSpeed = value
+    end
 })
 
-for name, cf in pairs(teleportPoints) do
-    local n = name
+-- Danh sách điểm teleport (hỗn hợp Vector3 và CFrame)
+local teleportPoints = {
+    ["Island 1"] = CFrame.new(282, 29.8, 51.2),
+    ["Island 2"] = CFrame.new(1491.4, 25.6, -451.1),
+    ["Island 3"] = CFrame.new(990, 28.1, 1272),
+    ["Island 4"] = CFrame.new(631.4, 28.1, -846.7),
+    ["Island 5"] = CFrame.new(-337.1, 29.9, 829.6),
+    -- Điểm Skill Book (NPC random skill)
+    ["Skill Book"] = CFrame.new(
+        120.66777, 67.662674, -41.885273,
+        -0.0367827006, 1.6738765e-08, 0.999323308,
+        8.67729284e-08, 1, -1.35561962e-08,
+        -0.999323308, 8.62155716e-08, -0.0367827006
+    ),
+    -- Điểm Skill Shop
+    ["Skill Shop"] = CFrame.new(
+        208.996475, 22.4446487, 59.3335266,
+        0.131857201, 7.43682804e-08, 0.991268694,
+        -6.4368777e-08, 1, -6.64610837e-08,
+        -0.991268694, -5.50433832e-08, 0.131857201
+    ),
+    -- Điểm Sell Fish
+    ["Sell Fish"] = CFrame.new(
+        208.996475, 22.4446487, 59.3335266,
+        0.131857201, -8.01955267e-08, 0.991268694,
+        6.94082871e-08, 1, 7.16693052e-08,
+        -0.991268694, 5.93521499e-08, 0.131857201
+    ),
+    -- Điểm Store (mua cần câu, mồi câu)
+    ["Store"] = CFrame.new(
+        168.836685, 23.9898472, 73.5896072,
+        0.199367687, -5.60842262e-10, 0.979924738,
+        -2.40166269e-08, 1, 5.45856382e-09,
+        -0.979924738, -2.46227501e-08, 0.199367687
+    )
+}
+
+-- Tạo các nút teleport
+for name, pos in pairs(teleportPoints) do
     TeleportTab:Button({
-        Title = "Teleport → " .. n,
+        Title = "Teleport to " .. name,
         Callback = function()
-            teleportTo(cf)
-            Window:Notify({Title = "Teleport", Content = "Đến " .. n, Duration = 2})
+            teleportWithTween(pos)
         end
     })
 end
 
-TeleportTab:Label({Title = "─── Custom Teleport ───"})
-TeleportTab:Input({Title = "X", Default = "0", Callback = function(v) customX = tonumber(v) or 0 end})
-TeleportTab:Input({Title = "Y", Default = "0", Callback = function(v) customY = tonumber(v) or 0 end})
-TeleportTab:Input({Title = "Z", Default = "0", Callback = function(v) customZ = tonumber(v) or 0 end})
+-- Nút teleport nhanh đến đảo gần nhất
 TeleportTab:Button({
-    Title = "Teleport to Custom XYZ",
+    Title = "Quick Teleport",
+    Description = "Teleport đến đảo gần nhất",
     Callback = function()
-        teleportTo(CFrame.new(customX, customY, customZ))
-        Window:Notify({
-            Title = "Teleport",
-            Content = string.format("Đến (%.1f, %.1f, %.1f)", customX, customY, customZ),
-            Duration = 2
-        })
-    end
-})
-
--- TAB: MISC
-local MiscTab = Window:Tab({Icon = "settings", Title = "Misc"})
-
-MiscTab:Toggle({
-    Title = "FPS Boost",
-    Description = "Tắt shadow/fog/PostEffect",
-    Value = false,
-    Callback = function(v)
-        fpsBoostEnabled = v
-        if v then applyFpsBoost() else removeFpsBoost() end
-    end
-})
-
-MiscTab:Button({
-    Title = "In Remote List (Console)",
-    Description = "Debug: in tất cả remote tìm được",
-    Callback = function()
-        print("=== Remote List ===")
-        for name, r in pairs(Remote) do
-            print(r.ClassName, name, r:GetFullName())
+        local character = player.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        
+        local currentPos = hrp.Position
+        local nearestPoint = nil
+        local nearestDistance = math.huge
+        
+        for name, pos in pairs(teleportPoints) do
+            local posVec = typeof(pos) == "CFrame" and pos.Position or pos
+            local dist = (currentPos - posVec).Magnitude
+            if dist < nearestDistance then
+                nearestDistance = dist
+                nearestPoint = pos
+            end
         end
-        Window:Notify({Title = "Debug", Content = "Đã in ra console!", Duration = 3})
+        
+        if nearestPoint then
+            teleportWithTween(nearestPoint)
+        end
     end
 })
 
-MiscTab:Button({
-    Title = "Rejoin Server",
+-- Nút Auto Spin Skill Book (từ xa, không di chuyển)
+TeleportTab:Button({
+    Title = "Auto Spin Skill Book (Remote)",
+    Description = "Tự động spin skill book mà không cần di chuyển",
     Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+        task.spawn(function()
+            -- Lấy vị trí của Skill Book
+            local skillBookPos = teleportPoints["Skill Book"]
+            if not skillBookPos then
+                Window:Notify({Title = "Lỗi", Content = "Không tìm thấy điểm Skill Book!", Duration = 3})
+                return
+            end
+            
+            -- Tìm Part có ClickDetector gần vị trí đó
+            local npcPart = nil
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("Part") and obj:FindFirstChild("ClickDetector") then
+                    local dist = (obj.Position - skillBookPos.Position).Magnitude
+                    if dist < 10 then
+                        npcPart = obj
+                        break
+                    end
+                end
+            end
+            
+            if not npcPart then
+                Window:Notify({Title = "Auto Spin", Content = "Không tìm thấy NPC Skill Book!", Duration = 3})
+                return
+            end
+            
+            -- Kích hoạt ClickDetector từ xa
+            fireclickdetector(npcPart:FindFirstChild("ClickDetector"))
+            task.wait(1) -- chờ menu mở
+            
+            -- Tìm nút spin
+            local spinBtn = findSpinButton()
+            if spinBtn then
+                simulateClick(spinBtn)
+                Window:Notify({Title = "Auto Spin", Content = "Đã nhấn nút Spin từ xa!", Duration = 3})
+            else
+                Window:Notify({Title = "Auto Spin", Content = "Không tìm thấy nút Spin!", Duration = 3})
+            end
+        end)
+    end
+})
+-- ==================== KẾT THÚC TELEPORT TAB ====================
+
+-- Tab Settings
+local SettingsTab = Window:Tab({Icon = "settings", Title = "Settings"})
+
+SettingsTab:Button({
+    Title = "Performance Mode",
+    Description = "Xóa bỏ vật liệu và chi tiết thừa để mượt hơn",
+    Callback = function()
+        local deleted = 0
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Part") or obj:IsA("MeshPart") then
+                if obj.Material == Enum.Material.Grass or 
+                   obj.Material == Enum.Material.Leaves or
+                   obj.Name:lower():find("grass") or
+                   obj.Name:lower():find("leaf") then
+                    obj:Destroy()
+                    deleted = deleted + 1
+                end
+            end
+        end
+        Window:Notify({Title = "Performance Mode", Content = "Đã xóa " .. deleted .. " vật thể", Duration = 3})
     end
 })
 
--- ==================== DRAG BUTTON ====================
+SettingsTab:Button({
+    Title = "FPS Boost",
+    Description = "Mở khóa FPS và giảm chất lượng render",
+    Callback = function()
+        pcall(function()
+            setfpscap(9999)
+        end)
+        Lighting.Brightness = 3
+        Lighting.GlobalShadows = false
+        Lighting.ClockTime = 12
+        Lighting.FogEnd = 1000
+        Window:Notify({Title = "FPS Boost", Content = "Đã kích hoạt FPS Boost", Duration = 3})
+    end
+})
+
+SettingsTab:Toggle({
+    Title = "Full Brightness",
+    Description = "Giúp nhìn rõ hơn trong khu vực tối",
+    Callback = function(value)
+        if value then
+            Lighting.Brightness = 3
+            Lighting.GlobalShadows = false
+            Lighting.ClockTime = 12
+            Lighting.FogEnd = 1000
+        else
+            Lighting.Brightness = 1
+            Lighting.GlobalShadows = true
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+        end
+    end
+})
+
+-- Nút GUI phụ
 local guiButton = Instance.new("ScreenGui")
-guiButton.Name          = "KhfreshHubButton"
-guiButton.Parent        = guiParent
-guiButton.ResetOnSpawn  = false
+guiButton.Parent = guiParent
+guiButton.Name = "KhfreshHubButton"
+guiButton.ResetOnSpawn = false
+guiButton.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local btn = Instance.new("ImageButton")
-btn.Parent                 = guiButton
-btn.BackgroundColor3       = Color3.fromRGB(25, 25, 25)
-btn.Position               = UDim2.new(0, 25, 0.5, -27)
-btn.Size                   = UDim2.new(0, 55, 0, 55)
-btn.Image                  = "rbxassetid://80225033364855"
-btn.BackgroundTransparency = 0.3
-btn.Draggable              = true
-btn.MouseButton1Click:Connect(function() Window:Toggle() end)
-local btnCorner = Instance.new("UICorner", btn)
-btnCorner.CornerRadius = UDim.new(0, 12)
+local button = Instance.new("ImageButton")
+button.Parent = guiButton
+button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+button.Position = UDim2.new(0, 25, 0.5, -27.5)
+button.Size = UDim2.new(0, 55, 0, 55)
+button.Image = "rbxassetid://80225033364855"
+button.BackgroundTransparency = 0.3
+button.Active = true
+button.Draggable = true
 
--- ==================== GARBAGE COLLECT ====================
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = button
+
+button.MouseButton1Click:Connect(function()
+    Window:Toggle()
+end)
+
+button.MouseEnter:Connect(function()
+    button.BackgroundTransparency = 0.1
+end)
+
+button.MouseLeave:Connect(function()
+    button.BackgroundTransparency = 0.3
+end)
+
+-- Dọn dẹp cache định kỳ
 task.spawn(function()
     while true do
         task.wait(300)
-        pcall(function() AssetService:ClearContentCache() end)
-        collectgarbage("collect")
+        pcall(function()
+            AssetService:ClearContentCache()
+            collectgarbage("collect")
+        end)
     end
 end)
 
--- ==================== STARTUP ====================
+-- Thông báo khởi động
 task.wait(1)
 Window:Notify({
-    Title   = "Khfresh Hub v27",
-    Content = "Loaded! Bấm 'Sync Server' trước khi dùng Auto Farm.",
-    Duration = 6
+    Title = "Khfresh Hub",
+    Content = "Tối ưu hoàn tất! Tốc độ teleport mặc định 310 studs/s",
+    Duration = 5
 })
-print("✅ Khfresh Hub v27 - Titan Fishing loaded.")
-print("💡 Tip: Bấm 'In Remote List' để xem remotes tìm được.")
+
+print("=== Khfresh Hub Loaded ===")
+print("Player:", player.Name)
+print("Auto Farm:", autoFarmEnabled)
+print("Selected Skills:", #selectedSkills)
+print("==========================")
