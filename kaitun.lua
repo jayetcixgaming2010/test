@@ -50,10 +50,11 @@ getgenv()["TweenSpeed"] = SF["Tween Speed"] or 310
 getgenv()["SelectedTeam"] = SF["Team"] or "Pirates"
 
 -- Anti Redeem Codes
-getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] ~= true
+getgenv()["AutoRedeemCode"] = SF_Misc["Auto Redeem Code"] == true
 
 -- Anti AFK
-getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] ~= true
+getgenv()["AntiAFK"] = SF_Misc["Anti AFK"] == true
+getgenv()["MeleeBuying"] = SF_Misc["Melee Buying"] == true
 
 -- Webhook
 getgenv()["WebhookEnabled"] = (SF_Misc["Webhook"] and SF_Misc["Webhook"]["Enabled"]) or false
@@ -72,16 +73,18 @@ local SF_FruitShop = SF["Sniper Fruit Shop"] or {}
 
 -- ===== END ADAPTER =====
 
-wait(5)
-if game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)") then
-	if game["Players"]["LocalPlayer"]["PlayerGui"]["Main (minimal)"]:FindFirstChild("ChooseTeam") then
-		repeat
-			wait()
-			if (game["Players"]["LocalPlayer"]["PlayerGui"]:FindFirstChild("Main (minimal)"))["ChooseTeam"]["Visible"] then
-				(((game:GetService("ReplicatedStorage")):WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("SetTeam", getgenv()["SelectedTeam"] or "Pirates")
-			end
-		until game["Players"]["LocalPlayer"]["Team"] ~= nil and game:IsLoaded()
+task.wait(5)
+-- Chọn team với timeout để tránh treo vô hạn
+local startTime = tick()
+while tick() - startTime < 10 do
+	if game.Players.LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+		local chooseTeam = game.Players.LocalPlayer.PlayerGui["Main (minimal)"]:FindFirstChild("ChooseTeam")
+		if chooseTeam and chooseTeam.Visible then
+			game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", getgenv()["SelectedTeam"] or "Pirates")
+			break
+		end
 	end
+	task.wait()
 end
 L_1_[29] = game:GetService("Players")
 L_1_[5] = L_1_[29]["LocalPlayer"]
@@ -95,8 +98,8 @@ L_1_[17] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Fragments")
 L_1_[1] = (L_1_[5]:WaitForChild("Data")):WaitForChild("Beli")
 L_1_[48] = require(L_1_[7]["Modules"]["Net"])
 L_1_[16] = game:GetService("Lighting")
-L_1_[2] = game:service("VirtualInputManager")
-L_1_[33] = game:service("VirtualUser")
+L_1_[2] = game:GetService("VirtualInputManager")
+L_1_[33] = game:GetService("VirtualUser")
 L_1_[4] = game:GetService("CoreGui")
 L_1_[45] = {}
 L_1_[6] = game:GetService("TweenService")
@@ -753,7 +756,7 @@ task["spawn"](function()
 		end
 	end
 end)
-wait(2)
+task.wait(2)
 task["spawn"](function()
 	if (getgenv())["Configs"]["FPS Booster"] then
 		local L_5_ = {}
@@ -926,7 +929,7 @@ function CheckLevel2()
 	local L_28_ = {}
 	L_28_[2] = (game:GetService("Players"))["LocalPlayer"]["Data"]["Level"]["Value"]
 	if Old_World then
-		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
+		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 9 or SelectMonster == "" then
 			Ms = "Bandit"
 			NameQuest = "BanditQuest1"
 			QuestLv = 1
@@ -934,7 +937,7 @@ function CheckLevel2()
 			CFrameQ = CFrame["new"](1059.37195, 15.4495068, 1550.4231, .939700544, 0, -0.341998369, 0, 1, 0, .341998369, 0, .939700544)
 			CFrameMon = CFrame["new"](1353.44885, 3.40935516, 1376.92029, .776053488, -6.97791975e-08, .630666852, 6.99138596e-08, 1, 2.4612488e-08, -0.630666852, 2.49917598e-08, .776053488)
 			Next_Level_X = 10
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 10 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 100 then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 10 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 100 then
 			Ms = "Shanda"
 			NameQuest = "SkyExp1Quest"
 			QuestLv = 2
@@ -972,7 +975,7 @@ function CheckLevel2()
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 110 then
 				SelectBoss_P = "Yeti"
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 100 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 119 or SelectMonster == "Snowman" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 100 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 119 or SelectMonster == "Snowman" then
 			Next_Level_X = 120
 			Ms = "Snowman"
 			NameQuest = "SnowQuest"
@@ -984,7 +987,7 @@ function CheckLevel2()
 				SelectBoss_P = "Yeti"
 			end
 			SelectMonster = "Snow Bandit"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 120 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 174 or SelectMonster == "Chief Petty Officer" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 120 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 174 or SelectMonster == "Chief Petty Officer" then
 			Ms = "Chief Petty Officer"
 			NameQuest = "MarineQuest2"
 			QuestLv = 1
@@ -1005,7 +1008,7 @@ function CheckLevel2()
 			NameMon = "Sky Bandit"
 			CFrameQ = CFrame["new"](-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268)
 			CFrameMon = CFrame["new"](-4959.51367, 365.39267, -2974.56812, .964867651, 7.74418396e-08, .262737453, -6.95931988e-08, 1, -3.91783708e-08, -0.262737453, 1.95171506e-08, .964867651)
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 175 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 189 or SelectMonster == "Dark Master" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 175 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 189 or SelectMonster == "Dark Master" then
 			Ms = "Dark Master"
 			NameQuest = "SkyQuest"
 			QuestLv = 2
@@ -1017,7 +1020,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 190
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 190 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 209 or SelectMonster == "Prisoner" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 190 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 209 or SelectMonster == "Prisoner" then
 			Ms = "Prisoner"
 			QuestLv = 1
 			NameQuest = "PrisonerQuest"
@@ -1038,7 +1041,7 @@ function CheckLevel2()
 				Next_Level_X = 210
 			end
 			Bypass_TP_Dis = true
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 210 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 249 or SelectMonster == "Dangerous Prisoner" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 210 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 249 or SelectMonster == "Dangerous Prisoner" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 220 then
 				SelectBoss_P = "Warden"
 			end
@@ -1057,7 +1060,7 @@ function CheckLevel2()
 			SelectMonster = "Prisoner"
 			Next_Level_X = 250
 			Bypass_TP_Dis = true
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 250 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 274 or SelectMonster == "Toga Warrior" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 250 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 274 or SelectMonster == "Toga Warrior" then
 			Ms = "Toga Warrior"
 			NameQuest = "ColosseumQuest"
 			QuestLv = 1
@@ -1068,7 +1071,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 275
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 275 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 299 or SelectMonster == "Gladiator" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 275 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 299 or SelectMonster == "Gladiator" then
 			Ms = "Gladiator"
 			NameQuest = "ColosseumQuest"
 			QuestLv = 2
@@ -1077,7 +1080,7 @@ function CheckLevel2()
 			CFrameMon = CFrame["new"](-1274.75903, 58.1895943, -3188.16309, .464524001, 6.21005611e-08, .885560572, -4.80449414e-09, 1, -6.76054768e-08, -0.885560572, 2.71497012e-08, .464524001)
 			SelectMonster = "Toga Warrior"
 			Next_Level_X = 300
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 300 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 324 or SelectMonster == "Military Soldier" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 300 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 324 or SelectMonster == "Military Soldier" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 350 then
 				SelectBoss_P = "Magma Admiral"
 			end
@@ -1091,7 +1094,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 325
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 325 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 374 or SelectMonster == "Military Spy" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 325 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 374 or SelectMonster == "Military Spy" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 350 then
 				SelectBoss_P = "Magma Admiral"
 			end
@@ -1103,7 +1106,7 @@ function CheckLevel2()
 			CFrameMon = CFrame["new"](-5787.99023, 120.864456, 8762.25293, -0.188358366, -1.84706277e-08, .982100308, -1.23782129e-07, 1, -4.93306951e-09, -0.982100308, -1.22495649e-07, -0.188358366)
 			SelectMonster = "Military Soldier"
 			Next_Level_X = 375
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 375 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 399 or SelectMonster == "Fishman Warrior" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 375 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 399 or SelectMonster == "Fishman Warrior" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 425 then
 				SelectBoss_P = "Fishman Lord"
 			end
@@ -1117,7 +1120,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 400
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 400 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 449 or SelectMonster == "Fishman Commando" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 400 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 449 or SelectMonster == "Fishman Commando" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 425 then
 				SelectBoss_P = "Fishman Lord"
 			end
@@ -1132,7 +1135,7 @@ function CheckLevel2()
 				Next_Level_X = 450
 			end
 			SelectMonster = "Fishman Warrior"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 450 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 474 or SelectMonster == "God's Guard" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 450 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 474 or SelectMonster == "God's Guard" then
 			Ms = "God's Guard"
 			NameQuest = "SkyExp1Quest"
 			QuestLv = 1
@@ -1144,7 +1147,7 @@ function CheckLevel2()
 				Next_Level_X = 475
 			end
 			SelectMonster = "Fishman Commando"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 475 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 524 or SelectMonster == "Shanda" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 475 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 524 or SelectMonster == "Shanda" then
 			Ms = "Shanda"
 			NameQuest = "SkyExp1Quest"
 			QuestLv = 2
@@ -1159,7 +1162,7 @@ function CheckLevel2()
 				Next_Level_X = 525
 			end
 			SelectMonster = "God's Guard"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 525 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 549 or SelectMonster == "Royal Squad" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 525 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 549 or SelectMonster == "Royal Squad" then
 			Ms = "Royal Squad"
 			NameQuest = "SkyExp2Quest"
 			QuestLv = 1
@@ -1171,7 +1174,7 @@ function CheckLevel2()
 				Next_Level_X = 550
 			end
 			SelectMonster = "Shanda"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 550 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 624 or SelectMonster == "Royal Soldier" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 550 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 624 or SelectMonster == "Royal Soldier" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 575 then
 				SelectBoss_P = "Thunder God"
 			end
@@ -1186,7 +1189,7 @@ function CheckLevel2()
 				Next_Level_X = 625
 			end
 			SelectMonster = "Royal Squad"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 625 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 649 or SelectMonster == "Galley Pirate" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 625 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 649 or SelectMonster == "Galley Pirate" then
 			Ms = "Galley Pirate"
 			NameQuest = "FountainQuest"
 			QuestLv = 1
@@ -1212,7 +1215,7 @@ function CheckLevel2()
 		end
 	end
 	if New_World then
-		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 700 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 724 or SelectMonster == "Raider" then
+		if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 700 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 724 or SelectMonster == "Raider" then
 			Ms = "Raider"
 			NameQuest = "Area1Quest"
 			QuestLv = 1
@@ -1223,7 +1226,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 725
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 725 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 774 or SelectMonster == "Mercenary" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 725 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 774 or SelectMonster == "Mercenary" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 750 then
 				SelectBoss_P = "Diamond"
 			end
@@ -1238,7 +1241,7 @@ function CheckLevel2()
 				Next_Level_X = 775
 			end
 			SelectMonster = "Raider"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 775 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 799 or SelectMonster == "Swan Pirate" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 775 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 799 or SelectMonster == "Swan Pirate" then
 			Ms = "Swan Pirate"
 			NameQuest = "Area2Quest"
 			QuestLv = 1
@@ -1249,7 +1252,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 800
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 800 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 874 or SelectMonster == "Factory Staff" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 800 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 874 or SelectMonster == "Factory Staff" then
 			Ms = "Factory Staff"
 			NameQuest = "Area2Quest"
 			QuestLv = 2
@@ -1264,7 +1267,7 @@ function CheckLevel2()
 				SelectBoss_P = "Jeremy"
 			end
 			SelectMonster = "Swan Pirate"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 875 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 899 or SelectMonster == "Marine Lieutenant" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 875 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 899 or SelectMonster == "Marine Lieutenant" then
 			Ms = "Marine Lieutenant"
 			NameQuest = "MarineQuest3"
 			QuestLv = 1
@@ -1275,7 +1278,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 900
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 900 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 949 or SelectMonster == "Marine Captain" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 900 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 949 or SelectMonster == "Marine Captain" then
 			Ms = "Marine Captain"
 			NameQuest = "MarineQuest3"
 			QuestLv = 2
@@ -1290,7 +1293,7 @@ function CheckLevel2()
 				Next_Level_X = 950
 			end
 			SelectMonster = "Marine Lieutenant"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 950 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 974 or SelectMonster == "Zombie" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 950 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 974 or SelectMonster == "Zombie" then
 			Ms = "Zombie"
 			NameQuest = "ZombieQuest"
 			QuestLv = 1
@@ -1302,7 +1305,7 @@ function CheckLevel2()
 				Next_Level_X = 975
 			end
 			Bypass_TP_Dis = true
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 975 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 999 or SelectMonster == "Vampire" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 975 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 999 or SelectMonster == "Vampire" then
 			Ms = "Vampire"
 			NameQuest = "ZombieQuest"
 			QuestLv = 2
@@ -1315,7 +1318,7 @@ function CheckLevel2()
 			end
 			Bypass_TP_Dis = true
 			SelectMonster = "Zombie"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1000 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1049 or SelectMonster == "Snow Trooper" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1000 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1049 or SelectMonster == "Snow Trooper" then
 			Ms = "Snow Trooper"
 			NameQuest = "SnowMountainQuest"
 			QuestLv = 1
@@ -1326,7 +1329,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 1050
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1050 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1099 or SelectMonster == "Winter Warrior" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1050 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1099 or SelectMonster == "Winter Warrior" then
 			Ms = "Winter Warrior"
 			NameQuest = "SnowMountainQuest"
 			QuestLv = 2
@@ -1338,7 +1341,7 @@ function CheckLevel2()
 				Next_Level_X = 1100
 			end
 			SelectMonster = "Snow Trooper"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1100 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1124 or SelectMonster == "Lab Subordinate" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1100 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1124 or SelectMonster == "Lab Subordinate" then
 			Ms = "Lab Subordinate"
 			NameQuest = "IceSideQuest"
 			QuestLv = 1
@@ -1349,7 +1352,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 1125
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1125 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1174 or SelectMonster == "Horned Warrior" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1125 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1174 or SelectMonster == "Horned Warrior" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1150 then
 				SelectBoss_P = "Smoke Admiral"
 			end
@@ -1364,7 +1367,7 @@ function CheckLevel2()
 				Next_Level_X = 1175
 			end
 			SelectMonster = "Lab Subordinate"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1175 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1199 or SelectMonster == "Magma Ninja" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1175 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1199 or SelectMonster == "Magma Ninja" then
 			Ms = "Magma Ninja"
 			NameQuest = "FireSideQuest"
 			QuestLv = 1
@@ -1375,7 +1378,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 1200
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1200 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1249 or SelectMonster == "Lava Pirate" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1200 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1249 or SelectMonster == "Lava Pirate" then
 			Ms = "Lava Pirate"
 			NameQuest = "FireSideQuest"
 			QuestLv = 2
@@ -1387,7 +1390,7 @@ function CheckLevel2()
 				Next_Level_X = 1250
 			end
 			SelectMonster = "Magma Ninja"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1250 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1274 or SelectMonster == "Ship Deckhand" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1250 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1274 or SelectMonster == "Ship Deckhand" then
 			Ms = "Ship Deckhand"
 			NameQuest = "ShipQuest1"
 			QuestLv = 1
@@ -1398,7 +1401,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 1275
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1275 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1299 or SelectMonster == "Ship Engineer" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1275 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1299 or SelectMonster == "Ship Engineer" then
 			Ms = "Ship Engineer"
 			NameQuest = "ShipQuest1"
 			QuestLv = 2
@@ -1410,7 +1413,7 @@ function CheckLevel2()
 				Next_Level_X = 1300
 			end
 			SelectMonster = "Ship Deckhand"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1300 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1324 or SelectMonster == "Ship Steward" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1300 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1324 or SelectMonster == "Ship Steward" then
 			Ms = "Ship Steward"
 			NameQuest = "ShipQuest2"
 			QuestLv = 1
@@ -1422,7 +1425,7 @@ function CheckLevel2()
 				Next_Level_X = 1325
 			end
 			SelectMonster = "Ship Deckhand"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1325 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1349 or SelectMonster == "Ship Officer" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1325 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1349 or SelectMonster == "Ship Officer" then
 			Ms = "Ship Officer"
 			NameQuest = "ShipQuest2"
 			QuestLv = 2
@@ -1434,7 +1437,7 @@ function CheckLevel2()
 				Next_Level_X = 1350
 			end
 			SelectMonster = "Ship Steward"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1350 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1374 or SelectMonster == "Arctic Warrior" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1350 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1374 or SelectMonster == "Arctic Warrior" then
 			Ms = "Arctic Warrior"
 			NameQuest = "FrostQuest"
 			QuestLv = 1
@@ -1445,7 +1448,7 @@ function CheckLevel2()
 			else
 				Next_Level_X = 1375
 			end
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1375 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1424 or SelectMonster == "Snow Lurker" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1375 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1424 or SelectMonster == "Snow Lurker" then
 			if game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1400 then
 				SelectBoss_P = "Awakened Ice Admiral"
 			end
@@ -1460,7 +1463,7 @@ function CheckLevel2()
 				Next_Level_X = 1450
 			end
 			SelectMonster = "Arctic Warrior"
-		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] == 1425 or game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1449 or SelectMonster == "Sea Soldier" then
+		elseif game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] >= 1425 and game["Players"]["LocalPlayer"]["Data"]["Level"]["Value"] <= 1449 or SelectMonster == "Sea Soldier" then
 			Ms = "Sea Soldier"
 			NameQuest = "ForgottenQuest"
 			QuestLv = 1
@@ -2626,34 +2629,34 @@ L_1_[8] = function()
     elseif Three_World and (L_1_[22]["Value"] >= 2575 and L_1_[22]["Value"] <= 2599) then
         Enemy = "Skull Slayer";
 		NameEnemy = "Skull Slayer";
-        NameQuest = "TikiQuest3";
+        QuestName = "TikiQuest3";
         QuestNumber = 2;
         QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
         EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
     elseif Three_World and (L_1_[22]["Value"] >= 2600 and L_1_[22]["Value"] <= 2624) then
         Enemy = "Skull Slayer";
-        NameQuest = "TikiQuest3";
+        QuestName = "TikiQuest3";
         NameEnemy = "Skull Slayer";
         QuestNumber = 2;
         QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
         EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
     elseif Three_World and (L_1_[22]["Value"] >= 2625 and L_1_[22]["Value"] <= 2649) then
         Enemy = "Skull Slayer";
-        NameQuest = "TikiQuest3";
+        QuestName = "TikiQuest3";
         NameEnemy = "Skull Slayer";
         QuestNumber = 2;
         QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
         EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
     elseif Three_World and (L_1_[22]["Value"] >= 2650 and L_1_[22]["Value"] <= 2750) then
         Enemy = "Skull Slayer";
-        NameQuest = "TikiQuest3";
+        QuestName = "TikiQuest3";
         NameEnemy = "Skull Slayer";
 		QuestNumber = 2;
         QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
         EnemyPos = CFrame.new(-16885.203125, 114.12911224365234, 1627.949951171875);
     elseif Three_World and (L_1_[22]["Value"] >= 2751 and L_1_[22]["Value"] <= 2800) then
         Enemy = "Skull Slayer";
-        NameQuest = "TikiQuest3";
+        QuestName = "TikiQuest3";
         NameEnemy = "Skull Slayer";
         QuestNumber = 2;
         QuestPos = CFrame.new(-16661.890625, 105.2862319946289, 1576.69775390625);
@@ -2794,11 +2797,38 @@ L_1_[14] = function()
 			end
 		end
 	else
-		for L_50_forvar0, L_51_forvar1 in pairs(L_1_[35]["Backpack"]:GetChildren()) do
-			local L_52_ = {}
-			L_52_[2], L_52_[1] = L_50_forvar0, L_51_forvar1
-			if L_52_[1]:IsA("Tool") and tostring(L_52_[1]["ToolTip"]) == "Melee" then
-				(L_1_[35]["Character"]:WaitForChild("Humanoid")):EquipTool(L_52_[1])
+		-- Ưu tiên equip võ Melee có mastery thấp nhất (< 400) để nâng lên max trước
+		local meleeOrder = {
+			"Black Leg", "Electro", "Fishman Karate", "Dragon Claw",
+			"Superhuman", "Death Step", "Sharkman Karate",
+			"Electric Claw", "Dragon Talon", "Godhuman"
+		}
+		local equipped = false
+		for _, meleeName in ipairs(meleeOrder) do
+			local tool = L_1_[35]["Character"]:FindFirstChild(meleeName)
+				or L_1_[35]["Backpack"]:FindFirstChild(meleeName)
+			if tool then
+				local lvNode = tool:FindFirstChild("Level")
+				local lv = lvNode and lvNode["Value"] or 0
+				if lv < 400 then
+					-- Nếu trong Backpack thì equip, nếu đã equip thì thôi
+					local inBackpack = L_1_[35]["Backpack"]:FindFirstChild(meleeName)
+					if inBackpack then
+						(L_1_[35]["Character"]:WaitForChild("Humanoid")):EquipTool(inBackpack)
+					end
+					equipped = true
+					break
+				end
+			end
+		end
+		-- Nếu tất cả đã 400+ thì equip bất kỳ Melee trong Backpack
+		if not equipped then
+			for L_50_forvar0, L_51_forvar1 in pairs(L_1_[35]["Backpack"]:GetChildren()) do
+				local L_52_ = {}
+				L_52_[2], L_52_[1] = L_50_forvar0, L_51_forvar1
+				if L_52_[1]:IsA("Tool") and tostring(L_52_[1]["ToolTip"]) == "Melee" then
+					(L_1_[35]["Character"]:WaitForChild("Humanoid")):EquipTool(L_52_[1])
+				end
 			end
 		end
 	end
@@ -3276,21 +3306,21 @@ setmetatable(L_1_[45], {
 				elseif (Vector3["new"](-12379.1406, 601.433167, -6543.60742) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] < 30 then
 					if L_170_[1] == "Good" then
 						repeat
-							wait(.1)
+							task.wait(.1)
 							L_1_[31](CFrame["new"](-12392.5068, 603.319763, -6596.00586), 1.5)
 						until (Vector3["new"](-12392.5068, 603.319763, -6596.00586) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
-						wait(1)
+						task.wait(1)
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "Progress", "Good")
-						wait(1)
+						task.wait(1)
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "StartTrial", "Good")
 					elseif L_170_[1] == "Evil" then
 						repeat
-							wait(.1)
+							task.wait(.1)
 							L_1_[31](CFrame["new"](-12392.2637, 603.319763, -6503.27832), 1.5)
 						until (Vector3["new"](-12392.2637, 603.319763, -6503.27832) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
-						wait(1)
+						task.wait(1)
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "Progress", "Evil")
-						wait(1)
+						task.wait(1)
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "StartTrial", "Evil")
 					end
 				end
@@ -3300,22 +3330,22 @@ setmetatable(L_1_[45], {
 				local L_172_ = {}
 				L_172_[2] = L_171_arg0
 				repeat
-					wait()
+					task.wait()
 					L_1_[31](L_1_[19]["Map"]["HeavenlyDimension"][L_172_[2]]["CFrame"], 1.5)
 				until (L_1_[19]["Map"]["HeavenlyDimension"][L_172_[2]]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 7
 				fireproximityprompt(workspace["Map"]["HeavenlyDimension"][L_172_[2]]["ProximityPrompt"])
-				wait(.5)
+				task.wait(.5)
 			end
 		elseif L_60_[3] == "GetTorchX" then
 			return function(L_173_arg0)
 				local L_174_ = {}
 				L_174_[1] = L_173_arg0
 				repeat
-					wait()
+					task.wait()
 					L_1_[31](L_1_[19]["Map"]["HellDimension"][L_174_[1]]["CFrame"], 1.5)
 				until (L_1_[19]["Map"]["HellDimension"][L_174_[1]]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 7
 				fireproximityprompt(workspace["Map"]["HellDimension"][L_174_[1]]["ProximityPrompt"])
-				wait(.5)
+				task.wait(.5)
 			end
 		end
 	end
@@ -3327,13 +3357,26 @@ L_1_[34] = {}
 L_1_[34]["__index"] = L_1_[34]
 L_1_[51] = L_1_[27]["LocalPlayer"]
 task["spawn"](function()
-	while task["wait"](.5) do
+	while task["wait"](.1) do
 		L_1_[45]["p"](function()
-			if L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] < 2800 then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Melee", L_1_[35]["Data"]["Points"]["Value"])
-			end
-			if L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"] >= 2800 and (L_1_[35]["Data"]["Points"]["Value"] > 0 and L_1_[35]["Data"]["Stats"]["Defense"]["Level"]["Value"] < 2700) then
-				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Defense", L_1_[35]["Data"]["Points"]["Value"])
+			local pts = L_1_[35]["Data"]["Points"]["Value"]
+			if pts > 0 then
+				local meleeLv  = L_1_[35]["Data"]["Stats"]["Melee"]["Level"]["Value"]
+				local defLv    = L_1_[35]["Data"]["Stats"]["Defense"]["Level"]["Value"]
+				-- Ưu tiên Melee (max 2800) -> Defense (max 2700) -> Sword (còn lại)
+				if meleeLv < 2800 then
+					for _ = 1, pts do
+						L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Melee", 1)
+					end
+				elseif defLv < 2800 then
+					for _ = 1, pts do
+						L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Defense", 1)
+					end
+				else
+					for _ = 1, pts do
+						L_1_[46]["Remotes"]["CommF_"]:InvokeServer("AddPoint", "Sword", 1)
+					end
+				end
 			end
 			if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
 				L_1_[46]["Remotes"]["CommF_"]:InvokeServer("Buso")
@@ -3501,41 +3544,117 @@ for L_195_forvar0, L_196_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeSer
 	end
 end
 L_1_[35]["PlayerGui"]["Notifications"]["Enabled"] = false
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Pure Red";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Pure_Red_H = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Snow White";
-	["Type"] = "AuraSkin",
-	["Context"] = "Equip"
-}) ~= false then
-	Snow_White = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Snow White";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Winter_Sky = true
-end
-if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
-	["StorageName"] = "Rainbow Saviour";
-	["Type"] = "AuraSkin";
-	["Context"] = "Equip"
-}) ~= false then
-	Rainbow_Saviour = true
-end
+pcall(function()
+	if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+		["StorageName"] = "Pure Red";
+		["Type"] = "AuraSkin";
+		["Context"] = "Equip"
+	}) ~= false then
+		Pure_Red_H = true
+	end
+end)
+pcall(function()
+	if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+		["StorageName"] = "Snow White";
+		["Type"] = "AuraSkin";
+		["Context"] = "Equip"
+	}) ~= false then
+		Snow_White = true
+	end
+end)
+pcall(function()
+	if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+		["StorageName"] = "Snow White";
+		["Type"] = "AuraSkin";
+		["Context"] = "Equip"
+	}) ~= false then
+		Winter_Sky = true
+	end
+end)
+pcall(function()
+	if (((L_1_[7]:WaitForChild("Modules")):WaitForChild("Net")):WaitForChild("RF/FruitCustomizerRF")):InvokeServer({
+		["StorageName"] = "Rainbow Saviour";
+		["Type"] = "AuraSkin";
+		["Context"] = "Equip"
+	}) ~= false then
+		Rainbow_Saviour = true
+	end
+end)
 if Three_World and (L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TushitaProgress"))["OpenedDoor"] then
 	Unlock_Tushita_Quest = true
 end
+-- ===== HELPER: kiểm tra xem nhân vật đã có võ nào chưa =====
+local function HasStyle(name)
+	return L_1_[45]["ffc"](L_1_[35]["Character"], name)
+		or L_1_[45]["ffc"](L_1_[35]["Backpack"], name)
+end
+local function StyleLv(name)
+	local t = L_1_[35]["Character"]:FindFirstChild(name)
+		or L_1_[35]["Backpack"]:FindFirstChild(name)
+	if t then
+		local lv = t:FindFirstChild("Level")
+		return lv and lv["Value"] or 0
+	end
+	return 0
+end
+-- Đồng bộ tất cả flag _C / _C_M từ trạng thái thực tế của nhân vật
+local function CheckAllStyles()
+	-- ===== FIRST SEA =====
+	-- Black Leg (Dark Step)
+	if HasStyle("Black Leg") or HasStyle("Dark Step")          then Black_Leg_C = true end
+	if StyleLv("Black Leg") >= 400 or StyleLv("Dark Step") >= 400 then Black_Leg_C_M = true end
+
+	-- Electro
+	if HasStyle("Electro")                                     then Electro_C = true end
+	if StyleLv("Electro") >= 400                               then Electro_C_M = true end
+
+	-- Fishman Karate / Water Kung Fu (tên tuỳ version)
+	if HasStyle("Fishman Karate") or HasStyle("Water Kung Fu") then Fishman_Karate_C = true end
+	if StyleLv("Fishman Karate") >= 400 or StyleLv("Water Kung Fu") >= 400 then Fishman_Karate_C_M = true end
+
+	-- ===== SECOND SEA =====
+	-- Dragon Claw / Dragon Breath (Sabi - BlackbeardReward)
+	if HasStyle("Dragon Claw") or HasStyle("Dragon Breath")    then Dragon_Claw_C = true end
+	if StyleLv("Dragon Claw") >= 400 or StyleLv("Dragon Breath") >= 400 then Dragon_Claw_C_M = true end
+
+	-- Superhuman
+	if HasStyle("Superhuman")                                  then Super_human = true end
+	if StyleLv("Superhuman") >= 400                            then Super_humanw_C_M = true end
+
+	-- Death Step (Black Leg V2)
+	if HasStyle("Death Step")                                  then Death_Step = true; Death_Step_C = true end
+	if StyleLv("Death Step") >= 400                            then Death_Step_C_M = true end
+
+	-- Sharkman Karate (Fishman Karate V2)
+	if HasStyle("Sharkman Karate")                             then Sharkman_Karate_C = true end
+	if StyleLv("Sharkman Karate") >= 400                       then Sharkman_Karate_C_M = true end
+
+	-- ===== THIRD SEA =====
+	-- Electric Claw (Electro V2)
+	if HasStyle("Electric Claw")                               then Electric_Claw_C = true end
+	if StyleLv("Electric Claw") >= 400                         then Electric_Claw_C_M = true end
+
+	-- Dragon Talon (Dragon Claw V2)
+	if HasStyle("Dragon Talon")                                then Dragon_Talon_C = true end
+	if StyleLv("Dragon Talon") >= 400                          then Dragon_Talon_C_M = true end
+
+	-- Godhuman
+	if HasStyle("Godhuman") or HasStyle("God Human")           then God_Human_C = true end
+	if StyleLv("Godhuman") >= 400 or StyleLv("God Human") >= 400 then God_Human_C_M = true end
+end
+
+
 L_1_[39] = function()
+    if getgenv()["MeleeBuying"] then return end
 	local L_198_ = {}
-	if Three_World then
-		if tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == "nil" or tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == nil then
+			if Three_World then
+				pcall(function()
+					local spawnerResult = tostring(string.match(tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+"))
+					if spawnerResult == "nil" or spawnerResult == nil then
+						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
+					end
+				end)
+			end
 			L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
 		end
 	end
@@ -3789,7 +3908,7 @@ L_1_[39] = function()
 	if Three_World and not Mirror_Fractal_H then
 		if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Sweet Chalice") or L_1_[45]["ffc"](L_1_[35]["Character"], "Sweet Chalice") or L_1_[45]["ffc"](L_1_[35]["Backpack"], "God's Chalice") or L_1_[45]["ffc"](L_1_[35]["Character"], "God's Chalice") or L_1_[45]["ffc"](L_1_[40], "Dough King") or L_1_[45]["ffc"](L_1_[7], "Dough King") then
 			repeat
-				wait()
+				task.wait()
 				for L_236_forvar0, L_237_forvar1 in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("getInventory")) do
 					local L_238_ = {}
 					L_238_[2], L_238_[3] = L_236_forvar0, L_237_forvar1
@@ -3806,7 +3925,7 @@ L_1_[39] = function()
 							L_241_[2], L_241_[1] = L_239_forvar0, L_240_forvar1
 							if L_241_[1]["Name"] == "Dough King" and L_241_[1]["Humanoid"]["Health"] > 0 then
 								repeat
-									wait(.1)
+									task.wait(.1)
 									L_1_[31](L_241_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -30, 0), 1.5)
 									L_1_[14]()
 								until not L_241_[1]["Parent"] or L_241_[1]["Humanoid"]["Health"] <= 0
@@ -3828,7 +3947,7 @@ L_1_[39] = function()
 				elseif L_1_[45]["ffc"](L_1_[35]["Backpack"], "Sweet Chalice") or L_1_[45]["ffc"](L_1_[35]["Character"], "Sweet Chalice") and not Mirror_Fractal_H then
 					if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-2286.6843261719, 146.56562805176, -12226.881835938))["Magnitude"] >= 1800 then
 						repeat
-							wait()
+							task.wait()
 							L_1_[31](CFrame["new"](-2286.6843261719, 146.56562805176, -12226.881835938), 1.5)
 						until (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-2286.6843261719, 146.56562805176, -12226.881835938))["Magnitude"] <= 3
 					elseif (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-2286.6843261719, 146.56562805176, -12226.881835938))["Magnitude"] < 1800 then
@@ -3843,7 +3962,7 @@ L_1_[39] = function()
 							PosMon_X = Monster["HumanoidRootPart"]["CFrame"]
 							StatrMagnet = true
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](Monster["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -17, 0), 1.5)
 								L_1_[14]()
 							until not Monster["Parent"] or Monster["Humanoid"]["Health"] <= 0
@@ -3869,7 +3988,7 @@ L_1_[39] = function()
 					elseif L_1_[45]["CheckItem"]("Conjured Cocoa") < 10 then
 						if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](658.22302246094, 24.734258651733, -12541.991210938))["Magnitude"] >= 1800 then
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](658.22302246094, 24.734258651733, -12541.991210938), 1.5)
 							until (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](658.22302246094, 24.734258651733, -12541.991210938))["Magnitude"] <= 3 or L_1_[45]["CheckItem"]("Conjured Cocoa") >= 10
 						elseif (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](658.22302246094, 24.734258651733, -12541.991210938))["Magnitude"] < 1800 then
@@ -3883,7 +4002,7 @@ L_1_[39] = function()
 								PosMon_X = Monster["HumanoidRootPart"]["CFrame"]
 								StatrMagnet = true
 								repeat
-									wait()
+									task.wait()
 									L_1_[31](Monster["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, -17, 0), 1.5)
 									L_1_[14]()
 								until not Monster["Parent"] or Monster["Humanoid"]["Health"] <= 0
@@ -4045,6 +4164,48 @@ L_1_[39] = function()
 					end
 				until (L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or not(getgenv())["AutoFarm"] or Quest ~= nil
 			end
+			elseif L_1_[24]["Value"] >= 2800 and Three_World then
+				SROP = false
+				if L_1_[45]["ffc"](L_1_[7], "Cake Prince") then
+					for L_278_forvar0, L_279_forvar1 in pairs(L_1_[7]:GetChildren()) do
+						local L_280_ = {}
+						L_280_[1], L_280_[2] = L_278_forvar0, L_279_forvar1
+						if L_280_[2]["Name"] == "Cake Prince" and (L_280_[2]:FindFirstChild("Humanoid") and (L_280_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
+							L_1_[31](L_280_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
+						end
+					end
+				elseif L_1_[45]["ffc"](L_1_[40], "Cake Prince") then
+					for L_281_forvar0, L_282_forvar1 in pairs(L_1_[40]:GetChildren()) do
+						local L_283_ = {}
+						L_283_[1], L_283_[2] = L_281_forvar0, L_282_forvar1
+						if L_283_[2]["Name"] == "Cake Prince" and (L_283_[2]:FindFirstChild("Humanoid") and (L_283_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
+							L_1_[31](L_283_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
+						end
+					end
+				else
+					if tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == "nil" or tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == nil then
+						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
+					end
+					if L_1_[45]["ffc"](L_1_[40], "Cookie Crafter") or L_1_[45]["ffc"](L_1_[40], "Cake Guard") or L_1_[45]["ffc"](L_1_[40], "Baking Staff") or L_1_[45]["ffc"](L_1_[40], "Head Baker") then
+						for L_284_forvar0, L_285_forvar1 in pairs(L_1_[40]:GetChildren()) do
+							local L_286_ = {}
+							L_286_[1], L_286_[2] = L_284_forvar0, L_285_forvar1
+							if L_286_[2]["Name"] == "Cookie Crafter" or L_286_[2]["Name"] == "Cake Guard" or L_286_[2]["Name"] == "Baking Staff" or L_286_[2]["Name"] == "Head Baker" then
+								repeat
+									L_1_[45]["wt"]()
+									L_1_[31](L_286_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
+									if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
+									end
+									L_1_[45]["BN"](L_286_[2]["Name"])
+									L_1_[14]()
+								until L_286_[2]["Humanoid"]["Health"] <= 0 or not L_1_[40]:FindFirstChild(Enemy) or not(L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or Quest ~= nil
+							end
+						end
+					else
+						L_1_[31](CFrame["new"](-2091.9118652344, 70.008842468262, -12142.8359375), 1.5)
+					end
+				end
 		elseif L_1_[24]["Value"] >= 9 and (L_1_[24]["Value"] <= 70 and (not New_World and not Three_World)) then
 			if ((CFrame["new"](-7895, 5546, -380))["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1000 then
 				if L_1_[45]["ffc"](L_1_[40], "Shanda") then
@@ -4106,45 +4267,40 @@ L_1_[39] = function()
 		end
 	elseif L_1_[24]["Value"] >= 2650 and Three_World then
 		SROP = false
-		if L_1_[45]["ffc"](L_1_[7], "Cake Prince") then
-			for L_278_forvar0, L_279_forvar1 in pairs(L_1_[7]:GetChildren()) do
-				local L_280_ = {}
-				L_280_[1], L_280_[2] = L_278_forvar0, L_279_forvar1
-				if L_280_[2]["Name"] == "Cake Prince" and (L_280_[2]:FindFirstChild("Humanoid") and (L_280_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
-					L_1_[31](L_280_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
-				end
-			end
-		elseif L_1_[45]["ffc"](L_1_[40], "Cake Prince") then
-			for L_281_forvar0, L_282_forvar1 in pairs(L_1_[40]:GetChildren()) do
-				local L_283_ = {}
-				L_283_[1], L_283_[2] = L_281_forvar0, L_282_forvar1
-				if L_283_[2]["Name"] == "Cake Prince" and (L_283_[2]:FindFirstChild("Humanoid") and (L_283_[2]:FindFirstChild("Humanoid"))["Health"] > 0) then
-					L_1_[31](L_283_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 42, 10), 1.5)
-				end
-			end
-		else
-			if tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == "nil" or tostring(string["match"](tostring(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner")), "%d+")) == nil then
-				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CakePrinceSpawner", true)
-			end
-			if L_1_[45]["ffc"](L_1_[40], "Cookie Crafter") or L_1_[45]["ffc"](L_1_[40], "Cake Guard") or L_1_[45]["ffc"](L_1_[40], "Baking Staff") or L_1_[45]["ffc"](L_1_[40], "Head Baker") then
-				for L_284_forvar0, L_285_forvar1 in pairs(L_1_[40]:GetChildren()) do
-					local L_286_ = {}
-					L_286_[1], L_286_[2] = L_284_forvar0, L_285_forvar1
-					if L_286_[2]["Name"] == "Cookie Crafter" or L_286_[2]["Name"] == "Cake Guard" or L_286_[2]["Name"] == "Baking Staff" or L_286_[2]["Name"] == "Head Baker" then
-						repeat
-							L_1_[45]["wt"]()
-							L_1_[31](L_286_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
-							if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
-								L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
-							end
-							L_1_[45]["BN"](L_286_[2]["Name"])
-							L_1_[14]()
-						until L_286_[2]["Humanoid"]["Health"] <= 0 or not L_1_[40]:FindFirstChild(Enemy) or not(L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or Quest ~= nil
+		if L_1_[35]["PlayerGui"]["Main"]["Quest"]["Visible"] then
+			if L_1_[45]["sf"](L_1_[35]["PlayerGui"]["Main"]["Quest"]["Container"]["QuestTitle"]["Title"]["Text"], tostring(NameEnemy)) then
+				if L_1_[45]["ffc"](L_1_[40], Enemy) then
+					for L_278_forvar0, L_279_forvar1 in pairs(L_1_[40]:GetChildren()) do
+						local L_280_ = {}
+						L_280_[1], L_280_[2] = L_278_forvar0, L_279_forvar1
+						if L_280_[2]["Name"] == Enemy and (L_280_[2]:FindFirstChild("Humanoid") and (L_280_[2]["Humanoid"]["Health"] > 0 and L_280_[2]:FindFirstChild("HumanoidRootPart"))) then
+							repeat
+								L_1_[45]["wt"]()
+								SROP = false
+								L_1_[31](L_280_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
+								if not L_1_[45]["ffc"](L_1_[35]["Character"], "HasBuso") then
+									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Buso")
+								end
+								L_1_[45]["BN"](L_280_[2]["Name"])
+								L_1_[14]()
+							until L_280_[2]["Humanoid"]["Health"] <= 0 or not L_1_[40]:FindFirstChild(Enemy) or not(L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or Quest ~= nil
+						end
 					end
+				else
+					L_1_[31](EnemyPos, 1.5)
 				end
 			else
-				L_1_[31](CFrame["new"](-2091.9118652344, 70.008842468262, -12142.8359375), 1.5)
+				L_1_[7]["Remotes"]["CommF_"]:InvokeServer("AbandonQuest")
 			end
+		else
+			repeat
+				L_1_[45]["wt"]()
+				L_1_[31](QuestPos, 1.5)
+				if (QuestPos["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 5 and (L_1_[35]["Character"]:WaitForChild("Humanoid"))["Health"] > 0 then
+					L_1_[45]["wt"](.5)
+					;((L_1_[7]:WaitForChild("Remotes")):WaitForChild("CommF_")):InvokeServer("StartQuest", QuestName, QuestNumber)
+				end
+			until (L_1_[35]["PlayerGui"]["Main"]:FindFirstChild("Quest"))["Visible"] or not(getgenv())["AutoFarm"] or Quest ~= nil
 		end
 	end
 end
@@ -4196,254 +4352,171 @@ task["spawn"](function()
 		end
 	end
 end)
-task["spawn"](function()
-	while L_1_[45]["wt"](1) do
-		xpcall(function()
-			if not Black_Leg_C then
-				repeat
-					L_1_[45]["wt"](L_1_[21])
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyBlackLeg")
-					L_1_[14]()
-					L_1_[45]["wt"](.05)
-					if L_1_[45]["ffc"](L_1_[35]["Character"], "Black Leg") or L_1_[45]["ffc"](L_1_[35]["Backpack"], "Black Leg") and not Black_Leg_C then
-						Black_Leg_C = true
-						L_1_[45]["Equip"]("Black Leg")
-					end
-				until Black_Leg_C
-			end
-			if not Electro_C then
-				repeat
-					L_1_[45]["wt"](L_1_[21])
-					L_1_[14]()
-					L_1_[2]:SendKeyEvent(true, "V", false, game)
-					wait(.5)
-					L_1_[2]:SendKeyEvent(false, "V", false, game)
-					if L_1_[45]["ffc"](L_1_[35]["Character"], "Black Leg") and (L_1_[35]["Character"]["Black Leg"]["Level"]["Value"] >= 300 and not Electro_C) then
-						if L_1_[35]["Character"]["Black Leg"]["Level"]["Value"] >= 400 then
-							Black_Leg_C_M = true
-						end
-						Electro_C = true
-						L_1_[45]["wt"](.05)
-						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectro")
-					end
-				until Electro_C
-			end
-			if not Fishman_Karate_C then
-				repeat
-					L_1_[45]["wt"](L_1_[21])
-					L_1_[14]()
-					if L_1_[45]["ffc"](L_1_[35]["Character"], "Electro") and (L_1_[35]["Character"]["Electro"]["Level"]["Value"] >= 300 and not Fishman_Karate_C) then
-						if L_1_[35]["Character"]["Electro"]["Level"]["Value"] >= 400 then
-							Electro_C_M = true
-						end
-						Fishman_Karate_C = true
-						L_1_[45]["wt"](.05)
-						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyFishmanKarate")
-					end
-				until Fishman_Karate_C
-			end
-			if not Fishman_Karate_C_M then
-				repeat
-					local L_295_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyFishmanKarate")
-					L_295_[2] = L_1_[35]["Character"]:FindFirstChild("Fishman Karate")
-					if L_295_[2] and (L_295_[2]:FindFirstChild("Level") and L_295_[2]["Level"]["Value"] >= 400) then
-						Fishman_Karate_C_M = true
-					end
-				until Fishman_Karate_C_M
-			end
-			L_1_[45]["wt"](L_1_[21])
-			if not Dragon_Claw_C then
-				local L_296_ = {}
-				L_296_[2] = L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BlackbeardReward", "DragonClaw", "2")
-				if L_296_[2] == 1 or L_296_[2] == 2 then
-					pcall(function()
-						if L_1_[35]["Character"]["Fishman Karate"]["Level"]["Value"] >= 400 then
-							Fishman_Karate_C_M = true
-						end
-					end)
-					Dragon_Claw_C = true
-				end
-			end
-			repeat
-				task["wait"](L_1_[21])
-				L_1_[14]()
-				if not Super_human then
-					if Dragon_Claw_C then
-						if L_1_[45]["ffc"](L_1_[35]["Character"], "Dragon Claw") and L_1_[35]["Character"]["Dragon Claw"]["Level"]["Value"] >= 300 then
-							local L_297_ = {}
-							if L_1_[35]["Character"]["Dragon Claw"]["Level"]["Value"] >= 400 then
-								Dragon_Claw_C_M = true
-							end
-							L_297_[2] = {
-								[1] = "BuySuperhuman"
-							}
-							if L_1_[7]["Remotes"]["CommF_"]:InvokeServer(unpack(L_297_[2])) == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer(unpack(L_297_[2])) == 2 then
-								Super_human = true
-								if L_1_[35]["Character"]["Superhuman"]["Level"]["Value"] >= 400 then
-									Super_humanw_C_M = true
-								end
-							end
-						end
-					end
-				end
-			until Super_human
-			if not Death_Step then
-				if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDeathStep") == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDeathStep") == 2 then
-					Death_Step = true
-				end
-			end
-			if Black_Leg_C_M then
-				repeat
-					local L_298_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_298_[1] = L_1_[35]["Character"]:FindFirstChild("Death Step")
-					if L_298_[1] and (L_298_[1]:FindFirstChild("Level") and L_298_[1]["Level"]["Value"] >= 400) then
-						local L_299_ = {}
-						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyBlackLeg")
-						L_299_[1] = L_1_[35]["Character"]:FindFirstChild("Black Leg")
-						if L_299_[1] and (L_299_[1]:FindFirstChild("Level") and L_299_[1]["Level"]["Value"] >= 400) then
-							Black_Leg_C_M = true
-						end
-					end
-				until Black_Leg_C_M
-			end
-			if not Death_Step_C_M then
-				repeat
-					local L_300_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDeathStep")
-					L_300_[1] = L_1_[35]["Character"]:FindFirstChild("Death Step")
-					if L_300_[1] and (L_300_[1]:FindFirstChild("Level") and L_300_[1]["Level"]["Value"] >= 400) then
-						Death_Step_C_M = true
-					end
-				until Death_Step_C_M
-			end
-			if not Electro_C_M then
-				repeat
-					local L_301_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectro")
-					L_301_[1] = L_1_[35]["Character"]:FindFirstChild("Electro")
-					if L_301_[1] and (L_301_[1]:FindFirstChild("Level") and L_301_[1]["Level"]["Value"] >= 400) then
-						Electro_C_M = true
-					end
-				until Electro_C_M
-			end
-			if not Fishman_Karate_C_M then
-				repeat
-					local L_302_ = {}
-					task["wait"](L_1_[21])
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyFishmanKarate")
-					warn()
-					L_302_[1] = L_1_[35]["Character"]:FindFirstChild("Fishman Karate")
-					if L_302_[1] and (L_302_[1]:FindFirstChild("Level") and L_302_[1]["Level"]["Value"] >= 400) then
-						Fishman_Karate_C_M = true
-					end
-				until Fishman_Karate_C_M
-			end
-			if not Dragon_Claw_C_M then
-				repeat
-					local L_303_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BlackbeardReward", "DragonClaw", "2")
-					L_303_[1] = L_1_[35]["Character"]:FindFirstChild("Dragon Claw")
-					if L_303_[1] and (L_303_[1]:FindFirstChild("Level") and L_303_[1]["Level"]["Value"] >= 400) then
-						Dragon_Claw_C_M = true
-					end
-				until Dragon_Claw_C_M
-			end
-			if not Sharkman_Karate_C then
-				repeat
-					L_1_[45]["wt"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuySharkmanKarate")
-					if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Sharkman Karate") or L_1_[45]["ffc"](L_1_[35]["Character"], "Sharkman Karate") then
-						Sharkman_Karate_C = true
-					end
-				until Sharkman_Karate_C
-			end
-			if not Sharkman_Karate_C_M then
-				repeat
-					local L_304_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuySharkmanKarate")
-					L_304_[1] = L_1_[35]["Character"]:FindFirstChild("Sharkman Karate")
-					if L_304_[1] and (L_304_[1]:FindFirstChild("Level") and L_304_[1]["Level"]["Value"] >= 400) then
-						Sharkman_Karate_C_M = true
-					end
-				until Sharkman_Karate_C_M
-			end
-			if not Electric_Claw_C then
-				repeat
-					task["wait"](L_1_[21])
-					if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectricClaw") == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectricClaw") == 2 then
-						Electric_Claw_C = true
-					end
-				until Electric_Claw_C
-			end
-			if not Electric_Claw_C_M then
-				repeat
-					local L_305_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectricClaw")
-					L_305_[2] = L_1_[35]["Character"]:FindFirstChild("Electric Claw")
-					if L_305_[2] and (L_305_[2]:FindFirstChild("Level") and L_305_[2]["Level"]["Value"] >= 400) then
-						Electric_Claw_C_M = true
-					end
-				until Electric_Claw_C_M
-			end
-			if not Dragon_Talon_C then
-				repeat
-					task["wait"](L_1_[21])
-					if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDragonTalon") == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDragonTalon") == 2 then
-						Dragon_Talon_C = true
-					end
-				until Dragon_Talon_C
-			end
-			if not Dragon_Talon_C_M then
-				repeat
-					local L_306_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDragonTalon")
-					L_306_[1] = L_1_[35]["Character"]:FindFirstChild("Dragon Talon")
-					if L_306_[1] and (L_306_[1]:FindFirstChild("Level") and L_306_[1]["Level"]["Value"] >= 400) then
-						Dragon_Talon_C_M = true
-					end
-				until Dragon_Talon_C_M
-			end
-			if not God_Human_C then
-				repeat
-					task["wait"](L_1_[21])
-					if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyGodhuman") == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyGodhuman") == 2 then
-						God_Human_C = true
-					end
-				until God_Human_C
-			end
-			if not God_Human_C_M then
-				repeat
-					local L_307_ = {}
-					task["wait"](L_1_[21])
-					L_1_[14]()
-					L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyGodhuman")
-					L_307_[2] = L_1_[35]["Character"]:FindFirstChild("Godhuman")
-					if L_307_[2] and (L_307_[2]:FindFirstChild("Level") and L_307_[2]["Level"]["Value"] >= 400) then
-						God_Human_C_M = true
-					end
-				until God_Human_C_M
-			end
-		end, warn)
-	end
-end);
+task.spawn(function()
+    task.wait(3)
+    CheckAllStyles()
+    while L_1_[45]["wt"](1) do
+        getgenv()["MeleeBuying"] = true
+        local success = xpcall(function()
+            CheckAllStyles()
+
+            -- ===== NPC MELEE COORDS =====
+            local MeleeNPC = {
+                -- ===== FIRST SEA (Old_World) =====
+                ["Black Leg"] = {
+                    Key = "BuyBlackLeg",
+                    NPC = "Dark Step Teacher",
+                    Pos = Old_World and CFrame.new(-985, 13, 3988)
+                        or New_World and CFrame.new(-4753, 35, -4850)
+                        or Three_World and CFrame.new(-5045, 371, -3181)
+                        or nil
+                },
+                ["Electro"] = {
+                    Key = "BuyElectro",
+                    NPC = "Mad Scientist",
+                    Pos = Old_World and CFrame.new(-5384, 13, -2148)
+                        or New_World and CFrame.new(-4867, 35, -4766)
+                        or Three_World and CFrame.new(-4995, 314, -3203)
+                        or nil
+                },
+                ["Fishman Karate"] = {
+                    Key = "BuyFishmanKarate",
+                    NPC = "Water Kung Fu Teacher",
+                    Pos = Old_World and CFrame.new(61585, 18, 987)
+                        or New_World and CFrame.new(-4958, 35, -4668)
+                        or Three_World and CFrame.new(-5023, 371, -3190)
+                        or nil
+                },
+                -- ===== SECOND SEA (New_World) =====
+                ["Dragon Claw"] = {
+                    Key = "BlackbeardReward",
+                    NPC = "Sabi",
+                    ExtraArgs = {"DragonClaw", "2"},
+                    Pos = New_World and CFrame.new(701, 187, 655)
+                        or Three_World and CFrame.new(-4981, 371, -3207)
+                        or nil
+                },
+                ["Superhuman"] = {
+                    Key = "BuySuperhuman",
+                    NPC = "Martial Arts Master",
+                    Pos = New_World and CFrame.new(1374, 247, -5192)
+                        or Three_World and CFrame.new(-5004, 371, -3198)
+                        or nil
+                },
+                ["Death Step"] = {
+                    Key = "BuyDeathStep",
+                    NPC = "Phoeyu, the Reformed",
+                    Pos = New_World and CFrame.new(6357, 296, -6762)
+                        or Three_World and CFrame.new(-4999, 314, -3221)
+                        or nil
+                },
+                ["Sharkman Karate"] = {
+                    Key = "BuySharkmanKarate",
+                    NPC = "Daigrock, the Sharkman",
+                    Pos = New_World and CFrame.new(-2602, 238, -10316)
+                        or Three_World and CFrame.new(-4972, 314, -3222)
+                        or nil
+                },
+                -- ===== THIRD SEA (Three_World) =====
+                ["Electric Claw"] = {
+                    Key = "BuyElectricClaw",
+                    NPC = "Previous Hero",
+                    Pos = Three_World and CFrame.new(-10371, 331, -10131) or nil
+                },
+                ["Dragon Talon"] = {
+                    Key = "BuyDragonTalon",
+                    NPC = "Uzoth",
+                    Pos = Three_World and CFrame.new(5661, 1211, 865) or nil
+                },
+                ["Godhuman"] = {
+                    Key = "BuyGodhuman",
+                    NPC = "Ancient Monk",
+                    Pos = Three_World and CFrame.new(-13776, 334, -9879) or nil
+                },
+            }
+
+            -- Hàm mua võ tại NPC
+            local function BuyMeleeAtNPC(styleName)
+                local info = MeleeNPC[styleName]
+                if not info or not info.Pos then return false end
+                local npcName = info.NPC or styleName
+                L_1_[45]["Status"]("Tween to NPC: " .. npcName .. " to buy " .. styleName)
+                L_1_[31](info.Pos, 1.5)
+                L_1_[45]["wt"](1.5)
+                local r
+                if info.ExtraArgs then
+                    r = L_1_[7]["Remotes"]["CommF_"]:InvokeServer(info.Key, table.unpack(info.ExtraArgs))
+                else
+                    r = L_1_[7]["Remotes"]["CommF_"]:InvokeServer(info.Key)
+                end
+                return r == 1 or r == 2 or HasStyle(styleName)
+            end
+
+            -- Thử mua từng võ nếu chưa có (mỗi lần lặp chỉ thử một lần, tránh treo)
+            if not Black_Leg_C then
+                if BuyMeleeAtNPC("Black Leg") then
+                    Black_Leg_C = true
+                    L_1_[45]["Equip"]("Black Leg")
+                end
+            end
+            if not Electro_C and StyleLv("Black Leg") >= 400 then
+                Black_Leg_C_M = true
+                if BuyMeleeAtNPC("Electro") then Electro_C = true end
+            end
+            if not Fishman_Karate_C and StyleLv("Electro") >= 400 then
+                Electro_C_M = true
+                if BuyMeleeAtNPC("Fishman Karate") then Fishman_Karate_C = true end
+            end
+            if not Dragon_Claw_C and StyleLv("Fishman Karate") >= 400 then
+                Fishman_Karate_C_M = true
+                if BuyMeleeAtNPC("Dragon Claw") then Dragon_Claw_C = true end
+            end
+            if not Super_human and StyleLv("Dragon Claw") >= 400 then
+                Dragon_Claw_C_M = true
+                if BuyMeleeAtNPC("Superhuman") then Super_human = true end
+            end
+            if not Death_Step and Super_human then
+                if BuyMeleeAtNPC("Death Step") then Death_Step = true end
+            end
+            if not Sharkman_Karate_C and Super_human then
+                if BuyMeleeAtNPC("Sharkman Karate") then Sharkman_Karate_C = true end
+            end
+            if not Electric_Claw_C and StyleLv("Sharkman Karate") >= 400 then
+                Sharkman_Karate_C_M = true
+                if BuyMeleeAtNPC("Electric Claw") then Electric_Claw_C = true end
+            end
+            if not Dragon_Talon_C and StyleLv("Electric Claw") >= 400 then
+                Electric_Claw_C_M = true
+                if BuyMeleeAtNPC("Dragon Talon") then Dragon_Talon_C = true end
+            end
+            if not God_Human_C and StyleLv("Dragon Talon") >= 400 then
+                Dragon_Talon_C_M = true
+                if BuyMeleeAtNPC("Godhuman") then God_Human_C = true end
+            end
+
+            -- Cập nhật flags mastery
+            if StyleLv("Black Leg") >= 400 then Black_Leg_C_M = true end
+            if StyleLv("Death Step") >= 400 then Death_Step_C_M = true end
+            if StyleLv("Electro") >= 400 then Electro_C_M = true end
+            if StyleLv("Fishman Karate") >= 400 then Fishman_Karate_C_M = true end
+            if StyleLv("Dragon Claw") >= 400 then Dragon_Claw_C_M = true end
+            if StyleLv("Superhuman") >= 400 then Super_humanw_C_M = true end
+            if StyleLv("Sharkman Karate") >= 400 then Sharkman_Karate_C_M = true end
+            if StyleLv("Electric Claw") >= 400 then Electric_Claw_C_M = true end
+            if StyleLv("Dragon Talon") >= 400 then Dragon_Talon_C_M = true end
+            if StyleLv("Godhuman") >= 400 then God_Human_C_M = true end
+
+            -- Farm mastery nếu cần
+            L_1_[14]()
+            if God_Human_C and not God_Human_C_M then
+                L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyGodhuman")
+            end
+        end, function(err)
+            warn("Melee buy error:", err)
+        end)
+        getgenv()["MeleeBuying"] = false
+    end
+end)
 (getgenv())["AutoFarm"] = true
 if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuySharkmanKarate", true) ~= L_1_[3]({
 	"I lost my house keys",
@@ -4671,6 +4744,14 @@ task["spawn"](function()
 									L_1_[14]()
 									if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Dragon Claw") or L_1_[45]["ffc"](L_1_[35]["Character"], "Dragon Claw") then
 										Dragon_Claw_C = true
+										repeat
+											L_1_[45]["wt"]()
+											L_1_[14]()
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BlackbeardReward", "DragonClaw", "2")
+											if StyleLv("Dragon Claw") >= 400 then
+												Dragon_Claw_C_M = true
+											end
+										until Dragon_Claw_C_M
 										return
 									end
 									if not Dragon_Claw_C and L_1_[24]["Value"] >= 1100 then
@@ -4873,10 +4954,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ",
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -4941,10 +5019,7 @@ task["spawn"](function()
 												L_1_[45]["wt"]()
 												L_1_[14]()
 												Quest = nil
-												L_1_[45]["Status"](L_1_[3]({
-													" Status : Auto Farm ",
-													"Level"
-												}))
+												L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 												L_1_[39]()
 											until L_1_[35]["Character"]["Superhuman"]["Level"]["Value"] >= 400
 											Super_humanw_C_M = true
@@ -4952,6 +5027,14 @@ task["spawn"](function()
 									end
 									if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Death Step") or L_1_[45]["ffc"](L_1_[35]["Character"], "Death Step") then
 										Death_Step = true
+										repeat
+											L_1_[45]["wt"]()
+											L_1_[14]()
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDeathStep")
+											if StyleLv("Death Step") >= 400 then
+												Death_Step_C_M = true
+											end
+										until Death_Step_C_M
 										return
 									end
 									if not Death_Step and L_1_[24]["Value"] >= 1100 then
@@ -4964,10 +5047,7 @@ task["spawn"](function()
 												else
 													L_1_[14]()
 													Quest = nil
-													L_1_[45]["Status"](L_1_[3]({
-														" Status : Auto Farm ",
-														"Level"
-													}))
+													L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 													L_1_[39]()
 												end
 											else
@@ -4976,10 +5056,7 @@ task["spawn"](function()
 													L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyBlackLeg")
 													L_1_[14]()
 													Quest = nil
-													L_1_[45]["Status"](L_1_[3]({
-														" Status : Auto Farm ";
-														"Level"
-													}))
+													L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 													L_1_[39]()
 												until L_1_[35]["Character"]["Black Leg"]["Level"]["Value"] >= 400
 												Black_Leg_C_M = true
@@ -5175,10 +5252,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ";
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -5197,6 +5271,14 @@ task["spawn"](function()
 									L_1_[14]()
 									if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Sharkman Karate") or L_1_[45]["ffc"](L_1_[35]["Character"], "Sharkman Karate") then
 										Sharkman_Karate_C = true
+										repeat
+											L_1_[45]["wt"]()
+											L_1_[14]()
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuySharkmanKarate")
+											if StyleLv("Sharkman Karate") >= 400 then
+												Sharkman_Karate_C_M = true
+											end
+										until Sharkman_Karate_C_M
 										return
 									end
 									if not Sharkman_Karate_C and L_1_[24]["Value"] >= 1100 then
@@ -5208,10 +5290,7 @@ task["spawn"](function()
 											else
 												L_1_[14]()
 												Quest = nil
-												L_1_[45]["Status"](L_1_[3]({
-													" Status : Auto Farm ",
-													"Level"
-												}))
+												L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 												L_1_[39]()
 											end
 										elseif L_1_[17]["Value"] < 5000 then
@@ -5398,10 +5477,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ",
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -5420,6 +5496,14 @@ task["spawn"](function()
 									L_1_[14]()
 									if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Electric Claw") or L_1_[45]["ffc"](L_1_[35]["Character"], "Electric Claw") then
 										Electric_Claw_C = true
+										repeat
+											L_1_[45]["wt"]()
+											L_1_[14]()
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyElectricClaw")
+											if StyleLv("Electric Claw") >= 400 then
+												Electric_Claw_C_M = true
+											end
+										until Electric_Claw_C_M
 										return
 									end
 									if not Electric_Claw_C and L_1_[24]["Value"] >= 1100 then
@@ -5444,10 +5528,7 @@ task["spawn"](function()
 											else
 												L_1_[14]()
 												Quest = nil
-												L_1_[45]["Status"](L_1_[3]({
-													" Status : Auto Farm ";
-													"Level"
-												}))
+												L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 												L_1_[39]()
 											end
 										elseif L_1_[17]["Value"] < 5000 then
@@ -5639,10 +5720,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ",
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -5661,6 +5739,14 @@ task["spawn"](function()
 									L_1_[14]()
 									if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Dragon Talon") or L_1_[45]["ffc"](L_1_[35]["Character"], "Dragon Talon") then
 										Dragon_Talon_C = true
+										repeat
+											L_1_[45]["wt"]()
+											L_1_[14]()
+											L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyDragonTalon")
+											if StyleLv("Dragon Talon") >= 400 then
+												Dragon_Talon_C_M = true
+											end
+										until Dragon_Talon_C_M
 										return
 									end
 									if not Dragon_Talon_C and L_1_[24]["Value"] >= 1100 then
@@ -5675,10 +5761,7 @@ task["spawn"](function()
 											else
 												L_1_[14]()
 												Quest = nil
-												L_1_[45]["Status"](L_1_[3]({
-													" Status : Auto Farm ",
-													"Level"
-												}))
+												L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 												L_1_[39]()
 											end
 										elseif L_1_[17]["Value"] < 5000 then
@@ -5868,10 +5951,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ",
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -5899,10 +5979,7 @@ task["spawn"](function()
 											else
 												L_1_[14]()
 												Quest = nil
-												L_1_[45]["Status"](L_1_[3]({
-													" Status : Auto Farm ",
-													"Level"
-												}))
+												L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 												L_1_[39]()
 											end
 										elseif L_1_[17]["Value"] < 5000 then
@@ -6092,10 +6169,7 @@ task["spawn"](function()
 															end
 														else
 															Quest = nil
-															L_1_[45]["Status"](L_1_[3]({
-																" Status : Auto Farm ";
-																"Level"
-															}))
+															L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 															L_1_[39]()
 														end
 													end
@@ -6116,10 +6190,7 @@ task["spawn"](function()
 							return
 						end
 						Quest = nil
-						L_1_[45]["Status"](L_1_[3]({
-							" Status : Auto Farm ",
-							"Level"
-						}))
+						L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 						L_1_[39]()
 					end
 				end
@@ -6848,21 +6919,21 @@ task["spawn"](function()
 						if Quest_Start_Evo_Human_V3 then
 							if not L_1_[45]["ffc"](L_1_[40], "Orbitus") and (not L_1_[45]["ffc"](L_1_[7], "Orbitus") and not Kill_Orbitus) then
 								L_1_[45]["HopLowServer"](4)
-								wait(.2)
+								task.wait(.2)
 								L_1_[35]:Kick("Hop")
 								L_1_[45]["wt"](.1)
 								L_1_[10]:Teleport(L_1_[30], L_1_[35])
 							end
 							if not L_1_[45]["ffc"](L_1_[40], "Jeremy") and (not L_1_[45]["ffc"](L_1_[7], "Jeremy") and not Kill_Jeremy) then
 								L_1_[45]["HopLowServer"](4)
-								wait(.2)
+								task.wait(.2)
 								L_1_[35]:Kick("Hop")
 								L_1_[45]["wt"](.1)
 								L_1_[10]:Teleport(L_1_[30], L_1_[35])
 							end
 							if not L_1_[45]["ffc"](L_1_[40], "Diamond") and (not L_1_[45]["ffc"](L_1_[7], "Diamond") and not Kill_Diamond) then
 								L_1_[45]["HopLowServer"](4)
-								wait(.2)
+								task.wait(.2)
 								L_1_[35]:Kick("Hop")
 								L_1_[45]["wt"](.1)
 								L_1_[10]:Teleport(L_1_[30], L_1_[35])
@@ -6989,55 +7060,55 @@ task["spawn"](function()
 									Tejao = true
 									PositionSkillMasteryDevilFruit = L_533_[3]["HumanoidRootPart"]["CFrame"]
 									L_1_[35]["Character"]["Humanoid"]["Sit"] = false
-									wait(1)
+									task.wait(1)
 									if L_1_[35]["Character"]["Humanoid"]["Sit"] == false then
 										Boat = nil
 									end
 									repeat
-										wait()
+										task.wait()
 										L_1_[31](L_533_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 3, 0), 1.5)
 									until (L_533_[3]["HumanoidRootPart"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 5 or not(getgenv())["AutoFarm"]
 									repeat
-										wait()
+										task.wait()
 										L_1_[45]["Equip"]("Fishman Karate")
 										if L_1_[35]["PlayerGui"]["Main"]["Skills"]:FindFirstChild("Fishman Karate") and (tostring(L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["Z"]["Title"]["TextColor"]) == "Institutional white" and L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["Z"]["Cooldown"]["AbsoluteSize"]["X"] == 0) then
 											L_1_[45]["Equip"]("Fishman Karate")
 											L_1_[31](L_533_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 3, 0), 1.5)
-											wait(.5)
+											task.wait(.5)
 											PositionSkillMasteryDevilFruit = L_533_[3]["HumanoidRootPart"]["Position"]
 											if L_533_[3]["Health"]["Value"] > 0 then
 												L_1_[2]:SendKeyEvent(true, "Z", false, game)
-												wait(.5)
+												task.wait(.5)
 												L_1_[2]:SendKeyEvent(false, "Z", false, game)
-												wait(.2)
+												task.wait(.2)
 											end
 										elseif L_1_[35]["PlayerGui"]["Main"]["Skills"]:FindFirstChild("Fishman Karate") and (tostring(L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["X"]["Title"]["TextColor"]) == "Institutional white" and L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["X"]["Cooldown"]["AbsoluteSize"]["X"] == 0) then
 											L_1_[45]["Equip"]("Fishman Karate")
 											L_1_[31](L_533_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 3, 0), 1.5)
-											wait(.5)
+											task.wait(.5)
 											PositionSkillMasteryDevilFruit = L_533_[3]["HumanoidRootPart"]["Position"]
 											if L_533_[3]["Health"]["Value"] > 0 then
 												L_1_[2]:SendKeyEvent(true, "X", false, game)
-												wait(.5)
+												task.wait(.5)
 												L_1_[2]:SendKeyEvent(false, "X", false, game)
-												wait(.2)
+												task.wait(.2)
 											end
 										elseif L_1_[35]["PlayerGui"]["Main"]["Skills"]:FindFirstChild("Fishman Karate") and (tostring(L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["C"]["Title"]["TextColor"]) == "Institutional white" and L_1_[35]["PlayerGui"]["Main"]["Skills"]["Fishman Karate"]["C"]["Cooldown"]["AbsoluteSize"]["X"] == 0) then
 											L_1_[45]["Equip"]("Fishman Karate")
 											L_1_[31](L_533_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 3, 0), 1.5)
-											wait(.5)
+											task.wait(.5)
 											PositionSkillMasteryDevilFruit = L_533_[3]["HumanoidRootPart"]["Position"]
 											if L_533_[3]["Health"]["Value"] > 0 then
 												L_1_[2]:SendKeyEvent(true, "C", false, game)
-												wait(.5)
+												task.wait(.5)
 												L_1_[2]:SendKeyEvent(false, "C", false, game)
-												wait(.2)
+												task.wait(.2)
 											end
 										end
 									until not L_533_[3]["Parent"] or L_533_[3]["Health"]["Value"] <= 0 or not(getgenv())["AutoFarm"]
 									Tejao = false
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "3")
-									wait(1)
+									task.wait(1)
 								end
 							end
 							if not L_530_[1] then
@@ -7056,19 +7127,19 @@ task["spawn"](function()
 											else
 												Boat = "Bit"
 												L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] = L_536_[1]["VehicleSeat"]["CFrame"] * CFrame["new"](0, 1, 0)
-												wait(3)
+												task.wait(3)
 											end
 										else
 											if L_1_[35]["Character"]["Humanoid"]["Sit"] then
 												vu:Button1Down(Vector2["new"](1280, 600))
-												wait(1)
+												task.wait(1)
 											elseif (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - L_536_[1]["VehicleSeat"]["Position"])["Magnitude"] >= 10 then
 												Boat = nil
 												L_1_[31](L_536_[1]["VehicleSeat"]["CFramem"], 1.5)
 											else
 												Boat = "Bit"
 												L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] = L_536_[1]["VehicleSeat"]["CFrame"] * CFrame["new"](0, 1, 0)
-												wait(3)
+												task.wait(3)
 											end
 										end
 									end
@@ -7078,13 +7149,13 @@ task["spawn"](function()
 								L_1_[31](CFrame["new"](-1935, 6, -2564), 1.5)
 								if (Vector3["new"](-1935, 6, -2564) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3 then
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("BuyBoat", "Dinghy")
-									wait(1)
+									task.wait(1)
 									Boat = "bit"
 								end
 							end
 						else
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "1")
-							wait(1)
+							task.wait(1)
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "2")
 							if L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "1") == 1 or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Wenlocktoad", "1") == 2 then
 								Quest_Start_Evo_Fishman_V3 = true
@@ -7184,10 +7255,7 @@ task["spawn"](function()
 				else
 					L_1_[14]()
 					Quest = nil
-					L_1_[45]["Status"](L_1_[3]({
-						" Status : Auto Farm ",
-						"Level"
-					}))
+					L_1_[45]["Status"](L_1_[3]({" Status : Auto Farm ", "Level"}))
 					L_1_[39]()
 				end
 			elseif Quest == "Yama" then
@@ -7201,7 +7269,7 @@ task["spawn"](function()
 									L_551_[3]["Humanoid"]["Animator"]:Destroy()
 								end
 								repeat
-									wait(.1)
+									task.wait(.1)
 									L_1_[14]()
 									L_551_[3]["HumanoidRootPart"]["Size"] = Vector3["new"](50, 50, 50)
 									L_1_[31](L_551_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 15, 0), 1.5)
@@ -7427,7 +7495,7 @@ task["spawn"](function()
 							-- Nếu chưa ở Third Sea, tự động đi đến
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 							TleP = true
-							wait(50)
+							task.wait(50)
 						end
 					elseif L_1_[45]["CheckItem"]("Ectoplasm") < 250 then
 						-- Farm Ectoplasm ở Second Sea (Ship)
@@ -7447,7 +7515,7 @@ task["spawn"](function()
 								end
 								if Monster and Monster.Humanoid.Health > 0 then
 									repeat
-										wait()
+										task.wait()
 										L_1_[31](Monster.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0), 1.5)
 										L_1_[14]()
 									until not Monster.Parent or Monster.Humanoid.Health <= 0
@@ -7458,12 +7526,12 @@ task["spawn"](function()
 						else
 							L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelDressrosa")
 							TleP = true
-							wait(50)
+							task.wait(50)
 						end
 					elseif not Three_World then
 						L_1_[7]["Remotes"]["CommF_"]:InvokeServer("TravelZou")
 						TleP = true
-						wait(50)
+						task.wait(50)
 					else
 						-- Bắt đầu làm quest Soul Guitar
 						-- Kiểm tra trạng thái màu nước
@@ -7474,7 +7542,7 @@ task["spawn"](function()
 							if progress and progress.Swamp == false then
 								-- Đến vị trí Swamp
 								L_1_[31](CFrame.new(-10147.779296875, 138.6266784668, 5939.5600585938), 1.5)
-								wait(1)
+								task.wait(1)
 								get_mon = {}
 								L_1_[45]["GetMon_Soul"]()  -- lấy danh sách Living Zombie
 								if #get_mon >= 6 then
@@ -7484,9 +7552,9 @@ task["spawn"](function()
 											enemy.HumanoidRootPart.CFrame = L_1_[35].Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 20)
 										end
 									end
-									wait(1)
+									task.wait(1)
 									L_1_[14]()
-									wait(2)
+									task.wait(2)
 								end
 							end
 						elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check") ~= nil then
@@ -7495,13 +7563,13 @@ task["spawn"](function()
 							if not Quest_Soul_Guitar then
 								-- Đến vị trí bắt đầu puzzle
 								L_1_[31](CFrame.new(-9680.7412109375, 6.1591067314148, 6346.1552734375), 1.5)
-								wait(1)
+								task.wait(1)
 								for k, v in pairs(prog) do
 									if v == false then
 										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", k)
 									end
 								end
-								wait(2)
+								task.wait(2)
 								for k, v in pairs(L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", "Check")) do
 									if v == false then
 										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GuitarPuzzleProgress", k)
@@ -7618,7 +7686,7 @@ task["spawn"](function()
 						(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_600_[1]))
 						repeat
 							local L_601_ = {}
-							wait()
+							task.wait()
 							game["Players"]["LocalPlayer"]["Character"]["HumanoidRootPart"]["CFrame"] = CFrame["new"](2959.87231, 2282.42139, -7216.23193)
 							L_601_[1] = {
 								[1] = "RaceV4Progress",
@@ -7635,7 +7703,7 @@ task["spawn"](function()
 								[2] = "Check"
 							};
 							(game:GetService("ReplicatedStorage"))["Remotes"]["CommF_"]:InvokeServer(unpack(L_602_[3]))
-							wait(1)
+							task.wait(1)
 							L_602_[2] = {
 								[1] = "RaceV4Progress";
 								[2] = "Continue"
@@ -7650,35 +7718,35 @@ task["spawn"](function()
 					if (game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") then
 						if L_1_[35]["Character"]["Humanoid"]["Sit"] == true then
 							L_1_[35]["Character"]["Humanoid"]["Sit"] = false
-							wait(.5)
+							task.wait(.5)
 							L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 15, 0)
-							wait(1)
+							task.wait(1)
 						else
 							local L_603_ = {}
 							L_603_[1] = ((game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland"))["WorldPivot"] * CFrame["new"](0, 500, 0)
 							if (L_603_[1]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 25 then
 								task["spawn"](function()
 									repeat
-										wait(.2)
+										task.wait(.2)
 										L_1_[19]["CurrentCamera"]["CFrame"] = CFrame["lookAt"](L_1_[19]["CurrentCamera"]["CFrame"]["Position"], L_1_[16]:GetMoonDirection() + L_1_[19]["CurrentCamera"]["CFrame"]["Position"])
 									until StopCamera or not(game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor")
 								end);
 								((L_1_[7]:WaitForChild("Remotes")):WaitForChild("CommE")):FireServer("ActivateAbility")
-								wait(17)
+								task.wait(17)
 								for L_604_forvar0, L_605_forvar1 in pairs((game:GetService("Workspace"))["Map"]["MysticIsland"]:GetChildren()) do
 									local L_606_ = {}
 									L_606_[3], L_606_[1] = L_604_forvar0, L_605_forvar1
 									if L_606_[1]["ClassName"] == "MeshPart" and (L_606_[1]["Name"] == "Part" and L_606_[1]["Transparency"] == 0) then
 										repeat
-											wait(.2)
+											task.wait(.2)
 											StopCamera = true
 											L_1_[31](L_606_[1]["CFrame"], 1.5)
-											wait(.5)
+											task.wait(.5)
 											L_1_[2]:SendKeyEvent(true, "Space", false, game)
-											wait(.5)
+											task.wait(.5)
 											L_1_[2]:SendKeyEvent(false, "Space", false, game)
 										until L_606_[1]["Transparency"] == 1 or not(game:GetService("Workspace"))["Map"]:FindFirstChild("MysticIsland") or L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CheckTempleDoor")
-										wait(.5)
+										task.wait(.5)
 									end
 								end
 							else
@@ -7697,38 +7765,38 @@ task["spawn"](function()
 							L_1_[45]["GetQuest"]("Good")
 						elseif L_607_[2]["Good"] == -3 then
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](-4600.37, 15.1245, -2881.18), 1.5)
 								if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-4600.37, 15.1245, -2881.18))["Magnitude"] <= 3 then
-									wait(1)
+									task.wait(1)
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"), "Check")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GetUnlockables")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"))
-									wait(.5)
+									task.wait(.5)
 									Q_Boat_1 = true
 								end
 							until Q_Boat_1
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](-2068.63, 3.37222, -9887.08), 1.5)
 								if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-2068.63, 3.37222, -9887.08))["Magnitude"] <= 3 then
-									wait(1)
+									task.wait(1)
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"), "Check")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GetUnlockables")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"))
-									wait(.5)
+									task.wait(.5)
 									Q_Boat_2 = true
 								end
 							until Q_Boat_2
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](-9531.19, 5.91675, -8377.75), 1.5)
 								if (L_1_[35]["Character"]["HumanoidRootPart"]["Position"] - Vector3["new"](-9531.19, 5.91675, -8377.75))["Magnitude"] <= 3 then
-									wait(1)
+									task.wait(1)
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"), "Check")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("GetUnlockables")
 									L_1_[7]["Remotes"]["CommF_"]:InvokeServer("CDKQuest", "BoatQuest", L_1_[25]["NPCs"]:FindFirstChild("Luxury Boat Dealer"))
-									wait(.5)
+									task.wait(.5)
 									Q_Boat_3 = true
 								end
 							until Q_Boat_3
@@ -7780,7 +7848,7 @@ task["spawn"](function()
 										L_616_[1], L_616_[2] = L_614_forvar0, L_615_forvar1
 										if L_616_[2]:FindFirstChild("Humanoid") and (L_616_[2]["Humanoid"]["Health"] > 0 and L_616_[2]:FindFirstChild("HazeESP")) then
 											repeat
-												wait(.1)
+												task.wait(.1)
 												L_1_[31](L_616_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 25, 0), 1.5)
 												L_1_[14]()
 											until not L_616_[2]["Parent"] or L_616_[2]["Humanoid"]["Health"] <= 0
@@ -7804,7 +7872,7 @@ task["spawn"](function()
 									L_619_[3], L_619_[1] = L_617_forvar0, L_618_forvar1
 									if L_619_[1]:FindFirstChild("Humanoid") and (L_619_[1]["Humanoid"]["Health"] > 0 and (L_619_[1]["HumanoidRootPart"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1500) then
 										repeat
-											wait(.3)
+											task.wait(.3)
 											L_1_[14]()
 											L_1_[31](L_619_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 										until not L_619_[1]["Parent"] or L_619_[1]["Humanoid"]["Health"] <= 0
@@ -7824,7 +7892,7 @@ task["spawn"](function()
 										L_622_[3], L_622_[2] = L_620_forvar0, L_621_forvar1
 										if L_622_[2]["Name"] == "Cake Queen" and (L_622_[2]["Humanoid"]["Health"] > 0 and not Kill_Boss_Cake) then
 											repeat
-												wait(.3)
+												task.wait(.3)
 												if L_1_[45]["ffc"](L_622_[2], "HumanoidRootPart") then
 													L_1_[31](L_622_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 													L_1_[14]()
@@ -7833,7 +7901,7 @@ task["spawn"](function()
 												end
 											until not L_622_[2]["Parent"] or L_622_[2]["Humanoid"]["Health"] <= 0
 											Kill_Boss_Cake = true
-											wait(1)
+											task.wait(1)
 										end
 									end
 								else
@@ -7843,10 +7911,10 @@ task["spawn"](function()
 								if L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension") then
 									if not Ceyma_HeavenlyDimension then
 										repeat
-											wait(.1)
+											task.wait(.1)
 											L_1_[31]((L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension"))["WorldPivot"], 1.5)
 										until ((L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension"))["WorldPivot"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 5
-										wait(1)
+										task.wait(1)
 										Ceyma_HeavenlyDimension = true
 									elseif Ceyma_HeavenlyDimension then
 										L_1_[14]()
@@ -7857,7 +7925,7 @@ task["spawn"](function()
 												if L_625_[2]:FindFirstChild("HumanoidRootPart") and (L_625_[2]:FindFirstChild("Humanoid") and ((L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension"))["WorldPivot"]["Position"] - L_625_[2]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1000) then
 													if L_625_[2]["Humanoid"]["Health"] > 0 then
 														repeat
-															wait()
+															task.wait()
 															L_1_[31](L_625_[2]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 															L_1_[14]()
 														until not L_625_[2]["Parent"] or L_625_[2]["Humanoid"]["Health"] <= 0
@@ -7872,14 +7940,14 @@ task["spawn"](function()
 													L_1_[45]["GetTorch"]("Torch3")
 													if not L_1_[40]:FindFirstChildOfClass("Model") and L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension") then
 														L_1_[19]["Map"]["HeavenlyDimension"]["Exit"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"]
-														wait(1)
+														task.wait(1)
 													end
 												end
 											end
 										end
 									end
 								elseif not L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension") then
-									wait(5)
+									task.wait(5)
 									if not L_1_[19]["Map"]:FindFirstChild("HeavenlyDimension") then
 										Kill_Boss_Cake = false
 									end
@@ -7894,10 +7962,10 @@ task["spawn"](function()
 							if L_1_[19]["Map"]:FindFirstChild("HellDimension") then
 								if ((L_1_[19]["Map"]:FindFirstChild("HellDimension"))["WorldPivot"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] > 1200 then
 									repeat
-										wait(.1)
+										task.wait(.1)
 										L_1_[31]((L_1_[19]["Map"]:FindFirstChild("HellDimension"))["WorldPivot"], 1.5)
 									until ((L_1_[19]["Map"]:FindFirstChild("HellDimension"))["WorldPivot"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 10
-									wait(1)
+									task.wait(1)
 								elseif ((L_1_[19]["Map"]:FindFirstChild("HellDimension"))["WorldPivot"]["Position"] - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1200 then
 									L_1_[14]()
 									if L_1_[40]:FindFirstChildOfClass("Model") then
@@ -7907,7 +7975,7 @@ task["spawn"](function()
 											if L_628_[1]:FindFirstChild("HumanoidRootPart") and (L_628_[1]:FindFirstChild("Humanoid") and ((L_1_[19]["Map"]:FindFirstChild("HellDimension"))["WorldPivot"]["Position"] - L_628_[1]["HumanoidRootPart"]["Position"])["Magnitude"] <= 1000) then
 												if L_628_[1]["Humanoid"]["Health"] > 0 then
 													repeat
-														wait()
+														task.wait()
 														L_1_[31](L_628_[1]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 														L_1_[14]()
 													until not L_628_[1]["Parent"] or L_628_[1]["Humanoid"]["Health"] <= 0
@@ -7922,7 +7990,7 @@ task["spawn"](function()
 												L_1_[45]["GetTorchX"]("Torch3")
 												if not L_1_[40]:FindFirstChildOfClass("Model") and L_1_[19]["Map"]:FindFirstChild("HellDimension") then
 													L_1_[19]["Map"]["HellDimension"]["Exit"]["CFrame"] = L_1_[35]["Character"]["HumanoidRootPart"]["CFrame"]
-													wait(1)
+													task.wait(1)
 												end
 											end
 										end
@@ -7933,22 +8001,22 @@ task["spawn"](function()
 									Stop_Fast_Attack = true
 									if not L_1_[40]:FindFirstChild("Soul Reaper") and game["ReplicatedStorage"]:FindFirstChild("Soul Reaper") then
 										repeat
-											wait(.2)
+											task.wait(.2)
 											L_1_[31]((game["ReplicatedStorage"]:FindFirstChild("Soul Reaper"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
 										until L_1_[40]:FindFirstChild("Soul Reaper")
-										wait(1)
+										task.wait(1)
 									end
 									if L_1_[40]:FindFirstChild("Soul Reaper") then
 										L_1_[31]((L_1_[40]:FindFirstChild("Soul Reaper"))["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 0, 2), 1.5)
-										wait(1)
+										task.wait(1)
 									end
 								elseif L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Check") > 0 and L_1_[45]["CheckItem"]("Bones") > 500 then
 									repeat
-										wait(.2)
+										task.wait(.2)
 										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Check")
 										L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Buy", 1, 1)
 									until L_1_[7]["Remotes"]["CommF_"]:InvokeServer("Bones", "Check") == 0
-									wait(1)
+									task.wait(1)
 									if not Dragon_Talon_C then
 										if L_1_[45]["ffc"](L_1_[35]["Backpack"], "Fire Essence") or L_1_[45]["ffc"](L_1_[35]["Character"], "Fire Essence") then
 											repeat
@@ -7982,46 +8050,46 @@ task["spawn"](function()
 						end
 					elseif L_607_[2]["Evil"] == 3 then
 						repeat
-							wait()
+							task.wait()
 							L_1_[31](CFrame["new"](-12392.2637, 603.319763, -6503.27832), 1.5)
 						until (Vector3["new"](-12392.2637, 603.319763, -6503.27832) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 2
 						if L_1_[4]:FindFirstChild("     ") then
 							L_1_[4]["     "]["Enabled"] = false
 						end
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(true, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(false, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[45]["click"](L_1_[35]["PlayerGui"]["Main"]["Dialogue"])
 					elseif L_607_[2]["Good"] == 3 then
 						repeat
-							wait()
+							task.wait()
 							L_1_[31](CFrame["new"](-12392.5068, 603.319763, -6596.00586), 1.5)
 						until (Vector3["new"](-12392.5068, 603.319763, -6596.00586) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 2
 						if L_1_[4]:FindFirstChild("     ") then
 							L_1_[4]["     "]["Enabled"] = false
 						end
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(true, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(false, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[45]["click"](L_1_[35]["PlayerGui"]["Main"]["Dialogue"])
 					elseif L_607_[2]["Good"] == 4 and (L_607_[2]["Evil"] == 4 and L_1_[19]["Map"]["Turtle"]["Cursed"]["BossDoor"]["Position"]["Y"] > 584) then
 						L_1_[14]()
 						repeat
-							wait(.1)
+							task.wait(.1)
 							L_1_[31](CFrame["new"](-12359.1719, 603.319702, -6550.59717, .481593847, 0, -0.87639451, 0, 1, 0, .87639451, 0, .481593847), 1.5)
 						until (Vector3["new"](-12359.1719, 603.319702, -6550.59717) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
 						if L_1_[4]:FindFirstChild("     ") then
 							L_1_[4]["     "]["Enabled"] = false
 						end
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(true, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[2]:SendKeyEvent(false, "E", false, game)
-						wait(1)
+						task.wait(1)
 						L_1_[45]["click"](L_1_[35]["PlayerGui"]["Main"]["Dialogue"])
 					elseif L_1_[19]["Map"]["Turtle"]["Cursed"]["BossDoor"]["Position"]["Y"] <= 584 then
 						local L_629_ = {}
@@ -8041,11 +8109,11 @@ task["spawn"](function()
 						CDK_Q_S_C = 10
 						if (Vector3["new"](-12297.5605, 598.726013, -6532.96436) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 100 then
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](-12379.1406, 601.433167, -6543.60742), 1.5)
 							until Boss_Extant or (Vector3["new"](-12379.1406, 601.433167, -6543.60742) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
 							repeat
-								wait()
+								task.wait()
 								L_1_[31](CFrame["new"](-12330.197265625, 603.31982421875, -6549.1186523438), 1.5)
 								for L_633_forvar0, L_634_forvar1 in pairs(L_1_[40]:GetChildren()) do
 									local L_635_ = {}
@@ -8056,13 +8124,13 @@ task["spawn"](function()
 									end
 								end
 							until Boss_Extant or (Vector3["new"](-12330.197265625, 603.31982421875, -6549.1186523438) - L_1_[35]["Character"]["HumanoidRootPart"]["Position"])["Magnitude"] <= 3
-							wait(1)
+							task.wait(1)
 							for L_636_forvar0, L_637_forvar1 in pairs(L_1_[40]:GetChildren()) do
 								local L_638_ = {}
 								L_638_[2], L_638_[3] = L_636_forvar0, L_637_forvar1
 								if L_638_[3]["Name"] == "Cursed Skeleton Boss" then
 									repeat
-										wait(.1)
+										task.wait(.1)
 										L_1_[45]["Get_Item_Inventory"]("Tushita")
 										L_1_[45]["Equip"]("Tushita")
 										L_1_[31](L_638_[3]["HumanoidRootPart"]["CFrame"] * CFrame["new"](0, 30, 0), 1.5)
@@ -8180,7 +8248,7 @@ task["spawn"](function()
 	if not getgenv()["AntiAFK"] then return end
 	while L_1_[45]["wt"](150) do
 		L_1_[2]:SendKeyEvent(true, "Space", false, game)
-		wait(.5)
+		task.wait(.5)
 		L_1_[2]:SendKeyEvent(false, "Space", false, game)
 	end
 end)
