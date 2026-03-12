@@ -1,87 +1,30 @@
-repeat task.wait() until game:IsLoaded() and game.Players.LocalPlayer
-getgenv().Setting = {
-    ["Team"] = "Pirates",
-    ["Auto Click"] = true,
-    ["Delay Click"] = 0.3,
-    ["EnableWeapon"] = {
-        ["Fruit"] = false,
-        ["Melee"] = true,
-        ["Sword"] = true,
-        ["Gun"] = false
-    },
-    ["Melee"] = {
-        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0.5},
-        ["X"] = {["Enable"] = true, ["HoldTime"] = 0.6},
-        ["C"] = {["Enable"] = true, ["HoldTime"] = 0.5},
-        ["ChangeDelay"] = 3
-    },
+getgenv().Key = "DragonHub_6af6fe1f1d7eee8dc898b1cf15505687"
+getgenv().Config_DragonHub = {
+    ["Team"] = "Pirates", -- Marines/Pirates
+    ["Tween Speed"] = 310, -- Recommend: 250-315
     ["Sword"] = {
-        ["Z"] = {["Enable"] = true, ["HoldTime"] = 1.5},
-        ["X"] = {["Enable"] = true, ["HoldTime"] = 0.6},
-        ["ChangeDelay"] = 2
+        ["Saber"] = true,
+        ["Pole"] = true,
+        ["Dragon Trident"] = true,
+        ["Yama"] = true,
+        ["Tushita"] = true,
+        ["CDK"] = true,
     },
     ["Gun"] = {
-        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["X"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["ChangeDelay"] = 1,
-        ["GunMode"] = false
+        ["Soul Guitar"] = false,
     },
-    ["Fruit"] = {
-        ["Z"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["X"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["C"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["V"] = {["Enable"] = false, ["HoldTime"] = 0.1},
-        ["F"] = {["Enable"] = true, ["HoldTime"] = 0.1},
-        ["ChangeDelay"] = 1
-    },
-    ["LockBounty"] = {
-        ["Enable"] = false,
-        ["Min"] = 0,
-        ["Max"] = 30000000
-    },
-    ["Skip"] = {
-        ["Fruit"] = true,
-        ["FruitSkip"] = {"Buddha","Tiger","T-Rex"},
-        ["SafeZone"] = true,
-        ["NoHaki"] = true,
-        ["NoPvP"] = true
-    },
-    ["SafeHealth"] = {
-        ["Health"] = 4700,
-        ["Mask"] = false,
-        ["MaskType"] = "Mask",
-        ["RaceV4"] = false
-    },
-    ["Setting"] = {
-        ["UseRaceV3"] = true,
-        ["UseRaceV4"] = true,
-        ["SafeHealth"] = true,
-        ["Skip V4 Race"] = true,
-        ["Health"] = 4700,
-        ["FPSBoots"] = true,
-        ["AutoServerHop"] = true,
-        ["CheckCombatBeforeHop"] = true,
-        ["Fast Attack"] = true
-    },
-    ["Select Region"] = {
-        ["Enabled"] = true,
-        ["Region"] = {
-            ["Singapore"] = true,
-            ["United States"] = false,
-            ["Netherlands"] = false,
-            ["Germany"] = false,
-            ["India"] = false,
-            ["Australia"] = false
+    ["Misc"] = {
+        ["Skip Level"] = true,
+        ["FPS Boost"] = true,
+        ["Set Fps"] = {["Enabled"] = false, ["Cap"] = 30},
+        ["Auto Fully Fighting Style"] = true, -- Combat -> Godhuman
+        ["Auto V2"] = true,
+        ["Auto V3"] = true, -- Just Auto V2
+        ["Pull Lever"] = false, -- Auto Pull Lever
+        ["Webhook"] = {
+            ["Enabled"] = false,
+            ["Url"] = "",
         }
-    },
-    ["Webhook"] = {
-        ["Enabled"] = true,
-        ["Url"] = "your Url webhook"
-    },
-    ["AimBot"] = {
-        ["Enable"] = true,
-        ["AimCamera"] = {["Enable"] = true, ["MaxDistance"] = 300},
-        ["LockAim"] = {["Enable"] = true}
     }
 }
-loadstring(game:HttpGet("https://raw.githubusercontent.com/dragonhubdev/dragonwitheveryone/refs/heads/main/AutoBounty.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dragonhubdev/dragonwitheveryone/refs/heads/main/KaitunLoader.lua"))()
