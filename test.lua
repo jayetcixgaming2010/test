@@ -1,57 +1,155 @@
 --[[
-    Khfresh Hub v30 - Titan Fishing Ultimate
-    Cập nhật v30:
-      - Fix tương thích tất cả executor (Delta, Arceus, KRNL, Synapse, Fluxus...)
-      - Xóa += syntax → dùng = x + 1 (Lua 5.1 compatible)
-      - Wrap hookmetamethod/getnamecallmethod với pcall + fallback
-      - Wrap fireclickdetector với pcall + fallback
-      - setclipboard compat (setclipboard / toclipboard / Clipboard)
-      - gethui fallback an toàn
-      - VirtualInputManager full pcall
-      - settings().Rendering wrap pcall
-      - Tất cả executor-specific function đều có fallback
+    Khfresh Hub v31 - Titan Fishing Ultimate
+    Cập nhật v31:
+      - Fix riêng cho Delta X (mobile) + Velocity (PC)
+      - Delta X: hookmetamethod/getnamecallmethod KHÔNG có → bỏ hẳn hook, dùng scan remote
+      - Delta X: VirtualInputManager không work mobile → dùng tap() fallback
+      - Velocity: gethui guard thêm
+      - Auto-detect executor, tự chọn click method phù hợp
+      - Log rõ executor + method đang dùng vào console
 --]]
 
--- ==================== EXECUTOR COMPAT LAYER ====================
--- Wrap tất cả executor-specific function an toàn
-local _gethui = (gethui and pcall(gethui) and gethui) or nil
-local _hookmetamethod = (typeof(hookmetamethod) == "function") and hookmetamethod or nil
-local _getnamecallmethod = (typeof(getnamecallmethod) == "function") and getnamecallmethod or nil
-local _fireclickdetector = (typeof(fireclickdetector) == "function") and fireclickdetector or nil
-local _setclipboard = (typeof(setclipboard) == "function") and setclipboard
-                   or (typeof(toclipboard) == "function") and toclipboard
-                   or (typeof(Clipboard) == "table" and typeof(Clipboard.set) == "function") and function(s) Clipboard.set(s) end
-                   or function(_) end -- noop nếu không có
+-- ==================== SERVICES ====================
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
+local TweenService      = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService   = game:GetService("TeleportService")
+local CoreGui           = game:GetService("CoreGui")
+local AssetService      = game:GetService("AssetService")
 
+local player = Players.LocalPlayer
+
+-- ==================== EXECUTOR COMPAT LAYER ====================
+-- Tự detect executor để chọn đúng method
+
+local IS_DELTA_X  = false
+local IS_VELOCITY = false
+local EXEC_NAME   = "Unknown"
+
+pcall(function()
+    if identifyexecutor then
+        EXEC_NAME = identifyexecutor() or "Unknown"
+        local low = EXEC_NAME:lower()
+        if low:find("delta") then IS_DELTA_X = true end
+        if low:find("velocity") then IS_VELOCITY = true end
+    end
+end)
+-- Fallback detect Delta X qua thiếu hookmetamethod (mobile executor thường không có)
+if not IS_DELTA_X and not IS_VELOCITY then
+    pcall(function()
+        if not hookmetamethod and not getnamecallmethod then
+            IS_DELTA_X = true -- assume mobile executor
+        end
+    end)
+end
+
+print("[KhfreshHub] Executor: " .. EXEC_NAME)
+print("[KhfreshHub] Delta X mode: " .. tostring(IS_DELTA_X))
+print("[KhfreshHub] Velocity mode: " .. tostring(IS_VELOCITY))
+
+-- gethui (Velocity có, Delta X thường có, nhưng guard cẩn thận)
+local _gethui = nil
+pcall(function()
+    if typeof(gethui) == "function" then
+        local ok, result = pcall(gethui)
+        if ok and result then _gethui = gethui end
+    end
+end)
+
+-- hookmetamethod + getnamecallmethod
+-- Delta X KHÔNG có → skip hoàn toàn, không gây error
+local _hookmetamethod    = nil
+local _getnamecallmethod = nil
+if not IS_DELTA_X then
+    pcall(function()
+        if typeof(hookmetamethod) == "function" then
+            _hookmetamethod = hookmetamethod
+        end
+        if typeof(getnamecallmethod) == "function" then
+            _getnamecallmethod = getnamecallmethod
+        end
+    end)
+end
+
+-- fireclickdetector
+local _fireclickdetector = nil
+pcall(function()
+    if typeof(fireclickdetector) == "function" then
+        _fireclickdetector = fireclickdetector
+    end
+end)
+
+-- setclipboard
+local _setclipboard = nil
+pcall(function()
+    if typeof(setclipboard) == "function" then _setclipboard = setclipboard
+    elseif typeof(toclipboard) == "function" then _setclipboard = toclipboard
+    elseif typeof(Clipboard) == "table" and typeof(Clipboard.set) == "function" then
+        _setclipboard = function(s) Clipboard.set(s) end
+    end
+end)
+
+-- tap() — Delta X mobile click method
+local _tap = nil
+pcall(function()
+    if typeof(tap) == "function" then _tap = tap end
+end)
+
+-- VirtualInputManager
+local _vim = nil
+pcall(function()
+    _vim = game:GetService("VirtualInputManager")
+end)
+
+-- guiParent
+local guiParent = CoreGui
+pcall(function()
+    if _gethui then
+        local ok, h = pcall(_gethui)
+        if ok and h then guiParent = h end
+    end
+end)
+
+-- ── HELPER FUNCTIONS ──
 local function safeFireCD(cd)
     if _fireclickdetector then
         pcall(_fireclickdetector, cd)
     else
-        -- Fallback: simulate proximity activate
         pcall(function() cd:Activate() end)
     end
 end
 
 local function safeCopyClipboard(str)
-    pcall(_setclipboard, str)
+    if _setclipboard then pcall(_setclipboard, str) end
 end
 
--- ==================== SERVICES ====================
-local Players             = game:GetService("Players")
-local RunService          = game:GetService("RunService")
-local TweenService        = game:GetService("TweenService")
-local ReplicatedStorage   = game:GetService("ReplicatedStorage")
-local TeleportService     = game:GetService("TeleportService")
-local CoreGui             = game:GetService("CoreGui")
-local AssetService        = game:GetService("AssetService")
-
-local VirtualInputManager = nil
-pcall(function()
-    VirtualInputManager = game:GetService("VirtualInputManager")
-end)
-
-local player    = Players.LocalPlayer
-local guiParent = (_gethui and pcall(_gethui) and _gethui()) or CoreGui
+-- ── CLICK FUNCTION (tự chọn method theo executor) ──
+-- Delta X mobile → dùng tap() nếu có, không thì remote-only
+-- Velocity / PC   → dùng VirtualInputManager
+local function sendClick()
+    if IS_DELTA_X then
+        -- Mobile: tap vào center màn hình
+        if _tap then
+            pcall(function()
+                local vp = workspace.CurrentCamera.ViewportSize
+                _tap(vp.X / 2, vp.Y / 2)
+            end)
+        end
+        -- Nếu không có tap → reel sẽ fallback dùng remote (xem doReel)
+    else
+        -- PC executor (Velocity, KRNL, Synapse...)
+        if _vim then
+            pcall(function()
+                _vim:SendMouseButtonEvent(0, 0, 0, true,  game, 1)
+            end)
+            task.wait(0.01)
+            pcall(function()
+                _vim:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            end)
+        end
+    end
+end
 
 -- ==================== WINDUI ====================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -223,14 +321,7 @@ local function fireRemote(name, ...)
     return false
 end
 
--- Safe VirtualInput click
-local function sendMouseClick(down)
-    if VirtualInputManager then
-        pcall(function()
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, down, game, 1)
-        end)
-    end
-end
+-- sendClick() defined in compat layer above
 
 -- ==================== ĐỌC LEVEL ====================
 -- Format game: "Level: 1 [0/40]"
@@ -429,9 +520,7 @@ local function spamClick(maxDur)
     local t = tick()
     while tick() - t < maxDur and autoFarmEnabled do
         if not isInReelPhase() then break end
-        sendMouseClick(true)
-        task.wait(reelDelay)
-        sendMouseClick(false)
+        sendClick()
         task.wait(reelDelay)
     end
 end
@@ -1181,15 +1270,18 @@ end)
 -- ==================== STARTUP ====================
 task.wait(1)
 
--- Log executor compat info
-local hookSupport = _hookmetamethod ~= nil and "YES" or "NO (fallback mode)"
-print("[KhfreshHub] hookmetamethod support: " .. hookSupport)
-print("[KhfreshHub] fireclickdetector support: " .. (_fireclickdetector ~= nil and "YES" or "NO (fallback)"))
-print("[KhfreshHub] setclipboard support: " .. (_setclipboard ~= nil and "YES" or "NO"))
+print("[KhfreshHub] hookmetamethod : " .. (_hookmetamethod ~= nil and "YES" or "NO"))
+print("[KhfreshHub] fireclickdetector: " .. (_fireclickdetector ~= nil and "YES" or "NO"))
+print("[KhfreshHub] setclipboard     : " .. (_setclipboard ~= nil and "YES" or "NO"))
+print("[KhfreshHub] tap()            : " .. (_tap ~= nil and "YES" or "NO"))
+print("[KhfreshHub] VIM              : " .. (_vim ~= nil and "YES" or "NO"))
+
+local clickMode = IS_DELTA_X and (_tap and "tap()" or "remote-only") or (_vim and "VirtualInputManager" or "none")
+print("[KhfreshHub] Click mode       : " .. clickMode)
 
 Window:Notify({
-    Title   = "Khfresh Hub v30",
-    Content = "Loaded! Sync → Auto Fish → Progression.",
+    Title   = "Khfresh Hub v31",
+    Content = "Loaded! Executor: " .. EXEC_NAME,
     Duration = 5
 })
-print("Khfresh Hub v30 - Titan Fishing loaded.")
+print("Khfresh Hub v31 - Titan Fishing loaded.")
