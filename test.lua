@@ -2,7 +2,7 @@
     Tên Script: Khfresh Hub v23 - Fixed & Optimized
     Mô tả: Script hỗ trợ tự động câu cá và teleport trong game.
     Đã sửa lỗi: Auto Farm, Dropdown skill, Teleport dùng Tween với tốc độ 310 studs/s
-              Thêm nút Auto Use VIP Skill, điểm Sell Fish, Store, Auto Spin từ xa
+              Thêm nút Auto Use VIP Skill, điểm Store, Auto Spin Skill Book (không teleport)
 --]]
 
 local Players = game:GetService("Players")
@@ -423,28 +423,28 @@ local teleportPoints = {
     ["Island 3"] = CFrame.new(990, 28.1, 1272),
     ["Island 4"] = CFrame.new(631.4, 28.1, -846.7),
     ["Island 5"] = CFrame.new(-337.1, 29.9, 829.6),
-    -- Điểm Skill Book (NPC random skill)
+    -- Skill Book (NPC random skill)
     ["Skill Book"] = CFrame.new(
         120.66777, 67.662674, -41.885273,
         -0.0367827006, 1.6738765e-08, 0.999323308,
         8.67729284e-08, 1, -1.35561962e-08,
         -0.999323308, 8.62155716e-08, -0.0367827006
     ),
-    -- Điểm Skill Shop
+    -- Skill Shop
     ["Skill Shop"] = CFrame.new(
         208.996475, 22.4446487, 59.3335266,
         0.131857201, 7.43682804e-08, 0.991268694,
         -6.4368777e-08, 1, -6.64610837e-08,
         -0.991268694, -5.50433832e-08, 0.131857201
     ),
-    -- Điểm Sell Fish
+    -- Sell Fish
     ["Sell Fish"] = CFrame.new(
         208.996475, 22.4446487, 59.3335266,
         0.131857201, -8.01955267e-08, 0.991268694,
         6.94082871e-08, 1, 7.16693052e-08,
         -0.991268694, 5.93521499e-08, 0.131857201
     ),
-    -- Điểm Store (mua cần câu, mồi câu)
+    -- Store (mua cần câu, mồi câu)
     ["Store"] = CFrame.new(
         168.836685, 23.9898472, 73.5896072,
         0.199367687, -5.60842262e-10, 0.979924738,
@@ -453,7 +453,7 @@ local teleportPoints = {
     )
 }
 
--- Tạo các nút teleport
+-- Tạo các nút teleport thông thường
 for name, pos in pairs(teleportPoints) do
     TeleportTab:Button({
         Title = "Teleport to " .. name,
@@ -478,58 +478,59 @@ TeleportTab:Button({
         
         for name, pos in pairs(teleportPoints) do
             local posVec = typeof(pos) == "CFrame" and pos.Position or pos
-            local dist = (currentPos - posVec).Magnitude
-            if dist < nearestDistance then
-                nearestDistance = dist
-                nearestPoint = pos
+            -- Chỉ xét các đảo chính (Island), có thể bỏ qua các điểm khác nếu muốn
+            if name:find("Island") then
+                local dist = (currentPos - posVec).Magnitude
+                if dist < nearestDistance then
+                    nearestDistance = dist
+                    nearestPoint = pos
+                end
             end
         end
         
         if nearestPoint then
             teleportWithTween(nearestPoint)
+        else
+            Window:Notify({Title = "Quick Teleport", Content = "Không tìm thấy đảo nào!", Duration = 2})
         end
     end
 })
 
--- Nút Auto Spin Skill Book (từ xa, không di chuyển)
+-- Nút Auto Spin Skill Book (KHÔNG teleport, tìm và tương tác từ xa)
 TeleportTab:Button({
-    Title = "Auto Spin Skill Book (Remote)",
-    Description = "Tự động spin skill book mà không cần di chuyển",
+    Title = "Auto Spin Skill Book",
+    Description = "Tìm NPC Skill Book và tự động spin (từ xa nếu có thể)",
     Callback = function()
         task.spawn(function()
-            -- Lấy vị trí của Skill Book
-            local skillBookPos = teleportPoints["Skill Book"]
-            if not skillBookPos then
-                Window:Notify({Title = "Lỗi", Content = "Không tìm thấy điểm Skill Book!", Duration = 3})
-                return
-            end
+            Window:Notify({Title = "Auto Spin", Content = "Đang tìm NPC Skill Book...", Duration = 2})
             
-            -- Tìm Part có ClickDetector gần vị trí đó
-            local npcPart = nil
+            -- Tìm NPC Skill Book trong toàn bộ workspace
+            local npcFound = false
             for _, obj in ipairs(workspace:GetDescendants()) do
                 if obj:IsA("Part") and obj:FindFirstChild("ClickDetector") then
-                    local dist = (obj.Position - skillBookPos.Position).Magnitude
-                    if dist < 10 then
-                        npcPart = obj
+                    local name = obj.Name:lower()
+                    -- Kết hợp thêm kiểm tra vị trí gần với tọa độ Skill Book để tăng độ chính xác
+                    local distFromBook = (obj.Position - teleportPoints["Skill Book"].Position).Magnitude
+                    if distFromBook < 20 and (name:find("skill") or name:find("book") or name:find("npc") or name:find("gacha")) then
+                        fireclickdetector(obj:FindFirstChild("ClickDetector"))
+                        npcFound = true
                         break
                     end
                 end
             end
             
-            if not npcPart then
-                Window:Notify({Title = "Auto Spin", Content = "Không tìm thấy NPC Skill Book!", Duration = 3})
+            if not npcFound then
+                Window:Notify({Title = "Auto Spin", Content = "Không tìm thấy NPC Skill Book gần điểm đã định!", Duration = 3})
                 return
             end
             
-            -- Kích hoạt ClickDetector từ xa
-            fireclickdetector(npcPart:FindFirstChild("ClickDetector"))
-            task.wait(1) -- chờ menu mở
+            task.wait(1) -- đợi menu mở
             
             -- Tìm nút spin
             local spinBtn = findSpinButton()
             if spinBtn then
                 simulateClick(spinBtn)
-                Window:Notify({Title = "Auto Spin", Content = "Đã nhấn nút Spin từ xa!", Duration = 3})
+                Window:Notify({Title = "Auto Spin", Content = "Đã nhấn nút Spin!", Duration = 3})
             else
                 Window:Notify({Title = "Auto Spin", Content = "Không tìm thấy nút Spin!", Duration = 3})
             end
