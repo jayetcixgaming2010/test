@@ -1131,22 +1131,51 @@ getgenv().TweenSpeedFar = 300   -- Velocidade Padrão (Longe)
 getgenv().TweenSpeedNear = 600  -- Velocidade Boost (Perto <= 15 studs)
 
 _tp = function(I)
-local e = plr.Character;
-if not e or not e:FindFirstChild("HumanoidRootPart") then
-return;
-end;
+    local e = plr.Character;
+    if not e or not e:FindFirstChild("HumanoidRootPart") then
+        return;
+    end;
 
-local HRP = e.HumanoidRootPart;  
+    local HRP = e.HumanoidRootPart;
 
--- Desativar farm enquanto tweena  
-shouldTween = true  
-getgenv().OnFarm = false  
+    -- Tắt farm trong khi tween
+    shouldTween = true
+    getgenv().OnFarm = false
 
--- Garantir que não está ancorado  
-if HRP.Anchored then  
-	HRP.Anchored = false  
-	task.wait()  
-end  
+    -- Giải phóng nếu đang bị anchor
+    if HRP.Anchored then
+        HRP.Anchored = false
+        task.wait()
+    end
+
+    local dist = (I.Position - HRP.Position).Magnitude
+
+    -- Tốc độ: gần (≤15) dùng 600, xa dùng 300 (có thể thay đổi qua getgenv)
+    local speed = dist <= 15 and (getgenv().TweenSpeedNear or 600) or (getgenv().TweenSpeedFar or 300)
+
+    local info = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)
+    -- Tween trên part C (Rip_Indra) thay vì HRP
+    local tween = game:GetService("TweenService"):Create(C, info, { CFrame = I })
+
+    -- Nếu đang ngồi trên thuyền, chỉ di chuyển theo chiều cao
+    if e.Humanoid.Sit == true then
+        C.CFrame = CFrame.new(C.Position.X, I.Y, C.Position.Z)
+    end
+
+    tween:Play()
+
+    -- Theo dõi quá trình tween, nếu bị hủy giữa chừng thì dừng
+    task.spawn(function()
+        while tween.PlaybackState == Enum.PlaybackState.Playing do
+            if not shouldTween then
+                tween:Cancel()
+                break
+            end
+            task.wait(0.1)
+        end
+        getgenv().OnFarm = true
+    end)
+end
 
 local dist = (I.Position - HRP.Position).Magnitude  
 
