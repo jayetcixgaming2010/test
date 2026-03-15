@@ -1,7 +1,7 @@
 local function NotificacaoNightMystic(titulo, mensagem)
     local TweenService = game:GetService("TweenService")
     local CoreGui = game:GetService("CoreGui")
-    local LogoID = "rbxassetid://105245380363493"
+    local LogoID = "rbxassetid://80900795508277"
 
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "NM_Notify"
@@ -43,12 +43,12 @@ local function NotificacaoNightMystic(titulo, mensagem)
     end)
 end
 
-NotificacaoNightMystic("SYNTRAX Hub", "Script carregado com sucesso!")
+NotificacaoNightMystic("Tsunami Hub", "Script carregado com sucesso!")
 
 repeat task.wait() until game:IsLoaded()
 
 local HttpService = game:GetService("HttpService")
-local FolderName = "SYNTRAX Hub"
+local FolderName = "Tsunami Hub"
 local FileName = "Settings.json"
 local FullPath = FolderName .. "/" .. FileName
 
@@ -170,7 +170,7 @@ Marines = function()
 Pirates = function()
 		replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates");
 	end;
-local I = (loadstring(game:HttpGet("https://pastefy.app/3JTRMAhT/raw")))();
+local I = (loadstring(game:HttpGet("https://pastefy.app/dC5PNp19/raw")))();
 if World1 then
 	Boss = {
 			"The Gorilla King",
@@ -2546,13 +2546,13 @@ ConfigSection:AddButton({
             
             -- Notificação Universal
             game.StarterGui:SetCore("SendNotification", {
-                Title = "NSYNTRAX Hub",
+                Title = "Tsunami Hub",
                 Text = "Configurações resetadas! Re-execute o script.",
                 Duration = 5
             })
         else
             game.StarterGui:SetCore("SendNotification", {
-                Title = "SYNTRAX Hub",
+                Title = "Tsunami Hub",
                 Text = "Nenhum arquivo de save encontrado para apagar.",
                 Duration = 3
             })
@@ -4296,7 +4296,7 @@ local ToolAbilities = Net:WaitForChild("RF/JobToolAbilities")
 -- =========================================================
 -- CONFIGURAÇÃO DA NOTIFICAÇÃO CUSTOMIZADA (FULL BLACK)
 -- =========================================================
-local LogoID = "rbxassetid://105245380363493"
+local LogoID = "rbxassetid://80900795508277"
 
 local function NotifyNightMystic(texto)
     task.spawn(function()
@@ -4658,7 +4658,7 @@ task.spawn(function()
 end)
 
 
-Discord_Info:AddDiscord("SYNTRAX Hub", "gkud3frejh")
+Discord_Info:AddDiscord("Tsunami Hub", "gkud3frejh")
 
 b:AddSeperator("Farming")
 
@@ -11593,7 +11593,8 @@ p:AddToggle({
         
         -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoStoreFruit_Save"] = I
-
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -11609,12 +11610,15 @@ end);
 p:AddToggle({
     Title = "Auto Tween to Fruit",
     Description = "Automatic tween to get devil fruit",
+    -- 1. Carrega o estado salvo
     Default = GetSetting("AutoTweenFruit_Save", false),
     Callback = function(I)
         _G.TwFruits = I
-
+        
+        -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoTweenFruit_Save"] = I
-
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -11634,12 +11638,15 @@ end);
 p:AddToggle({
     Title = "Auto Collect Fruit",
     Description = "Automatic bring devil fruit",
+    -- 1. Carrega o estado salvo ou false por padrão
     Default = GetSetting("AutoCollectFruit_Save", false),
     Callback = function(I)
         _G.InstanceF = I
         
+        -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoCollectFruit_Save"] = I
-    
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -11666,39 +11673,169 @@ D:AddButton({ Title = "Buy Ken", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("KenTalk", "Buy");
 	end });
 D:AddSeperator("Fighting - Style");
-D:AddButton({ Title = "Buy Black Leg", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyBlackLeg");
-	end });
-D:AddButton({ Title = "Buy Electro", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyElectro");
-	end });
-D:AddButton({ Title = "Buy Fishman Karate", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyFishmanKarate");
-	end });
-D:AddButton({ Title = "Buy DragonClaw", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BlackbeardReward", "DragonClaw", "2");
-	end });
-D:AddButton({ Title = "Buy Superhuman", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuySuperhuman");
-	end });
-D:AddButton({ Title = "Buy Death Step", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyDeathStep");
-	end });
-D:AddButton({ Title = "Buy Sharkman Karate", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuySharkmanKarate");
-	end });
-D:AddButton({ Title = "Buy ElectricClaw", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyElectricClaw");
-	end });
-D:AddButton({ Title = "Buy DragonTalon", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyDragonTalon");
-	end });
-D:AddButton({ Title = "Buy Godhuman", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuyGodhuman");
-	end });
-D:AddButton({ Title = "Buy SanguineArt", Description = "", Callback = function()
-		replicated.Remotes.CommF_:InvokeServer("BuySanguineArt");
-	end });
+-- ============================================================
+-- Hàm tween mượt đến NPC rồi mua Fighting Style
+-- Dùng RunService.Heartbeat delta → đảm bảo chạy 100% chính xác
+-- ============================================================
+local _MeleeTweenActive = false
+
+local function TweenBuyMelee(targetCFrame, remoteKey, remoteArg1, remoteArg2)
+	if _MeleeTweenActive then return end
+	if not targetCFrame then
+		-- Không tìm được vị trí NPC phù hợp world hiện tại
+		warn("[TweenBuyMelee] Không tìm thấy vị trí NPC cho world này.")
+		return
+	end
+	_MeleeTweenActive = true
+
+	task.spawn(function()
+		local char = plr.Character
+		if not char or not char:FindFirstChild("HumanoidRootPart") then
+			_MeleeTweenActive = false
+			return
+		end
+
+		local HRP = char.HumanoidRootPart
+		local TweenService = game:GetService("TweenService")
+		local RunService = game:GetService("RunService")
+
+		-- Tắt farm trong lúc tween
+		shouldTween = true
+		getgenv().OnFarm = false
+
+		-- Bỏ anchor nếu có
+		if HRP.Anchored then
+			HRP.Anchored = false
+			task.wait()
+		end
+
+		-- Tính thời gian tween dựa trên khoảng cách + delta
+		local dist = (targetCFrame.Position - HRP.Position).Magnitude
+		local speed = dist <= 15 and (getgenv().TweenSpeedNear or 600) or (getgenv().TweenSpeedFar or 300)
+		local duration = dist / speed
+
+		-- Tween đến NPC (dùng cùng biến C như hàm _tp gốc)
+		local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+		local tween = TweenService:Create(C, tweenInfo, { CFrame = targetCFrame })
+
+		-- Đếm delta qua Heartbeat để đảm bảo hoàn thành đúng thời điểm
+		local elapsed = 0
+		local heartbeatConn
+		heartbeatConn = RunService.Heartbeat:Connect(function(dt)
+			elapsed = elapsed + dt
+			if elapsed >= duration then
+				heartbeatConn:Disconnect()
+			end
+		end)
+
+		tween:Play()
+		tween.Completed:Wait()
+
+		-- Đảm bảo heartbeat đã disconnect
+		if heartbeatConn.Connected then
+			heartbeatConn:Disconnect()
+		end
+
+		-- Đợi server nhận vị trí
+		task.wait(0.35)
+
+		-- Invoke server mua style
+		pcall(function()
+			if remoteArg1 ~= nil and remoteArg2 ~= nil then
+				replicated.Remotes.CommF_:InvokeServer(remoteKey, remoteArg1, remoteArg2)
+			elseif remoteArg1 ~= nil then
+				replicated.Remotes.CommF_:InvokeServer(remoteKey, remoteArg1)
+			else
+				replicated.Remotes.CommF_:InvokeServer(remoteKey)
+			end
+		end)
+
+		task.wait(0.2)
+		getgenv().OnFarm = true
+		_MeleeTweenActive = false
+	end)
+end
+
+-- Bảng NPC Fighting Style (Pos ưu tiên theo world hiện tại)
+local MeleeNPCData = {
+	["Dark Step"]      = { Key = "BuyBlackLeg",
+		Pos = World1 and CFrame.new(-985, 13, 3988)
+			or World2 and CFrame.new(-4753, 35, -4850)
+			or World3 and CFrame.new(-5045, 371, -3181) or nil },
+	["Electric"]       = { Key = "BuyElectro",
+		Pos = World1 and CFrame.new(-5384, 13, -2148)
+			or World2 and CFrame.new(-4867, 35, -4766)
+			or World3 and CFrame.new(-4995, 314, -3203) or nil },
+	["Water Kung Fu"]  = { Key = "BuyFishmanKarate",
+		Pos = World1 and CFrame.new(61585, 18, 987)
+			or World2 and CFrame.new(-4958, 35, -4668)
+			or World3 and CFrame.new(-5023, 371, -3190) or nil },
+	["Dragon Breath"]  = { Key = "BlackbeardReward", Arg1 = "DragonClaw", Arg2 = "2",
+		Pos = World2 and CFrame.new(701, 187, 655)
+			or World3 and CFrame.new(-4981, 371, -3207) or nil },
+	["Superhuman"]     = { Key = "BuySuperhuman",
+		Pos = World2 and CFrame.new(1374, 247, -5192)
+			or World3 and CFrame.new(-5004, 371, -3198) or nil },
+	["Death Step"]     = { Key = "BuyDeathStep",
+		Pos = World2 and CFrame.new(6357, 296, -6762)
+			or World3 and CFrame.new(-4999, 314, -3221) or nil },
+	["Sharkman Karate"]= { Key = "BuySharkmanKarate",
+		Pos = World2 and CFrame.new(-2602, 238, -10316)
+			or World3 and CFrame.new(-4972, 314, -3222) or nil },
+	["Dragon Talon"]   = { Key = "BuyDragonTalon",
+		Pos = World3 and CFrame.new(5661, 1211, 865) or nil },
+	["Electric Claw"]  = { Key = "BuyElectricClaw",
+		Pos = World3 and CFrame.new(-10371, 331, -10131) or nil },
+	["Godhuman"]       = { Key = "BuyGodhuman",
+		Pos = World3 and CFrame.new(-13776, 334, -9879) or nil },
+	["Sanguine Art"]   = { Key = "BuySanguineArt",
+		Pos = World3 and CFrame.new(-16353, 160, 99) or nil },
+}
+
+D:AddButton({ Title = "Buy Black Leg",      Description = "Tween → Dark Step Teacher", Callback = function()
+	local d = MeleeNPCData["Dark Step"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy Electro",        Description = "Tween → Mad Scientist", Callback = function()
+	local d = MeleeNPCData["Electric"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy Fishman Karate", Description = "Tween → Water Kung Fu Teacher", Callback = function()
+	local d = MeleeNPCData["Water Kung Fu"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy DragonClaw",     Description = "Tween → Sabi", Callback = function()
+	local d = MeleeNPCData["Dragon Breath"]
+	TweenBuyMelee(d.Pos, d.Key, d.Arg1, d.Arg2)
+end });
+D:AddButton({ Title = "Buy Superhuman",     Description = "Tween → Martial Arts Master", Callback = function()
+	local d = MeleeNPCData["Superhuman"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy Death Step",     Description = "Tween → Phoeyu, the Reformed", Callback = function()
+	local d = MeleeNPCData["Death Step"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy Sharkman Karate",Description = "Tween → Daigrock, the Sharkman", Callback = function()
+	local d = MeleeNPCData["Sharkman Karate"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy ElectricClaw",   Description = "Tween → Previous Hero", Callback = function()
+	local d = MeleeNPCData["Electric Claw"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy DragonTalon",    Description = "Tween → Uzoth", Callback = function()
+	local d = MeleeNPCData["Dragon Talon"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy Godhuman",       Description = "Tween → Ancient Monk", Callback = function()
+	local d = MeleeNPCData["Godhuman"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
+D:AddButton({ Title = "Buy SanguineArt",    Description = "Tween → Shafi", Callback = function()
+	local d = MeleeNPCData["Sanguine Art"]
+	TweenBuyMelee(d.Pos, d.Key)
+end });
 D:AddSeperator("Accessory");
 D:AddButton({ Title = "Buy Tomoe Ring", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Tomoe Ring");
@@ -12073,8 +12210,10 @@ task.spawn(function()
 		end);
 	end);
 end);
-
+-- FastAttack extraído do seu script (cole isso onde precisar)
 local FastAttackModule = {}
+
+-- Dependências (ajuste se já tiver essas variáveis no seu ambiente)
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -12093,11 +12232,13 @@ end
 local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
 local Net = SafeWaitForChild(Modules, "Net")
 
+-- Configs usadas pelo loop externo (podem ser mudadas em runtime)
 local Settings = {
     AutoClick = true,
     ClickDelay = 0
 }
 
+-- Implementação do FastAttack
 local FastAttack = {
     Distance = 100,
     attackMobs = true,
@@ -12112,6 +12253,7 @@ local function IsAlive(character)
     return character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0
 end
 
+-- Procura inimigos (Head) dentro da pasta passada (Enemies ou Characters)
 local function ProcessEnemies(OthersEnemies, Folder)
     local BasePart = nil
     for _, Enemy in ipairs(Folder:GetChildren()) do
@@ -12128,6 +12270,7 @@ end
 
 function FastAttack:Attack(BasePart, OthersEnemies)
     if not BasePart or #OthersEnemies == 0 then return end
+    -- envia RegisterAttack com delay configurado e depois RegisterHit com os alvos
     pcall(function()
         RegisterAttack:FireServer(Settings.ClickDelay or 0)
         RegisterHit:FireServer(BasePart, OthersEnemies)
@@ -12136,6 +12279,7 @@ end
 
 function FastAttack:AttackNearest()
     local OthersEnemies = {}
+    -- assume que as pastas 'Enemies' e 'Characters' existem no workspace
     local EnemiesFolder = workspace:FindFirstChild("Enemies")
     local CharactersFolder = workspace:FindFirstChild("Characters")
     local Part1 = nil
@@ -12147,6 +12291,7 @@ function FastAttack:AttackNearest()
     if not character then return end
     local equippedWeapon = character:FindFirstChildOfClass("Tool")
 
+    -- Se a arma tem LeftClickRemote, usa ela (some armas enviam direção)
     if equippedWeapon and equippedWeapon:FindFirstChild("LeftClickRemote") then
         for _, enemyData in ipairs(OthersEnemies) do
             local enemy = enemyData[1]
@@ -12158,6 +12303,7 @@ function FastAttack:AttackNearest()
             end
         end
     elseif #OthersEnemies > 0 then
+        -- fallback: usa RegisterHit
         self:Attack(Part1 or Part2, OthersEnemies)
     else
         task.wait(0)
@@ -12173,6 +12319,7 @@ function FastAttack:BladeHits()
     end
 end
 
+-- loop automático que dispara BladeHits de acordo com Settings
 task.spawn(function()
     while task.wait(Settings.ClickDelay) do
         if Settings.AutoClick then
@@ -12181,6 +12328,7 @@ task.spawn(function()
     end
 end)
 
+-- exporta / cacheia no _ENV como no original
 _ENV.rz_FastAttack = FastAttack
 FastAttackModule.FastAttack = FastAttack
 return FastAttackModule
