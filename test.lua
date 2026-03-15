@@ -250,23 +250,7 @@ Pirates = function()
     replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
 end
 
-local I
-local _libUrl = "https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua"
-for _attempt = 1, 5 do
-    local _ok, _result = pcall(function()
-        return loadstring(game:HttpGet(_libUrl))()
-    end)
-    if _ok and _result then
-        I = _result
-        break
-    else
-        warn("[Tsunami Hub] UI load attempt " .. _attempt .. " failed, retrying...")
-        task.wait(2)
-    end
-end
-if not I then
-    error("[Tsunami Hub] Failed to load UI after 5 attempts. Check your internet or executor.")
-end
+local I = (loadstring(game:HttpGet("https://pastefy.app/txyPm9xu/raw")))()
 if World1 then
 	Boss = {
 			"The Gorilla King",
@@ -2439,7 +2423,6 @@ local dragStart
 local startPos
 
 local function update(input)
-    if not dragStart or not startPos then return end
     local delta = input.Position - dragStart
     imageButton.Position = UDim2.new(
         startPos.X.Scale,
@@ -2450,8 +2433,7 @@ local function update(input)
 end
 
 imageButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = imageButton.Position
@@ -2464,31 +2446,25 @@ imageButton.InputBegan:Connect(function(input)
 end)
 
 imageButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
 
-pcall(function()
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if dragging and input == dragInput then
-            update(input)
-        end
-    end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
 end)
 
 local isOpen = true
 imageButton.MouseButton1Click:Connect(function()
     isOpen = not isOpen
-    -- Tìm ScreenGui của library và toggle visibility
-    pcall(function()
-        for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Name ~= "ControlGUI" and gui.Name ~= "NM_Notify" then
-                gui.Enabled = isOpen
-            end
-        end
-    end)
+    if isOpen then
+        V:Minimize(false)
+    else
+        V:Minimize(true)
+    end
 end)
 
 -- TABS (somente nomes alterados)
