@@ -11673,6 +11673,7 @@ D:AddButton({ Title = "Buy Ken", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("KenTalk", "Buy");
 	end });
 D:AddSeperator("Fighting - Style")
+
 local MeleeCoords = {
     ["Dark Step"] = {
         Key = "BuyBlackLeg",
@@ -11748,8 +11749,7 @@ local MeleeCoords = {
     }
 }
 
-local SelectedMelee = "Dark Step "
-
+-- Function to filter available melees based on current world
 local function GetAvailableMeleeOptions()
     local list = {}
     for name, data in pairs(MeleeCoords) do
@@ -11761,24 +11761,30 @@ local function GetAvailableMeleeOptions()
     return list
 end
 
-D:AddButton({
-    Name = "Choose Melee To Auto Buy",
-    Options = GetAvailableMeleeOptions(),
-    Default = "Dark Step",
+local SelectedMelee = "Dark Step" -- default, no trailing space
+
+-- Dropdown to choose melee style
+D:AddDropdown({
+    Title = "Choose Melee To Auto Buy",
+    Description = "Select the fighting style you want to purchase",
+    Values = GetAvailableMeleeOptions(),
+    Default = SelectedMelee,
     Callback = function(Value)
         SelectedMelee = Value
     end
 })
 
-D:AddButton({
-    Name = "Auto Buy Melee",
+-- Toggle for auto-buy
+D:AddToggle({
+    Title = "Auto Buy Melee",
+    Description = "Automatically teleport to the NPC and purchase the selected melee",
     Default = GetSetting("AutoBuyMelee_Save", false),
     Callback = function(Value)
         _G.AutoBuyMelee = Value
         _G.SaveData["AutoBuyMelee_Save"] = Value
         SaveSettings()
-        
-        
+
+        -- Enable/disable noclip while auto-buy is active
         if Value then
             _G.MeleeNoclip = game:GetService("RunService").Stepped:Connect(function()
                 if not _G.AutoBuyMelee then 
@@ -11799,6 +11805,7 @@ D:AddButton({
                 _G.MeleeNoclip:Disconnect()
                 _G.MeleeNoclip = nil
             end
+            -- Restore collision (optional)
             local char = game.Players.LocalPlayer.Character
             if char then
                 for _, v in pairs(char:GetDescendants()) do
@@ -11807,60 +11814,47 @@ D:AddButton({
             end
         end
 
-        
+        -- Start the auto-buy loop
         task.spawn(function()
             while _G.AutoBuyMelee do
-                task.wait()
-                if not _G.AutoBuyMelee then break end
+                task.wait(0.5) -- small delay to avoid overloading
 
                 local data = MeleeCoords[SelectedMelee]
                 if not data or not data.Pos then
-                    
-                    if bearlib and bearlib.Notify then
-                        bearlib:Notify({
-                            Title = "Tsunami Hub",
-                            Message = "Lỗi: Không tìm thấy toạ độ cho Melee này ở Sea hiện tại!",
-                            Duration = 3
-                        })
-                    end
+                    -- No valid position for this melee in current world
+                    NotificacaoNightMystic("Tsunami Hub", "This melee is not available in your current sea!")
                     _G.AutoBuyMelee = false
                     break
                 end
 
                 local lp = game.Players.LocalPlayer
-                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = lp.Character.HumanoidRootPart
-                    local dist = (hrp.Position - data.Pos.Position).Magnitude
+                if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+                    continue
+                end
+                local hrp = lp.Character.HumanoidRootPart
+                local dist = (hrp.Position - data.Pos.Position).Magnitude
 
-                    if dist > 15 then
-                        
-                        _tp(data.Pos)
-                    else
-                        
-                        shouldTween = false
-                        hrp.CFrame = data.Pos
-                        
-                        
+                if dist > 15 then
+                    -- Teleport to NPC
+                    _tp(data.Pos)
+                else
+                    -- We're close, try to buy
+                    -- Stop tween temporarily to avoid interfering
+                    shouldTween = false
+                    hrp.CFrame = data.Pos
+
+                    -- Attempt purchase
+                    local success, result = pcall(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(data.Key)
-                        
-                        if data.Key == "BuyDragonClaw" then
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","1")
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","2")
-                        elseif data.Key == "BuySharkmanKarate" then
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate",true)
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
-                        end
-                        
-                        
-                        if bearlib and bearlib.Notify then
-                            bearlib:Notify({
-                                Title = "Tsunami Hub",
-                                Message = "Đã mua: " .. SelectedMelee,
-                                Duration = 2
-                            })
-                        end
-                        task.wait(1)
+                    end)
+                    if not success then
+                        NotificacaoNightMystic("Tsunami Hub", "Failed to purchase " .. SelectedMelee)
+                    else
+                        NotificacaoNightMystic("Tsunami Hub", "Successfully purchased " .. SelectedMelee)
+                        -- Optionally stop after success
+                        _G.AutoBuyMelee = false
                     end
+                    task.wait(1)
                 end
             end
         end)
