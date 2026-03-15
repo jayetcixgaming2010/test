@@ -190,11 +190,26 @@ Lighting.ColorShift_Top = Color3.new(0.695, 0.695, 0.695)
 Lighting.Brightness = 2
 Lighting.FogEnd = 1e10
 
+-- Khai báo trước để dùng trong repeat
+ply = Services.Players
+plr = ply.LocalPlayer
+replicated = Services.ReplicatedStorage
+
+-- Chờ game load xong TRƯỚC khi truy cập Character
+repeat
+    local loading = plr.PlayerGui:FindFirstChild("Main")
+    loading = loading and loading:FindFirstChild("Loading")
+    task.wait()
+until game:IsLoaded() and not (loading and loading.Visible)
+
+-- Chờ Character load xong
+if not plr.Character then
+    plr.CharacterAdded:Wait()
+end
+plr.Character:WaitForChild("HumanoidRootPart")
+
 do
-    ply = Services.Players
-    plr = ply.LocalPlayer
     Root = plr.Character.HumanoidRootPart
-    replicated = Services.ReplicatedStorage
     Lv = plr.Data.Level.Value
     TeleportService = Services.TeleportService
     TW = Services.TweenService
@@ -205,7 +220,8 @@ do
     TeamSelf = plr.Team
     RunSer = Services.RunService
     Stats = Services.Stats
-    Energy = plr.Character.Energy.Value
+    -- Lấy object Energy thay vì .Value để tránh stale value
+    Energy = plr.Character:FindFirstChild("Energy") and plr.Character.Energy.Value or 0
 
     Boss = {}
     BringConnections = {}
@@ -223,11 +239,6 @@ do
     ClickState = 0
     Num_self = 25
 end
-repeat
-    local loading = plr.PlayerGui:FindFirstChild("Main")
-    loading = loading and loading:FindFirstChild("Loading")
-    task.wait()
-until game:IsLoaded() and not (loading and loading.Visible)
 
 local placeId = game.PlaceId
 if placeId == 2753915549 or placeId == 85211729168715 then
@@ -12536,8 +12547,4 @@ task.spawn(function()
 		end);
 	end);
 end);
--- (FastAttack module already defined above — no duplicate needed)
-
 NotificacaoNightMystic("Tsunami Hub", "✅All systems have been downloaded!")
-
-return FastAttackModule
