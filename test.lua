@@ -11749,7 +11749,6 @@ local MeleeCoords = {
     }
 }
 
--- Function to filter available melees based on current world
 local function GetAvailableMeleeOptions()
     local list = {}
     for name, data in pairs(MeleeCoords) do
@@ -11761,9 +11760,8 @@ local function GetAvailableMeleeOptions()
     return list
 end
 
-local SelectedMelee = "Dark Step" -- default, no trailing space
+local SelectedMelee = "Dark Step"
 
--- Dropdown to choose melee style
 D:AddDropdown({
     Title = "Choose Melee To Auto Buy",
     Description = "Select the fighting style you want to purchase",
@@ -11774,7 +11772,6 @@ D:AddDropdown({
     end
 })
 
--- Toggle for auto-buy
 D:AddToggle({
     Title = "Auto Buy Melee",
     Description = "Automatically teleport to the NPC and purchase the selected melee",
@@ -11784,7 +11781,7 @@ D:AddToggle({
         _G.SaveData["AutoBuyMelee_Save"] = Value
         SaveSettings()
 
-        -- Enable/disable noclip while auto-buy is active
+        -- Enable noclip while auto-buy is active
         if Value then
             _G.MeleeNoclip = game:GetService("RunService").Stepped:Connect(function()
                 if not _G.AutoBuyMelee then 
@@ -11805,23 +11802,15 @@ D:AddToggle({
                 _G.MeleeNoclip:Disconnect()
                 _G.MeleeNoclip = nil
             end
-            -- Restore collision (optional)
-            local char = game.Players.LocalPlayer.Character
-            if char then
-                for _, v in pairs(char:GetDescendants()) do
-                    if v:IsA("BasePart") then v.CanCollide = true end
-                end
-            end
         end
 
-        -- Start the auto-buy loop
+        -- Auto-buy loop with improved tween
         task.spawn(function()
             while _G.AutoBuyMelee do
-                task.wait(0.5) -- small delay to avoid overloading
+                task.wait(0.2) -- check every 0.2 seconds
 
                 local data = MeleeCoords[SelectedMelee]
                 if not data or not data.Pos then
-                    -- No valid position for this melee in current world
                     NotificacaoNightMystic("Tsunami Hub", "This melee is not available in your current sea!")
                     _G.AutoBuyMelee = false
                     break
@@ -11834,27 +11823,30 @@ D:AddToggle({
                 local hrp = lp.Character.HumanoidRootPart
                 local dist = (hrp.Position - data.Pos.Position).Magnitude
 
-                if dist > 15 then
-                    -- Teleport to NPC
+                if dist > 10 then
+                    -- Use tween to move to NPC
                     _tp(data.Pos)
                 else
-                    -- We're close, try to buy
-                    -- Stop tween temporarily to avoid interfering
-                    shouldTween = false
-                    hrp.CFrame = data.Pos
+                    -- We're close enough, try to purchase
+                    -- Ensure tween is stopped (optional: _tp will handle it)
+                    shouldTween = false -- temporarily disable tween to avoid conflicts
+                    hrp.CFrame = data.Pos -- snap to exact position
 
-                    -- Attempt purchase
+                    -- Attempt to buy
                     local success, result = pcall(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(data.Key)
                     end)
-                    if not success then
-                        NotificacaoNightMystic("Tsunami Hub", "Failed to purchase " .. SelectedMelee)
-                    else
-                        NotificacaoNightMystic("Tsunami Hub", "Successfully purchased " .. SelectedMelee)
-                        -- Optionally stop after success
+
+                    if success then
+                        NotificacaoNightMystic("Tsunami Hub", "Purchased " .. SelectedMelee)
+                        -- Optional: turn off after success
                         _G.AutoBuyMelee = false
+                    else
+                        NotificacaoNightMystic("Tsunami Hub", "Failed to purchase " .. SelectedMelee)
                     end
-                    task.wait(1)
+
+                    task.wait(1) -- wait a bit before next attempt
+                    shouldTween = true -- re-enable tween
                 end
             end
         end)
