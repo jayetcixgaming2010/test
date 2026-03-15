@@ -284,19 +284,21 @@ Lighting.FogEnd = 1e10
 do
     ply = Services.Players
     plr = ply.LocalPlayer
-    Root = plr.Character.HumanoidRootPart
+    Root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
     replicated = Services.ReplicatedStorage
-    Lv = plr.Data.Level.Value
+    local _lvOk, _lvVal = pcall(function() return plr.Data.Level.Value end)
+    Lv = _lvOk and _lvVal or 0
     TeleportService = Services.TeleportService
     TW = Services.TweenService
     Lighting = Services.Lighting
-    Enemies = workspace.Enemies
+    Enemies = workspace:FindFirstChild("Enemies") or {}
     vim1 = Services.VirtualInputManager
     vim2 = Services.VirtualUser
     TeamSelf = plr.Team
     RunSer = Services.RunService
     Stats = Services.Stats
-    Energy = plr.Character.Energy.Value
+    local _enOk, _enVal = pcall(function() return plr.Character.Energy.Value end)
+    Energy = _enOk and _enVal or 0
     
     
     Boss = {}
@@ -521,12 +523,7 @@ end)
 pcall(function()
     _hookfn((require((game:GetService("ReplicatedStorage")):WaitForChild("GuideModule"))).ChangeDisplayedNPC, function() end)
 end)
-pcall(function()
-    _hookfn(error, function() end)
-end)
-pcall(function()
-    _hookfn(warn, function() end)
-end)
+-- NOTE: không hook error/warn để tránh script chết thầm khi có lỗi
 local O = workspace:FindFirstChild("Rocks");
 if O then
 	O:Destroy();
@@ -2471,7 +2468,8 @@ QuestNeta = function()
 		end
 	end
 	if not Library then
-		error("[Tsunami Hub] Failed to load UI after 5 attempts. Check your internet or executor.")
+		NotificacaoNightMystic("Tsunami Hub", "❌ UI failed to load! Check executor/internet.")
+		return
 	end
 	Library = Library:MakeWindow({
     Title = "Tsunami Hub | Blox fruit",
