@@ -1,104 +1,171 @@
-local function NotificacaoNightMystic(titulo, mensagem)
-    local TweenService = game:GetService("TweenService")
-    local CoreGui = game:GetService("CoreGui")
-    local LogoID = "rbxassetid://105245380363493"
-
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "NM_Notify"
-    pcall(function() ScreenGui.Parent = CoreGui end)
-    
-    local Frame = Instance.new("Frame")
-    Frame.Parent = ScreenGui
-    Frame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
-    Frame.Position = UDim2.new(1, 20, 0.85, 0)
-    Frame.Size = UDim2.new(0, 280, 0, 65)
-    
-    local UICorner = Instance.new("UICorner"); UICorner.CornerRadius = UDim.new(0, 10); UICorner.Parent = Frame
-    local UIStroke = Instance.new("UIStroke"); UIStroke.Parent = Frame; UIStroke.Color = Color3.fromRGB(45, 45, 45); UIStroke.Thickness = 1
-
-    local Logo = Instance.new("ImageLabel")
-    Logo.Parent = Frame
-    Logo.BackgroundTransparency = 1
-    Logo.Position = UDim2.new(0, 10, 0, 10)
-    Logo.Size = UDim2.new(0, 45, 0, 45)
-    Logo.Image = LogoID
-    Logo.ScaleType = Enum.ScaleType.Fit
-
-    local Title = Instance.new("TextLabel")
-    Title.Parent = Frame; Title.BackgroundTransparency = 1; Title.Position = UDim2.new(0, 65, 0, 12); Title.Size = UDim2.new(1, -70, 0, 20)
-    Title.Font = Enum.Font.GothamBold; Title.Text = titulo; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
-
-    local Msg = Instance.new("TextLabel")
-    Msg.Parent = Frame; Msg.BackgroundTransparency = 1; Msg.Position = UDim2.new(0, 65, 0, 32); Msg.Size = UDim2.new(1, -70, 0, 20)
-    Msg.Font = Enum.Font.GothamMedium; Msg.Text = mensagem; Msg.TextColor3 = Color3.fromRGB(200, 200, 200); Msg.TextSize = 12; Msg.TextXAlignment = Enum.TextXAlignment.Left
-    
-    TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -300, 0.85, 0)}):Play()
-
-    task.delay(10, function()
-        if Frame then
-            TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0.85, 0)}):Play()
-            task.wait(0.5)
-            ScreenGui:Destroy()
-        end
-    end)
+-- Compatibility checks
+if not hookfunction and hookfunc then
+    hookfunction = hookfunc
+elseif not hookfunction then
+    hookfunction = function(f, r) return r end
 end
 
-NotificacaoNightMystic("SYNTRAX Hub", "Script carregado com sucesso!")
+if not newcclosure then
+    newcclosure = function(f) return f end
+end
 
-repeat task.wait() until game:IsLoaded()
+if not getnamecallmethod then
+    getnamecallmethod = function() return "" end
+end
 
-local HttpService = game:GetService("HttpService")
-local FolderName = "SYNTRAX Hub"
+-- Services metatable (lazy-load)
+local Services = setmetatable({}, {
+    __index = function(self, serviceName)
+        local service = game:GetService(serviceName)
+        rawset(self, serviceName, service)
+        return service
+    end
+})
+
+local function NotificacaoNightMystic(titulo, mensagem)
+    local success = pcall(function()
+        local TweenService = Services.TweenService
+        local CoreGui = Services.CoreGui
+        local LogoID = "rbxassetid://80900795508277"
+
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "NM_Notify"
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.Parent = CoreGui
+
+        local Frame = Instance.new("Frame")
+        Frame.Parent = ScreenGui
+        Frame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+        Frame.BorderSizePixel = 0
+        Frame.Position = UDim2.new(1, 20, 0.85, 0)
+        Frame.Size = UDim2.new(0, 280, 0, 65)
+
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0, 10)
+        UICorner.Parent = Frame
+
+        local UIStroke = Instance.new("UIStroke")
+        UIStroke.Parent = Frame
+        UIStroke.Color = Color3.fromRGB(52, 152, 219)
+        UIStroke.Thickness = 1
+
+        local Logo = Instance.new("ImageLabel")
+        Logo.Parent = Frame
+        Logo.BackgroundTransparency = 1
+        Logo.Position = UDim2.new(0, 10, 0, 10)
+        Logo.Size = UDim2.new(0, 45, 0, 45)
+        Logo.Image = LogoID
+        Logo.ScaleType = Enum.ScaleType.Fit
+
+        local Title = Instance.new("TextLabel")
+        Title.Parent = Frame
+        Title.BackgroundTransparency = 1
+        Title.Position = UDim2.new(0, 65, 0, 12)
+        Title.Size = UDim2.new(1, -70, 0, 20)
+        Title.Font = Enum.Font.GothamBold
+        Title.Text = titulo
+        Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Title.TextSize = 14
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.TextTruncate = Enum.TextTruncate.AtEnd
+
+        local Msg = Instance.new("TextLabel")
+        Msg.Parent = Frame
+        Msg.BackgroundTransparency = 1
+        Msg.Position = UDim2.new(0, 65, 0, 32)
+        Msg.Size = UDim2.new(1, -70, 0, 20)
+        Msg.Font = Enum.Font.GothamMedium
+        Msg.Text = mensagem
+        Msg.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Msg.TextSize = 12
+        Msg.TextXAlignment = Enum.TextXAlignment.Left
+        Msg.TextTruncate = Enum.TextTruncate.AtEnd
+
+        local tweenIn = TweenService:Create(
+            Frame,
+            TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Position = UDim2.new(1, -300, 0.85, 0)}
+        )
+        tweenIn:Play()
+
+        task.delay(10, function()
+            if Frame and Frame.Parent then
+                local tweenOut = TweenService:Create(
+                    Frame,
+                    TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                    {Position = UDim2.new(1, 20, 0.85, 0)}
+                )
+                tweenOut:Play()
+                tweenOut.Completed:Wait()
+                ScreenGui:Destroy()
+            end
+        end)
+    end)
+
+    if not success then
+        warn("[Tsunami Hub] Error notification")
+    end
+end
+
+NotificacaoNightMystic("Tsunami Hub", "script has loaded successfully!")
+
+local HttpService = Services.HttpService
+local FolderName = "Tsunami Hub"
 local FileName = "Settings.json"
 local FullPath = FolderName .. "/" .. FileName
 
-if makefolder and not isfolder(FolderName) then makefolder(FolderName) end
+if makefolder and not isfolder(FolderName) then
+    makefolder(FolderName)
+end
 
-_G.SaveData = {}
+_G.SaveData = _G.SaveData or {}
 
--- Esta é a função que o botão vai chamar
 function SaveSettings()
-    if writefile then
+    if not writefile then return false end
+    local success = pcall(function()
         local json = HttpService:JSONEncode(_G.SaveData)
         writefile(FullPath, json)
-    end
+    end)
+    return success
 end
 
 function LoadSettings()
-    if isfile and isfile(FullPath) then
+    if not (isfile and isfile(FullPath)) then return false end
+    local success, result = pcall(function()
         local content = readfile(FullPath)
-        local success, result = pcall(function() return HttpService:JSONDecode(content) end)
-        if success then _G.SaveData = result end
+        return HttpService:JSONDecode(content)
+    end)
+    if success and result then
+        _G.SaveData = result
+        return true
     end
+    return false
 end
 
 function GetSetting(name, default)
-    if _G.SaveData[name] ~= nil then return _G.SaveData[name] end
-    return default
+    return _G.SaveData[name] ~= nil and _G.SaveData[name] or default
 end
 
-LoadSettings() -- Carrega tudo antes de abrir a UI
+LoadSettings()
 
-local Players = game:GetService("Players")
-local CollectionService = game:GetService("CollectionService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = Services.Players
+local CollectionService = Services.CollectionService
+local ReplicatedStorage = Services.ReplicatedStorage
 
 local player = Players.LocalPlayer
-local commE = ReplicatedStorage:WaitForChild("Remotes", 10) and ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE", 10)
+local commE = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE")
 
-local AutoKen = true
+_G.AutoKen = true
 
 local function HasKen()
     local char = player.Character
-    if not char then return false end
-    return CollectionService:HasTag(char, "Ken")
+    return char and CollectionService:HasTag(char, "Ken")
 end
 
 task.spawn(function()
-    while AutoKen do
+    while _G.AutoKen do
         task.wait(0.2)
-
-        if HasKen() then
+        if not HasKen() then
             pcall(function()
                 commE:FireServer("Ken", true)
             end)
@@ -108,77 +175,82 @@ end)
 
 local desiredTeam = "Marines"
 
-if player.Team == nil or player.Team.Name ~= desiredTeam then
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", desiredTeam)
+if not player.Team or player.Team.Name ~= desiredTeam then
+    pcall(function()
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", desiredTeam)
+    end)
 end
 
-local Lighting = game:GetService("Lighting")
+local Lighting = Services.Lighting
 
--- Full bright automático (bem pouquinho mais escuro)
+-- Full bright
 Lighting.Ambient = Color3.new(0.695, 0.695, 0.695)
 Lighting.ColorShift_Bottom = Color3.new(0.695, 0.695, 0.695)
 Lighting.ColorShift_Top = Color3.new(0.695, 0.695, 0.695)
-
--- Esperar o jogo carregar completamente antes de acessar Character e dados
-repeat
-	local I = (plr.PlayerGui:WaitForChild("Main")):WaitForChild("Loading") and game:IsLoaded();
-	wait();
-until I;
+Lighting.Brightness = 2
+Lighting.FogEnd = 1e10
 
 do
-	ply = game.Players;
-	plr = ply.LocalPlayer;
-	-- Esperar o Character carregar com segurança
-	if not plr.Character then plr.CharacterAdded:Wait() end
-	Root = plr.Character:WaitForChild("HumanoidRootPart");
-	replicated = game:GetService("ReplicatedStorage");
-	-- Lv e Energy com pcall para não crashar se Data não existir ainda
-	local ok1, lvVal = pcall(function() return game.Players.LocalPlayer.Data.Level.Value end)
-	Lv = ok1 and lvVal or 0;
-	TeleportService = game:GetService("TeleportService");
-	TW = game:GetService("TweenService");
-	Lighting = game:GetService("Lighting");
-	Enemies = workspace.Enemies;
-	vim1 = game:GetService("VirtualInputManager");
-	vim2 = game:GetService("VirtualUser");
-	TeamSelf = plr.Team;
-	RunSer = game:GetService("RunService");
-	Stats = game:GetService("Stats");
-	local ok2, enVal = pcall(function() return plr.Character:WaitForChild("Energy", 5).Value end)
-	Energy = ok2 and enVal or 0;
-	Boss = {};
-	BringConnections = {};
-	MaterialList = {};
-	NPCList = {};
-	shouldTween = false;
-	SoulGuitar = false;
-	KenTest = true;
-	debug = false;
-	Brazier1 = false;
-	Brazier2 = false;
-	Brazier3 = false;
-	Sec = .1;
-	ClickState = 0;
-	Num_self = 25;
-end;
-if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
-    World1 = true
-elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
-    World2 = true
-elseif game.PlaceId == 7449423635 or game.PlaceId == 100117331123089 then
-    World3 = true
+    ply = Services.Players
+    plr = ply.LocalPlayer
+    Root = plr.Character.HumanoidRootPart
+    replicated = Services.ReplicatedStorage
+    Lv = plr.Data.Level.Value
+    TeleportService = Services.TeleportService
+    TW = Services.TweenService
+    Lighting = Services.Lighting
+    Enemies = workspace.Enemies
+    vim1 = Services.VirtualInputManager
+    vim2 = Services.VirtualUser
+    TeamSelf = plr.Team
+    RunSer = Services.RunService
+    Stats = Services.Stats
+    Energy = plr.Character.Energy.Value
+
+    Boss = {}
+    BringConnections = {}
+    MaterialList = {}
+    NPCList = {}
+
+    shouldTween = false
+    SoulGuitar = false
+    KenTest = true
+    debug = false
+    Brazier1 = false
+    Brazier2 = false
+    Brazier3 = false
+    Sec = 0.1
+    ClickState = 0
+    Num_self = 25
 end
-Sea = World1 or World2 or World3 or plr:Kick("\226\157\140 Error : A[12]Blox Fruits \226\157\140");
+repeat
+    local loading = plr.PlayerGui:FindFirstChild("Main")
+    loading = loading and loading:FindFirstChild("Loading")
+    task.wait()
+until game:IsLoaded() and not (loading and loading.Visible)
+
+local placeId = game.PlaceId
+if placeId == 2753915549 or placeId == 85211729168715 then
+    World1 = true
+elseif placeId == 4442272183 or placeId == 79091703265657 then
+    World2 = true
+elseif placeId == 7449423635 or placeId == 100117331123089 then
+    World3 = true
+else
+    plr:Kick("❌ Error : Blox Fruits - World not recognized")
+end
+
+Sea = World1 or World2 or World3
+
 Marines = function()
-		replicated.Remotes.CommF_:InvokeServer("SetTeam", "Marines");
-	end;
+    replicated.Remotes.CommF_:InvokeServer("SetTeam", "Marines")
+end
+
 Pirates = function()
-		replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates");
-	end;
-local ok_ui, err_ui = pcall(function()
-	local I = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))();
-end)
-if not ok_ui then warn("[SYNTRAX] Falha ao carregar mainUI: " .. tostring(err_ui)) end
+    replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+end
+
+local I = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))()
 if World1 then
 	Boss = {
 			"The Gorilla King",
@@ -349,18 +421,19 @@ weaponSc = function(I)
 			end;
 		end;
 	end;
-hookfunction(require((game:GetService("ReplicatedStorage")).Effect.Container.Death), function()
- 
-end);
-hookfunction((require((game:GetService("ReplicatedStorage")):WaitForChild("GuideModule"))).ChangeDisplayedNPC, function()
- 
-end);
-hookfunction(error, function()
- 
-end);
-hookfunction(warn, function()
- 
-end);
+local _hookfn = hookfunction or hookfunc or (function(f, r) return r end)
+pcall(function()
+    _hookfn(require((game:GetService("ReplicatedStorage")).Effect.Container.Death), function() end)
+end)
+pcall(function()
+    _hookfn((require((game:GetService("ReplicatedStorage")):WaitForChild("GuideModule"))).ChangeDisplayedNPC, function() end)
+end)
+pcall(function()
+    _hookfn(error, function() end)
+end)
+pcall(function()
+    _hookfn(warn, function() end)
+end)
 local O = workspace:FindFirstChild("Rocks");
 if O then
 	O:Destroy();
@@ -2322,6 +2395,78 @@ QuestNeta = function()
 
 local V=I:NewWindow();
 
+-- Draggable logo button to toggle UI (from Tsunami Hub main)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ControlGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game.CoreGui
+
+local imageButton = Instance.new("ImageButton")
+imageButton.Size = UDim2.new(0, 50, 0, 50)
+imageButton.Position = UDim2.new(0.15, 0, 0.15, 0)
+imageButton.Image = "rbxassetid://80900795508277"
+imageButton.BackgroundTransparency = 1
+imageButton.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0.5, 0)
+uiCorner.Parent = imageButton
+
+local uiStroke = Instance.new("UIStroke", imageButton)
+uiStroke.Thickness = 2
+uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+uiStroke.Color = Color3.fromRGB(52, 152, 219)
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    imageButton.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+imageButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = imageButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+imageButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+
+local isOpen = true
+imageButton.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    if isOpen then
+        V:Minimize(false)
+    else
+        V:Minimize(true)
+    end
+end)
+
 -- TABS (somente nomes alterados)
 local i        = V:T("Discord","rbxassetid://73132811772878")
 local server   = V:T("Status And Server","rbxassetid://122223674767625")
@@ -2533,7 +2678,7 @@ ConfigSection:AddButton({
             
             -- Notificação Universal (Funciona sem a lib Fluent)
             game.StarterGui:SetCore("SendNotification", {
-                Title = "SYNTRAX Hub",
+                Title = "Tsunami Hub",
                 Text = "Configurações salvas com sucesso!",
                 Duration = 5
             })
@@ -4301,10 +4446,7 @@ local CraftRemote = Net:WaitForChild("RF/Craft")
 local JobsRemote = Net:WaitForChild("RF/JobsRemoteFunction")
 local ToolAbilities = Net:WaitForChild("RF/JobToolAbilities")
 
--- =========================================================
--- CONFIGURAÇÃO DA NOTIFICAÇÃO CUSTOMIZADA (FULL BLACK)
--- =========================================================
-local LogoID = "rbxassetid://105245380363493"
+local LogoID = "rbxassetid://80900795508277"
 
 local function NotifyNightMystic(texto)
     task.spawn(function()
@@ -4666,7 +4808,322 @@ task.spawn(function()
 end)
 
 
-Discord_Info:AddDiscord("SYNTRAX Hub", "gkud3frejh")
+Discord_Info:AddDiscord("Tsunami Hub", "gkud3frejh")
+
+-- Credits
+local credits = Discord_Info:AddParagraph({Title = "Credits For Someone Peoples", Desc = ""})
+credits:SetDesc("Support @kiengodvippropvp_81236 on Discord - Sever Tsunami Hub")
+
+-- ============================================================
+-- WEBHOOK NOTIFY VIP (ported from Tsunami Hub main)
+-- ============================================================
+local WEBHOOKS = {
+    FullMoon          = "https://ptb.discord.com/api/webhooks/1482196516654288926/7SOrcTY9fFBL43LMoH6Ik_NP2Tzyrp6T18JIeVs2_cR1wGD-NVD_CZ3lwfUE6RT5bKYG",
+    NearFullMoon      = "https://ptb.discord.com/api/webhooks/1482196729301303326/ZW6lt_vCwZ-dG4SFqf8IQPeDZf9mU1UzDu8FXY9AoKD9n3YW_sSuBlmKkjhVIfb-VXc_",
+    Boss              = "https://ptb.discord.com/api/webhooks/1482196866861895852/dft2UlHuCyhMmIe8pF0ov-IQB8Qlfu24cMu_QgWKl6EsTFG_sSz5s6JcjYdHbev9qkrn",
+    Haki              = "https://ptb.discord.com/api/webhooks/1482196942099579003/UHoL4Of8gGdzIS1OgQSKMlncWOFcOqx_hlyVoAQMkymfsANdvLrwAV0sbFvfpeV8efCK",
+    LegendarySword    = "https://ptb.discord.com/api/webhooks/1482197041022111918/HuMa4oEbhYcg8snSL5WxyH5RsF1sMZv2XIGCv_spYTS-YbD50qkP0e6IVgfG8HdQf5qP",
+    FruitSpawn        = "https://ptb.discord.com/api/webhooks/1482197120734986381/vGPPlUUuayGPAqqI2P43WLbse9EmJ0L7zOn3WF3aEAV2stEaBdpv-5Ya4HD-g4cHl4bY",
+    KitsuneIsland     = "https://ptb.discord.com/api/webhooks/1482197250854621216/oKIWhqBC7PfTBOKxtunrUur6zV1jPkQLktnItnqddL-BOd0y06LnNs6K2wpZ-HkRYfoB",
+    PrehistoricIsland = "https://ptb.discord.com/api/webhooks/1482197331611750491/rw0XQIjPMNlfm-kKGfGl-0LGy_HdhLuNb1WbH1UgwiXvGD2i8UgV7M3B9j619l3Cf9DK",
+    MirageIsland      = "https://ptb.discord.com/api/webhooks/1482197449023160380/JDr65rHNuxt6O9y03clqdQ6cUt7_-N1GRsCep3NJYRHbg_dfiud1gUdKMtSVPssHJUZ2",
+}
+
+local SHARED_IMAGE    = "https://media.discordapp.net/attachments/1479872403529007178/1480118906189385790/standard_5.gif?ex=69b51b26&is=69b3c9a6&hm=9e2e35d8e25a9b121090ae668515e59a24ef0c10e268951c6768addbdbd11e5e&="
+local THUMBNAIL_IMAGE = "https://media.discordapp.net/attachments/1480070582526804070/1480070663728398509/Tsunami_Hub.png?ex=69b4ee38&is=69b39cb8&hm=1e6507010e1ff953bdd418904a741c3baedb8692a61da9f003fbfe3cbf1b47ba&=&format=webp&quality=lossless"
+
+local WebhookEnabled   = true
+local WebhookCooldowns = {}
+local WEBHOOK_CD       = 10
+
+local function CanNotify(key)
+    local now = os.clock()
+    if not WebhookCooldowns[key] or (now - WebhookCooldowns[key]) >= WEBHOOK_CD then
+        WebhookCooldowns[key] = now
+        return true
+    end
+    return false
+end
+
+local function GetWebhookKey(eventType, dataKey)
+    if eventType == "moon" then
+        return dataKey == "fullmoon" and "FullMoon" or "NearFullMoon"
+    elseif eventType == "boss"  then return "Boss"
+    elseif eventType == "haki"  then return "Haki"
+    elseif eventType == "sword" then return "LegendarySword"
+    elseif eventType == "fruit" then return "FruitSpawn"
+    elseif eventType == "island" then
+        if dataKey == "kitsune"       then return "KitsuneIsland"
+        elseif dataKey == "prehistoric" then return "PrehistoricIsland"
+        else return "MirageIsland" end
+    end
+    return nil
+end
+
+local function SendNotify(eventType, data)
+    if not WebhookEnabled then return end
+    local wKey = GetWebhookKey(eventType, data.key or "")
+    if not wKey then return end
+    local url = WEBHOOKS[wKey]
+    if not url or url == "" then return end
+    if not CanNotify(wKey .. "_" .. (data.key or "")) then return end
+
+    local Http        = Services.HttpService
+    local Players     = Services.Players
+    local playerCount = #Players:GetPlayers()
+    local maxPlayers  = 12
+    local jobId       = tostring(game.JobId)
+    local timeOfDay   = tostring(Services.Lighting.TimeOfDay or "00:00:00")
+    local worldNum    = World1 and 1 or World2 and 2 or World3 and 3 or "?"
+
+    local fields = {}
+    local color  = data.color or 0x00ffff
+
+    if eventType == "boss" then
+        fields = {
+            {name = "Boss Name :", value = "```" .. (data.name or "?") .. "```",              inline = true},
+            {name = "Players :",   value = "```" .. playerCount .. "/" .. maxPlayers .. "```", inline = true},
+            {name = "Job-Id :",    value = "```" .. jobId .. "```",                            inline = false},
+            {name = "Script :",    value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+    elseif eventType == "moon" then
+        fields = {
+            {name = "⏰ Become Around :", value = "```" .. (data.become or "1 Minute ( s )") .. "```", inline = true},
+            {name = "Players :",          value = "```" .. playerCount .. "/" .. maxPlayers .. "```",   inline = true},
+            {name = "Moon Phase :",       value = "```" .. (data.phase or "5/5") .. "```",              inline = false},
+            {name = "Job-Id :",           value = "```" .. jobId .. "```",                              inline = false},
+            {name = "Script :",           value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+        color = data.color or 0xFFB6C1
+    elseif eventType == "haki" then
+        fields = {
+            {name = "Colors Name :", value = "```" .. (data.name or "Pure Red") .. "```",          inline = true},
+            {name = "World :",       value = "```" .. tostring(worldNum) .. "```",                  inline = true},
+            {name = "Players :",     value = "```" .. playerCount .. "/" .. maxPlayers .. "```",    inline = false},
+            {name = "Job-Id :",      value = "```" .. jobId .. "```",                               inline = false},
+            {name = "Script :",      value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+    elseif eventType == "sword" then
+        fields = {
+            {name = "Swords Name :", value = "```" .. (data.name or "?") .. "```",                 inline = true},
+            {name = "Players :",     value = "```" .. playerCount .. "/" .. maxPlayers .. "```",    inline = true},
+            {name = "Job-Id :",      value = "```" .. jobId .. "```",                               inline = false},
+            {name = "Script :",      value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+    elseif eventType == "fruit" then
+        fields = {
+            {name = "🏝️ Spawn :",      value = "🟢",                                                inline = true},
+            {name = "⏰ Time Of Day :", value = "```" .. timeOfDay .. "```",                         inline = true},
+            {name = "Players :",        value = "```" .. playerCount .. "/" .. maxPlayers .. "```", inline = false},
+            {name = "Job-Id :",         value = "```" .. jobId .. "```",                            inline = false},
+            {name = "Script :",         value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+    elseif eventType == "island" then
+        fields = {
+            {name = "🏝️ Spawn :", value = "🟢",                                                    inline = false},
+            {name = "Players :",   value = "```" .. playerCount .. "/" .. maxPlayers .. "```",      inline = false},
+            {name = "Job-Id :",    value = "```" .. jobId .. "```",                                 inline = false},
+            {name = "Script :",    value = '```\ngame:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", "' .. jobId .. '")\n```', inline = false},
+        }
+    end
+
+    local embed = {
+        title  = "🌊 TSUNAMI HUB - NOTIFY VIP 🌊",
+        author = {
+            name     = "Tsunami Hub",
+            icon_url = THUMBNAIL_IMAGE,
+        },
+        color     = color,
+        fields    = fields,
+        thumbnail = {url = THUMBNAIL_IMAGE},
+        image     = {url = SHARED_IMAGE},
+        footer    = {
+            text     = "Made by Kiên • discord.gg/3bS7hjJ9es",
+            icon_url = "https://media.discordapp.net/attachments/1479872403529007178/1480209575654195220/image.png?ex=69b4c6d7&is=69b37557&hm=a2dd81a0a72d022c1af955b671a108a78e7585bb12dac09d4d99325dac13ebed&=&format=webp&quality=lossless",
+        },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+    local payload = Http:JSONEncode({embeds = {embed}})
+
+    task.spawn(function()
+        pcall(function()
+            local reqFunc = syn and syn.request
+                or (typeof(request) == "function" and request)
+                or (http and http.request)
+                or nil
+            if reqFunc then
+                reqFunc({
+                    Url     = url,
+                    Method  = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body    = payload,
+                })
+            end
+        end)
+    end)
+end
+
+Discord_Info:AddSeperator("🔔 Webhook Notify VIP")
+Discord_Info:AddParagraph({Title = "📋 Danh Sách Notify", Desc = "🌕 Full Moon | 🌔 Near Full Moon | 💀 Boss Spawn | ⚡ Haki | ⚔️ Legendary Sword | 🍎 Fruit Spawn | 🦊 Kitsune | 🦕 Prehistoric | 🏝️ Mirage"})
+
+task.spawn(function()
+    local RS  = Services.ReplicatedStorage
+    local WS  = game:GetService("Workspace")
+    local LT  = Services.Lighting
+
+    local lastSword   = ""
+    local lastMoon    = ""
+    local lastKitsune = false
+    local lastPrehis  = false
+    local lastMirage  = false
+    local lastBoss    = {}
+    local fruitSeen   = {}
+
+    local BOSSES = {
+        {name = "Soul Reaper",         check = function(e) return e:FindFirstChild("Soul Reaper") end,          color = 0x00ffff},
+        {name = "Dough King",          check = function(e) return e:FindFirstChild("Dough King") or RS:FindFirstChild("Dough King") end, color = 0x00ffff},
+        {name = "Darkbeard",           check = function(e) return e:FindFirstChild("Darkbeard") end,            color = 0x00ffff},
+        {name = "Rip Indra True Form", check = function(e) return RS:FindFirstChild("rip_indra True Form") or e:FindFirstChild("rip_indra") end, color = 0x00ffff},
+        {name = "Cursed Captain",      check = function(e) return e:FindFirstChild("Cursed Captain") end,       color = 0x00ffff},
+    }
+
+    local MOON_FULL  = "http://www.roblox.com/asset/?id=9709149431"
+    local MOON_NEAR4 = "http://www.roblox.com/asset/?id=9709149052"
+    local MOON_NEAR3 = "http://www.roblox.com/asset/?id=9709143733"
+
+    while true do
+        task.wait(5)
+        if not WebhookEnabled then continue end
+
+        pcall(function()
+            local enemies = WS:FindFirstChild("Enemies")
+
+            -- Moon detection
+            local moonId = ""
+            pcall(function()
+                local sky = LT:FindFirstChildOfClass("Sky") or LT:FindFirstChild("FantasySky")
+                if sky then moonId = sky.MoonTextureId end
+            end)
+            if moonId ~= lastMoon then
+                lastMoon = moonId
+                if moonId == MOON_FULL then
+                    SendNotify("moon", {key="fullmoon",  phase="5/5", become="Full Moon Now!",    color=0xFFB6C1})
+                elseif moonId == MOON_NEAR4 then
+                    SendNotify("moon", {key="nearmoon4", phase="4/5", become="~1 Minute ( s )", color=0xFFA07A})
+                elseif moonId == MOON_NEAR3 then
+                    SendNotify("moon", {key="nearmoon3", phase="3/5", become="~2 Minute ( s )", color=0xFFA07A})
+                end
+            end
+
+            -- Legendary Sword detection
+            pcall(function()
+                local remote = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("CommF_")
+                if not remote then return end
+                local sword = ""
+                if remote:InvokeServer("LegendarySwordDealer", "1") then sword = "Shisui"
+                elseif remote:InvokeServer("LegendarySwordDealer", "2") then sword = "Wando"
+                elseif remote:InvokeServer("LegendarySwordDealer", "3") then sword = "Saddi"
+                end
+                if sword ~= "" and sword ~= lastSword then
+                    lastSword = sword
+                    SendNotify("sword", {key="sword_"..sword, name=sword, color=0x9B59B6})
+                elseif sword == "" then
+                    lastSword = ""
+                end
+            end)
+
+            -- Boss detection
+            if enemies then
+                for _, boss in ipairs(BOSSES) do
+                    local found = false
+                    pcall(function() found = boss.check(enemies) ~= nil end)
+                    local key = boss.name
+                    if found and not lastBoss[key] then
+                        lastBoss[key] = true
+                        SendNotify("boss", {key="boss_"..key, name=boss.name, color=boss.color})
+                    elseif not found then
+                        lastBoss[key] = false
+                    end
+                end
+            end
+
+            -- Kitsune Island
+            pcall(function()
+                local found = WS.Map:FindFirstChild("KitsuneIsland") ~= nil
+                if found and not lastKitsune then
+                    lastKitsune = true
+                    SendNotify("island", {key="kitsune", name="Kitsune Island 🦊", color=0xFF6B35})
+                elseif not found then lastKitsune = false end
+            end)
+
+            -- Prehistoric Island
+            pcall(function()
+                local loc = WS:FindFirstChild("_WorldOrigin") and WS._WorldOrigin:FindFirstChild("Locations")
+                if not loc then return end
+                local found = loc:FindFirstChild("Prehistoric Island") ~= nil
+                if found and not lastPrehis then
+                    lastPrehis = true
+                    SendNotify("island", {key="prehistoric", name="Prehistoric Island 🦕", color=0x27AE60})
+                elseif not found then lastPrehis = false end
+            end)
+
+            -- Mirage Island
+            pcall(function()
+                local loc = WS:FindFirstChild("_WorldOrigin") and WS._WorldOrigin:FindFirstChild("Locations")
+                if not loc then return end
+                local found = loc:FindFirstChild("Mirage Island") ~= nil
+                if found and not lastMirage then
+                    lastMirage = true
+                    SendNotify("island", {key="mirage", name="Mirage Island 🏝️", color=0x3498DB})
+                elseif not found then lastMirage = false end
+            end)
+
+            -- Fruit Spawn
+            pcall(function()
+                local fruitFolder = WS:FindFirstChild("Fruits")
+                    or WS:FindFirstChild("DroppedFruits")
+                    or WS:FindFirstChild("Drops")
+                if not fruitFolder then return end
+                for _, obj in pairs(fruitFolder:GetChildren()) do
+                    local fName = obj.Name
+                    if not fruitSeen[fName] then
+                        fruitSeen[fName] = true
+                        SendNotify("fruit", {key="fruit_"..fName, name=fName, color=0xE67E22})
+                    end
+                end
+                if #fruitFolder:GetChildren() == 0 then fruitSeen = {} end
+            end)
+
+            -- Haki detection
+            pcall(function()
+                local plr = game.Players.LocalPlayer
+                local hakiVal = plr:FindFirstChild("BusoHaki")
+                    or (plr:FindFirstChild("Data") and plr.Data:FindFirstChild("BusoHaki"))
+                local hakiColor = "Pure Red"
+                pcall(function()
+                    local char = plr.Character
+                    if char then
+                        for _, v in pairs(char:GetDescendants()) do
+                            if v:IsA("SpecialMesh") or v:IsA("Part") then
+                                local c = v.Color
+                                if     c == Color3.fromRGB(255, 0, 0)   then hakiColor = "Pure Red"
+                                elseif c == Color3.fromRGB(0, 0, 255)   then hakiColor = "Pure Blue"
+                                elseif c == Color3.fromRGB(255, 255, 0) then hakiColor = "Pure Yellow"
+                                elseif c == Color3.fromRGB(0, 255, 0)   then hakiColor = "Pure Green"
+                                elseif c == Color3.fromRGB(255, 255, 255) then hakiColor = "Pure White"
+                                end
+                            end
+                        end
+                    end
+                end)
+                if hakiVal and tonumber(hakiVal.Value) and tonumber(hakiVal.Value) >= 100 then
+                    SendNotify("haki", {key="hakiv3", name=hakiColor, color=0x8E44AD})
+                end
+            end)
+        end)
+    end
+end)    
 
 b:AddSeperator("Farming")
 
@@ -4702,17 +5159,13 @@ _G.StartFarm = false
 _G.Level = false
 _G.AutoFarm_Bone = false
 _G.AutoFarm_Cake = false
-_G.AutoTyrant = false -- Adicionado
+_G.AutoTyrant = false 
 _G.AcceptQuest = false
 
--- Variável para guardar o mob de Level Farm
 local CurrentMobLevel = nil
 local CurrentMobLevelSystem = nil
-
--- Define o limite de distância para teleporte condicional (em studs)
 local TELEPORT_DISTANCE_THRESHOLD = 15 
 
--- Função auxiliar para teleporte condicional
 local function TeleportConditional(hrp, targetCFrame, threshold)
     if not hrp or not targetCFrame then return end
     
@@ -4721,12 +5174,6 @@ local function TeleportConditional(hrp, targetCFrame, threshold)
         _tp(targetCFrame)  
     end
 end
-
----
-
-----------------------------------------------------------------------------
--- 1. UI: DROPDOWN + TOGGLES (Coloque isso na seção da sua UI)
-----------------------------------------------------------------------------
 
 b:AddDropdown({
     Title = "Select Farm Mode",
@@ -11601,7 +12048,8 @@ p:AddToggle({
         
         -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoStoreFruit_Save"] = I
-
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -11617,12 +12065,15 @@ end);
 p:AddToggle({
     Title = "Auto Tween to Fruit",
     Description = "Automatic tween to get devil fruit",
+    -- 1. Carrega o estado salvo
     Default = GetSetting("AutoTweenFruit_Save", false),
     Callback = function(I)
         _G.TwFruits = I
-
+        
+        -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoTweenFruit_Save"] = I
-
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -11642,12 +12093,15 @@ end);
 p:AddToggle({
     Title = "Auto Collect Fruit",
     Description = "Automatic bring devil fruit",
+    -- 1. Carrega o estado salvo ou false por padrão
     Default = GetSetting("AutoCollectFruit_Save", false),
     Callback = function(I)
         _G.InstanceF = I
         
+        -- 2. Guarda na memória de salvamento
         _G.SaveData["AutoCollectFruit_Save"] = I
-    
+        
+        -- 3. Salva no arquivo Settings.json
         SaveSettings()
     end,
 })
@@ -12081,114 +12535,8 @@ task.spawn(function()
 		end);
 	end);
 end);
+-- (FastAttack module already defined above — no duplicate needed)
 
-local FastAttackModule = {}
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer
+NotificacaoNightMystic("Tsunami Hub", "✅All systems have been downloaded!")
 
-local function SafeWaitForChild(parent, childName)
-    local success, result = pcall(function()
-        return parent:WaitForChild(childName)
-    end)
-    if not success or not result then
-        warn("SafeWaitForChild falhou: " .. tostring(childName))
-    end
-    return result
-end
-
-local Modules = SafeWaitForChild(ReplicatedStorage, "Modules")
-local Net = SafeWaitForChild(Modules, "Net")
-
-local Settings = {
-    AutoClick = true,
-    ClickDelay = 0
-}
-
-local FastAttack = {
-    Distance = 100,
-    attackMobs = true,
-    attackPlayers = true,
-    Equipped = nil
-}
-
-local RegisterAttack = SafeWaitForChild(Net, "RE/RegisterAttack")
-local RegisterHit = SafeWaitForChild(Net, "RE/RegisterHit")
-
-local function IsAlive(character)
-    return character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0
-end
-
-local function ProcessEnemies(OthersEnemies, Folder)
-    local BasePart = nil
-    for _, Enemy in ipairs(Folder:GetChildren()) do
-        local Head = Enemy:FindFirstChild("Head")
-        if Head and IsAlive(Enemy) and Player:DistanceFromCharacter(Head.Position) < FastAttack.Distance then
-            if Enemy ~= Player.Character then
-                table.insert(OthersEnemies, { Enemy, Head })
-                BasePart = Head
-            end
-        end
-    end
-    return BasePart
-end
-
-function FastAttack:Attack(BasePart, OthersEnemies)
-    if not BasePart or #OthersEnemies == 0 then return end
-    pcall(function()
-        RegisterAttack:FireServer(Settings.ClickDelay or 0)
-        RegisterHit:FireServer(BasePart, OthersEnemies)
-    end)
-end
-
-function FastAttack:AttackNearest()
-    local OthersEnemies = {}
-    local EnemiesFolder = workspace:FindFirstChild("Enemies")
-    local CharactersFolder = workspace:FindFirstChild("Characters")
-    local Part1 = nil
-    local Part2 = nil
-    if EnemiesFolder then Part1 = ProcessEnemies(OthersEnemies, EnemiesFolder) end
-    if CharactersFolder then Part2 = ProcessEnemies(OthersEnemies, CharactersFolder) end
-
-    local character = Player.Character
-    if not character then return end
-    local equippedWeapon = character:FindFirstChildOfClass("Tool")
-
-    if equippedWeapon and equippedWeapon:FindFirstChild("LeftClickRemote") then
-        for _, enemyData in ipairs(OthersEnemies) do
-            local enemy = enemyData[1]
-            if enemy and enemy:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("HumanoidRootPart") then
-                local direction = (enemy.HumanoidRootPart.Position - character:GetPivot().Position).Unit
-                pcall(function()
-                    equippedWeapon.LeftClickRemote:FireServer(direction, 1)
-                end)
-            end
-        end
-    elseif #OthersEnemies > 0 then
-        self:Attack(Part1 or Part2, OthersEnemies)
-    else
-        task.wait(0)
-    end
-end
-
-function FastAttack:BladeHits()
-    local Equipped = IsAlive(Player.Character) and Player.Character:FindFirstChildOfClass("Tool")
-    if Equipped and Equipped.ToolTip ~= "Gun" then
-        self:AttackNearest()
-    else
-        task.wait(0)
-    end
-end
-
-task.spawn(function()
-    while task.wait(Settings.ClickDelay) do
-        if Settings.AutoClick then
-            FastAttack:BladeHits()
-        end
-    end
-end)
-
-_ENV.rz_FastAttack = FastAttack
-FastAttackModule.FastAttack = FastAttack
 return FastAttackModule
