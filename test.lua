@@ -250,7 +250,11 @@ Pirates = function()
     replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
 end
 
-local I = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))()
+-- =============================================
+-- [SỬA LỖI] Đổi tên biến thư viện UI từ I thành UI
+-- =============================================
+local UI = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))()
+
 if World1 then
 	Boss = {
 			"The Gorilla King",
@@ -4963,9 +4967,6 @@ local function SendNotify(eventType, data)
         end)
     end)
 end
-
-Discord_Info:AddSeperator("🔔 Webhook Notify VIP")
-Discord_Info:AddParagraph({Title = "📋 Danh Sách Notify", Desc = "🌕 Full Moon | 🌔 Near Full Moon | 💀 Boss Spawn | ⚡ Haki | ⚔️ Legendary Sword | 🍎 Fruit Spawn | 🦊 Kitsune | 🦕 Prehistoric | 🏝️ Mirage"})
 
 task.spawn(function()
     local RS  = Services.ReplicatedStorage
