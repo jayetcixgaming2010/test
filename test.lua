@@ -1154,7 +1154,7 @@ local dist = (I.Position - HRP.Position).Magnitude
 --  SE ESTIVER ATÉ 15 STUDS → USA A VELOCIDADE DE PERTO
 --  CASO CONTRÁRIO → USA A VELOCIDADE PADRÃO
 -- ===============================  
-local speed = dist <= 15 and (getgenv().TweenSpeedNear or 600) or (getgenv().TweenSpeedFar or 300)
+local speed = dist <= 15 and (getgenv().TweenSpeedNear or 300) or (getgenv().TweenSpeedFar or 300)
 
 local info = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)  
 local tween = game:GetService("TweenService"):Create(HRP, info, { CFrame = I })  
