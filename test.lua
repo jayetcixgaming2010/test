@@ -1177,39 +1177,6 @@ _tp = function(I)
     end)
 end
 
-local dist = (I.Position - HRP.Position).Magnitude  
-
--- ===============================  
---  SE ESTIVER ATÉ 15 STUDS → USA A VELOCIDADE DE PERTO
---  CASO CONTRÁRIO → USA A VELOCIDADE PADRÃO
--- ===============================  
-local speed = dist <= 15 and (getgenv().TweenSpeedNear or 300) or (getgenv().TweenSpeedFar or 300)
-
-local info = TweenInfo.new(dist / speed, Enum.EasingStyle.Linear)  
-local tween = game:GetService("TweenService"):Create(HRP, info, { CFrame = I })  
-
--- Caso esteja sentado  
-if e.Humanoid.Sit == true then  
-	HRP.CFrame = CFrame.new(HRP.Position.X, I.Y, HRP.Position.Z)  
-end  
-
-tween:Play()  
-
--- Anti travamento / controle  
-task.spawn(function()  
-	while tween.PlaybackState == Enum.PlaybackState.Playing do  
-		if not shouldTween then  
-			tween:Cancel()  
-			break  
-		end  
-		task.wait(.1)  
-	end  
-
-	getgenv().OnFarm = true  
-end)
-
-end
-
 TeleportToTarget = function(I)
 _tp(I)
 end
