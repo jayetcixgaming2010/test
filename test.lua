@@ -84,7 +84,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local commE = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE")
+local commE = ReplicatedStorage:WaitForChild("Remotes", 10) and ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommE", 10)
 
 local AutoKen = true
 
@@ -106,8 +106,6 @@ task.spawn(function()
     end
 end)
 
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local desiredTeam = "Marines"
 
 if player.Team == nil or player.Team.Name ~= desiredTeam then
@@ -121,22 +119,33 @@ Lighting.Ambient = Color3.new(0.695, 0.695, 0.695)
 Lighting.ColorShift_Bottom = Color3.new(0.695, 0.695, 0.695)
 Lighting.ColorShift_Top = Color3.new(0.695, 0.695, 0.695)
 
- do
+-- Esperar o jogo carregar completamente antes de acessar Character e dados
+repeat
+	local I = (plr.PlayerGui:WaitForChild("Main")):WaitForChild("Loading") and game:IsLoaded();
+	wait();
+until I;
+
+do
 	ply = game.Players;
 	plr = ply.LocalPlayer;
-	Root = plr.Character.HumanoidRootPart;
+	-- Esperar o Character carregar com segurança
+	if not plr.Character then plr.CharacterAdded:Wait() end
+	Root = plr.Character:WaitForChild("HumanoidRootPart");
 	replicated = game:GetService("ReplicatedStorage");
-	Lv = game.Players.LocalPlayer.Data.Level.Value;
+	-- Lv e Energy com pcall para não crashar se Data não existir ainda
+	local ok1, lvVal = pcall(function() return game.Players.LocalPlayer.Data.Level.Value end)
+	Lv = ok1 and lvVal or 0;
 	TeleportService = game:GetService("TeleportService");
 	TW = game:GetService("TweenService");
-Lighting = game:GetService("Lighting");
+	Lighting = game:GetService("Lighting");
 	Enemies = workspace.Enemies;
 	vim1 = game:GetService("VirtualInputManager");
 	vim2 = game:GetService("VirtualUser");
 	TeamSelf = plr.Team;
 	RunSer = game:GetService("RunService");
 	Stats = game:GetService("Stats");
-	Energy = plr.Character.Energy.Value;
+	local ok2, enVal = pcall(function() return plr.Character:WaitForChild("Energy", 5).Value end)
+	Energy = ok2 and enVal or 0;
 	Boss = {};
 	BringConnections = {};
 	MaterialList = {};
@@ -152,10 +161,6 @@ Lighting = game:GetService("Lighting");
 	ClickState = 0;
 	Num_self = 25;
 end;
-repeat
-	local I = (plr.PlayerGui:WaitForChild("Main")):WaitForChild("Loading") and game:IsLoaded();
-	wait();
-until I;
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
     World1 = true
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -170,7 +175,10 @@ Marines = function()
 Pirates = function()
 		replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates");
 	end;
-local I = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))();
+local ok_ui, err_ui = pcall(function()
+	local I = (loadstring(game:HttpGet("https://raw.githubusercontent.com/jayetcixgaming2010/UI/refs/heads/main/mainUI.lua")))();
+end)
+if not ok_ui then warn("[SYNTRAX] Falha ao carregar mainUI: " .. tostring(err_ui)) end
 if World1 then
 	Boss = {
 			"The Gorilla King",
