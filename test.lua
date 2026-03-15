@@ -43,6 +43,81 @@ local function ShowNotification(title, message)
     end)
 end
 
+local function QuickNotify(message, duration)
+    if _G.DisableNotify then return end
+    duration = duration or 3
+    task.spawn(function()
+        local TweenService = game:GetService("TweenService")
+        local CoreGui = game:GetService("CoreGui")
+        local guiName = "NM_QuickNotify"
+        local existing = CoreGui:FindFirstChild(guiName)
+        if existing then existing:Destroy() end
+
+        local sg = Instance.new("ScreenGui")
+        sg.Name = guiName
+        sg.ResetOnSpawn = false
+        pcall(function() sg.Parent = CoreGui end)
+
+        local frame = Instance.new("Frame")
+        frame.Parent = sg
+        frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+        frame.BorderSizePixel = 0
+        frame.Size = UDim2.new(0, 260, 0, 56)
+        frame.Position = UDim2.new(1, 10, 0.78, 0)
+
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local stroke = Instance.new("UIStroke", frame)
+        stroke.Color = Color3.fromRGB(55, 55, 55)
+        stroke.Thickness = 1
+
+        local icon = Instance.new("ImageLabel", frame)
+        icon.BackgroundTransparency = 1
+        icon.Position = UDim2.new(0, 8, 0, 8)
+        icon.Size = UDim2.new(0, 40, 0, 40)
+        icon.Image = "rbxassetid://80900795508277"
+
+        local title = Instance.new("TextLabel", frame)
+        title.BackgroundTransparency = 1
+        title.Position = UDim2.new(0, 56, 0, 7)
+        title.Size = UDim2.new(0, 196, 0, 18)
+        title.Font = Enum.Font.GothamBold
+        title.Text = "Tsunami Hub"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.TextSize = 13
+        title.TextXAlignment = Enum.TextXAlignment.Left
+
+        local msg = Instance.new("TextLabel", frame)
+        msg.BackgroundTransparency = 1
+        msg.Position = UDim2.new(0, 56, 0, 27)
+        msg.Size = UDim2.new(0, 196, 0, 22)
+        msg.Font = Enum.Font.Gotham
+        msg.Text = message
+        msg.TextColor3 = Color3.fromRGB(190, 190, 190)
+        msg.TextSize = 12
+        msg.TextXAlignment = Enum.TextXAlignment.Left
+        msg.TextTruncate = Enum.TextTruncate.AtEnd
+
+        TweenService:Create(frame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Position = UDim2.new(1, -270, 0.78, 0)}):Play()
+
+        task.wait(duration)
+
+        TweenService:Create(frame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+        TweenService:Create(icon,  TweenInfo.new(0.4), {ImageTransparency = 1}):Play()
+        TweenService:Create(title, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        TweenService:Create(msg,   TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+        task.wait(0.4)
+        sg:Destroy()
+    end)
+end
+
+local _origShowNotif = ShowNotification
+ShowNotification = function(title, message)
+    if _G.DisableNotify then return end
+    _origShowNotif(title, message)
+end
+
 ShowNotification("Tsunami Hub", "Script loaded successfully!")
 
 repeat task.wait() until game:IsLoaded()
@@ -1415,11 +1490,11 @@ QuestCheck = function()
     local I = game.Players.LocalPlayer.Data.Level.Value
     
     if World1 and I > 699 then
-        I = 650 -- Force Galley Captain quest (Lv 650)
+        I = 650 -- Força a missão do Galley Captain (Lv 650)
     end
     
     if World2 and I > 1499 then
-        I = 1450 -- Force Water Fighter quest (Lv 1450)
+        I = 1450 -- Força a missão do Water Fighter (Lv 1450)
     end
 
     if World1 then
@@ -2458,7 +2533,7 @@ end
 local ConfigSection = c:AddSection("Manual Save")
 
 ConfigSection:AddButton({
-    Title = "Save Settings Now",
+    Title = "Salvar Configurações Agora",
     Description = "Cria um backup manual das tuas opções atuais",
     Callback = function()
         if SaveSettings then
@@ -2477,7 +2552,7 @@ ConfigSection:AddButton({
 
 ConfigSection:AddButton({
     Title = "Resetar Configurações",
-    Description = "Delete save file and reset to default",
+    Description = "Apaga o ficheiro de save e volta ao padrão",
     Callback = function()
         if isfile and isfile(FullPath) then
             delfile(FullPath)
@@ -2721,12 +2796,21 @@ CS:AddToggle({
 })
 
 serverSection:AddSeperator("Server - Function");
+serverSection:AddButton({ Title = "Spam Join (set Job ID first)", Description = "Teleport to a specific server by Job ID", Callback = function()
+    local jobId = _G.SpamJoinJobId or ""
+    if jobId == "" then
+        ShowNotification("Server", "Please set Job ID first via input box.")
+        return
+    end
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, jobId, game.Players.LocalPlayer)
+end });
 
 serverSection:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
     (game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
 serverSection:AddButton({ Title = "Hop Server", Description = "", Callback = function()
+    QuickNotify("Hopping to another server...", 3)
     Hop();
 end });
 
@@ -3272,7 +3356,7 @@ end
 
 VI_S:AddSeperator("Fontes");
 
-local currentFont = Enum.Font.Arial -- Default font
+local currentFont = Enum.Font.Arial -- Fonte padrão inicial
 
 local function ApplyGlobalFont(fontEnum)
     currentFont = fontEnum
@@ -3437,7 +3521,6 @@ kk:AddButton({
             end)
         end
 
-        
         getgenv().gg_scripters = "Aori0001"
     end
 })
@@ -4400,6 +4483,7 @@ task.spawn(function()
                         
                         NotifyNightMystic("New item caught")
                     end
+                        QuickNotify("Fish caught!", 2)
                 end
             end)
         end
@@ -4496,7 +4580,7 @@ end)
 
 TT:AddToggle({
     Title = "Auto use skill of the rod",
-    Description = "Spam skill Z of the equipped tool",
+    Description = "Spamma a skill Z da ferramenta equipada",
     Default = GetSetting("Fish_AutoSkillZ", false),
     Callback = function(Value)
         _G.AutoSkillZ = Value
@@ -4586,6 +4670,7 @@ b:AddToggle({
     Default = GetSetting("StartFarm_Save", false),
     Callback = function(v)
         _G.StartFarm = v
+        if v then QuickNotify("Auto Farm started", 3) else QuickNotify("Auto Farm stopped", 2) end
 
         _G.Level = false  
         _G.AutoFarm_Bone = false  
@@ -5625,6 +5710,7 @@ T:AddToggle({
 		_B = I
         _G.SaveData["BringMobs_Save"] = I
         SaveSettings()
+        if I then QuickNotify("Bring Mobs ON", 2) else QuickNotify("Bring Mobs OFF", 2) end
 	end,
 })
 
@@ -7229,6 +7315,7 @@ spawn(function()
                 replicated.Remotes.CommF_:InvokeServer("BlackbeardReward", "Microchip", "2")
                 
                 fireclickdetector(workspace.Map.CircleIsland.RaidSummon.Button.Main.ClickDetector)
+						QuickNotify("Raid started (Sea 2)", 3)
                 
                 local enemy = GetConnectionEnemies("Order")
                 if enemy then
@@ -7906,7 +7993,7 @@ spawn(function()
 end);
 zu:AddToggle({
     Title = "Auto Tween To Highest Point",
-    Description = "Fly to the highest point of Mirage Island (ideal for watching the Moon)",
+    Description = "Fly to the highest point of Mirage (ideal for watching the Moon)",
     Default = GetSetting("HighestMirage_Save", false),
     Callback = function(I)
         _G.HighestMirage = I
@@ -10186,7 +10273,7 @@ p:AddToggle({
 
 				if not GetBP("Special Microchip") then
 					
-					local I = {} -- Valid fruit list
+					local I = {} -- Lista de frutas válidas
 
 					for _, data in next, replicated.Remotes.CommF_:InvokeServer("GetFruits") do
 						local rarity = tostring(data.Rarity or ""):lower()
@@ -10221,131 +10308,116 @@ p:AddToggle({
     Description = "Inicia a Raid automaticamente e aguarda 10s entre verificações",
     Default = false,
     Callback = function(I)
-        _G.Auto_StartRaid = I;
+        _G.Auto_StartRaid = I
+        if I then QuickNotify("Auto Start Raid enabled", 3) end
     end,
 });
 
 spawn(function()
-    while true do 
+    while true do
         task.wait(10)
-        
         if _G.Auto_StartRaid then
             pcall(function()
                 if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
-                    
                     if GetBP("Special Microchip") then
-                        
                         if World2 then
-                            _tp(CFrame.new(-6438.73535, 250.645355, -4501.50684));
-                            fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector);
-                            
+                            _tp(CFrame.new(-6438.73535, 250.645355, -4501.50684))
+                            fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
+                            QuickNotify("Raid started (Sea 2)", 3)
                         elseif World3 then
-                            replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602));
-                            
-                            task.wait(0.5); 
-                            
-                            _tp(CFrame.new(-5033.50879, 315.014252, -2947.77539));
-                            
-                            fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector);
-                        end;
-                        
-                    end;
-                end;
-            end);
-        end;
-    end;
-end);
-
-p:AddToggle({
-    Title = "Auto Complete Raid",
-    Description = "",
-    Default = false,
-    Callback = function(I)
-        _G.Raiding = I
-    end,
-})
-
-function IsIslandRaid(cu)
-    local locs = game:GetService("Workspace")["_WorldOrigin"].Locations
-    if locs:FindFirstChild("Island " .. cu) then
-        local min = 4500
-
-        for _, v in ipairs(locs:GetChildren()) do
-            if v.Name == "Island " .. cu then
-                local dist = (v.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-                if dist < min then
-                    min = dist
+                            replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602))
+                            task.wait(0.5)
+                            _tp(CFrame.new(-5033.50879, 315.014252, -2947.77539))
+                            fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
+                            QuickNotify("Raid started (Sea 3)", 3)
+                        end
+                    else
+                        QuickNotify("No Special Microchip found!", 4)
+                    end
                 end
-            end
-        end
-
-        for _, v in ipairs(locs:GetChildren()) do
-            if v.Name == "Island " .. cu then
-                local dist = (v.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-                if dist <= min then
-                    return v
-                end
-            end
+            end)
         end
     end
+end)
+
+p:AddToggle({
+	Title = "Auto Complete Raid",
+	Description = "Auto attack mobs and hop between islands during raid",
+	Default = false,
+	Callback = function(I)
+		_G.Raiding = I
+		if I then QuickNotify("Auto Complete Raid ON", 3) else QuickNotify("Auto Complete Raid OFF", 2) end
+	end,
+});
+
+function IsIslandRaid(cu)
+	local locs = game:GetService("Workspace")["_WorldOrigin"].Locations
+	if locs:FindFirstChild("Island " .. cu) then
+		local minDist = 4500
+		for _, v in ipairs(locs:GetChildren()) do
+			if v.Name == "Island " .. cu then
+				local d = (v.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+				if d < minDist then minDist = d end
+			end
+		end
+		for _, v in ipairs(locs:GetChildren()) do
+			if v.Name == "Island " .. cu then
+				if (v.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= minDist then
+					return v
+				end
+			end
+		end
+	end
 end
 
 function getNextIsland()
-    local order = {5,4,3,2,1}
-    for _, id in ipairs(order) do
-        local island = IsIslandRaid(id)
-        if island then
-            local dist = (island.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-            if dist <= 4500 then
-                return island
-            end
-        end
-    end
+	for _, id in ipairs({5,4,3,2,1}) do
+		local island = IsIslandRaid(id)
+		if island then
+			if (island.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 4500 then
+				return island
+			end
+		end
+	end
 end
 
 function attackNearbyEnemies()
-    for _, mob in pairs(workspace.Enemies:GetChildren()) do
-        if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") then
-            if mob.Humanoid.Health > 0 then
-                local dist = (mob.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude
-                if dist <= 1000 then
-                    repeat
-                        G.Kill(mob, _G.Raiding)
-                        task.wait()
-                    until not _G.Raiding or not mob.Parent or mob.Humanoid.Health <= 0
-                end
-            end
-        end
-    end
+	for _, mob in pairs(workspace.Enemies:GetChildren()) do
+		if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") then
+			if mob.Humanoid.Health > 0 then
+				if (mob.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 1000 then
+					repeat
+						G.Kill(mob, _G.Raiding)
+						task.wait()
+					until not _G.Raiding or not mob.Parent or mob.Humanoid.Health <= 0
+				end
+			end
+		end
+	end
 end
 
 spawn(function()
-pcall(function()
-while wait(Sec) do
-    if _G.Raiding then
-
-        if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then
-
-            attackNearbyEnemies()
-
-            local nextIsland = getNextIsland()
-            if nextIsland then
-                _tp(nextIsland.CFrame * CFrame.new(0, 50, 0))
-
-                NextIs = true
-            else
-                NextIs = false
-            end
-
-        else
-            NextIs = false
-        end
-
-    else
-        NextIs = false
-    end
-end
-end)
+	pcall(function()
+		while wait(Sec) do
+			if _G.Raiding then
+				if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then
+					attackNearbyEnemies()
+					local nextIsland = getNextIsland()
+					if nextIsland then
+						_tp(nextIsland.CFrame * CFrame.new(0, 50, 0))
+						QuickNotify("Moving to " .. tostring(nextIsland.Name), 2)
+						NextIs = true
+					else
+						NextIs = false
+					end
+				else
+					NextIs = false
+				end
+			else
+				NextIs = false
+			end
+		end
+	end)
 end)
 
 p:AddToggle({
@@ -11139,19 +11211,99 @@ spawn(function()
 		end;
 	end;
 end);
-D:AddSeperator("Shop Options");
-D:AddButton({ Title = "Buy Buso", Description = "", Callback = function()
+D:AddSeperator("Abilities Shop");
+D:AddButton({ Title = "Buy Buso Haki [ 25,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyHaki", "Buso");
 	end });
-D:AddButton({ Title = "Buy Geppo", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Skyjump / Geppo [ 10,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyHaki", "Geppo");
 	end });
-D:AddButton({ Title = "Buy Soru", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Soru [ 100,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyHaki", "Soru");
 	end });
-D:AddButton({ Title = "Buy Ken", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Observation Haki [ 750,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("KenTalk", "Buy");
 	end });
+
+local SelectedMelee = "Dark Step"
+
+local function GetAvailableMeleeOptions()
+    local list = {}
+    for name, data in pairs(MeleeCoords) do
+        if data.Pos then
+            table.insert(list, name)
+        end
+    end
+    table.sort(list)
+    return list
+end
+
+D:AddSeperator("Fighting Style - Auto Buy");
+D:AddDropdown({ Title = "Choose Melee To Buy", Description = "Select fighting style", Options = GetAvailableMeleeOptions(), Default = "Dark Step", Callback = function(Value)
+    SelectedMelee = Value
+end });
+D:AddToggle({ Title = "Auto Buy Melee", Description = "Tween to NPC and purchase automatically", Default = false, Callback = function(Value)
+    _G.AutoBuyMelee = Value
+    _G.SaveData["AutoBuyMelee_Save"] = Value
+    SaveSettings()
+    if Value then
+        _G.MeleeNoclip = game:GetService("RunService").Stepped:Connect(function()
+            if not _G.AutoBuyMelee then
+                if _G.MeleeNoclip then _G.MeleeNoclip:Disconnect() end
+                return
+            end
+            local char = game.Players.LocalPlayer.Character
+            if char then
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if _G.MeleeNoclip then _G.MeleeNoclip:Disconnect(); _G.MeleeNoclip = nil end
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") then v.CanCollide = true end
+            end
+        end
+    end
+    task.spawn(function()
+        while _G.AutoBuyMelee do
+            task.wait()
+            if not _G.AutoBuyMelee then break end
+            local data = MeleeCoords[SelectedMelee]
+            if not data or not data.Pos then
+                ShowNotification("Tsunami Hub", SelectedMelee .. " not available in current Sea.")
+                _G.AutoBuyMelee = false; break
+            end
+            local lp = game.Players.LocalPlayer
+            if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = lp.Character.HumanoidRootPart
+                local dist = (hrp.Position - data.Pos.Position).Magnitude
+                if dist > 15 then
+                    _tp(data.Pos)
+                else
+                    shouldTween = false
+                    hrp.CFrame = data.Pos
+                    pcall(function()
+                        replicated.Remotes.CommF_:InvokeServer(data.Key)
+                        if data.Key == "BuyDragonClaw" then
+                            replicated.Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","1")
+                            replicated.Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","2")
+                        elseif data.Key == "BuySharkmanKarate" then
+                            replicated.Remotes.CommF_:InvokeServer("BuySharkmanKarate",true)
+                            replicated.Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+                        end
+                    end)
+                    ShowNotification("Tsunami Hub", "Purchased: " .. SelectedMelee)
+                    _G.AutoBuyMelee = false
+                    task.wait(1)
+                end
+            end
+        end
+    end)
+end });
 D:AddSeperator("Fighting - Style");
 
 local MeleeCoords = {
@@ -11309,65 +11461,80 @@ D:AddButton({ Title = "Craft MythicalScroll", Description = "", Callback = funct
 		replicated.Remotes.CommF_:InvokeServer("CraftItem", "Craft", "MythicalScroll");
 	end });
 D:AddSeperator("Weapon World1");
-D:AddButton({ Title = "Buy Cutlass", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Cutlass [ 1,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Cutlass");
 	end });
-D:AddButton({ Title = "Buy Katana", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Katana [ 1,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Katana");
 	end });
-D:AddButton({ Title = "Buy Iron Mace", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Iron Mace [ 25,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Iron Mace");
 	end });
-D:AddButton({ Title = "Buy Duel Katana", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Duel Katana [ 12,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Duel Katana");
 	end });
-D:AddButton({ Title = "Buy Triple Katana", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Triple Katana [ 60,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Triple Katana");
 	end });
-D:AddButton({ Title = "Buy Pipe", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Pipe [ 100,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Pipe");
 	end });
-D:AddButton({ Title = "Buy Dual-Headed Blade", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Dual-Headed Blade [ 400,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Dual-Headed Blade");
 	end });
-D:AddButton({ Title = "Buy Bisento", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Bisento [ 1,200,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Bisento");
 	end });
-D:AddButton({ Title = "Buy Soul Cane", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Soul Cane [ 750,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Soul Cane");
 	end });
-D:AddButton({ Title = "Buy Slingshot", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Slingshot [ 5,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Slingshot");
 	end });
-D:AddButton({ Title = "Buy Musket", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Musket [ 8,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Musket");
 	end });
 D:AddButton({ Title = "Buy Dual Flintlock", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Dual Flintlock");
 	end });
-D:AddButton({ Title = "Buy Flintlock", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Refined Slingshot [ 30,000 Beli ]", Description = "", Callback = function()
+		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Refined Slingshot");
+	end });
+D:AddButton({ Title = "Buy Flintlock [ 10,500 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Flintlock");
 	end });
-D:AddButton({ Title = "Buy Refined Flintlock", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Refined Flintlock [ 65,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Refined Flintlock");
 	end });
-D:AddButton({ Title = "Buy Cannon", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Cannon [ 100,000 Beli ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BuyItem", "Cannon");
 	end });
-D:AddButton({ Title = "Buy Kabucha", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Kabucha [ 1,500 Fragments ]", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BlackbeardReward", "Slingshot", "2");
 	end });
+D:AddButton({ Title = "Buy Pole v.2 [ 5,000 Fragments ]", Description = "", Callback = function()
+		replicated.Remotes.CommF_:InvokeServer("ThunderGodTalk");
+	end });
 D:AddSeperator("Fragments shop");
-D:AddButton({ Title = "Buy Refund Stats", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Refund Stats (2500 Fragments)", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BlackbeardReward", "Refund", "2");
 	end });
-D:AddButton({ Title = "Buy Reroll Race", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Reroll Race (3000 Fragments)", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("BlackbeardReward", "Reroll", "2");
 	end });
-D:AddButton({ Title = "Buy Ghoul Race (2.5k)", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Draco Race", Description = "Teleport to Dragon Wizard and purchase", Callback = function()
+		task.spawn(function()
+			_tp(CFrame.new(5814.427, 1208.327, 884.579))
+			local target = Vector3.new(5814.427, 1208.327, 884.579)
+			local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
+			repeat task.wait() until (char.HumanoidRootPart.Position - target).Magnitude < 1
+			game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/InteractDragonQuest"):InvokeServer({NPC="Dragon Wizard",Command="DragonRace"})
+		end)
+	end });
+D:AddButton({ Title = "Buy Ghoul Race (2500 Fragments)", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("Ectoplasm", " Change", 4);
 	end });
-D:AddButton({ Title = "Buy Cyborg Race (2.5k)", Description = "", Callback = function()
+D:AddButton({ Title = "Buy Cyborg Race (2500 Fragments)", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("CyborgTrainer", " Buy");
 	end });
 kk:AddSeperator("Open");
@@ -11404,6 +11571,7 @@ kk:AddButton({
 kk:AddSeperator("Team");
 kk:AddButton({ Title = "Set Pirate Team", Description = "", Callback = function()
 		Pirates();
+		QuickNotify("Redeeming all codes...", 3)
 	end });
 kk:AddButton({ Title = "Set Marine Team", Description = "", Callback = function()
 		Marines();
