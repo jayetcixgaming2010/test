@@ -2,20 +2,35 @@ local function NotificacaoNightMystic(titulo, mensagem)
     local TweenService = game:GetService("TweenService")
     local CoreGui = game:GetService("CoreGui")
     local LogoID = "rbxassetid://80900795508277"
+    local SHOW_DURATION = 10  -- giây hiển thị
+    local TWEEN_IN_TIME  = 0.55
+    local TWEEN_OUT_TIME = 0.6
 
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "NM_Notify"
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     pcall(function() ScreenGui.Parent = CoreGui end)
-    
+
+    -- Frame bắt đầu ngoài màn hình bên phải, trong suốt hoàn toàn
     local Frame = Instance.new("Frame")
     Frame.Parent = ScreenGui
     Frame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+    Frame.BackgroundTransparency = 1
     Frame.Position = UDim2.new(1, 20, 0.85, 0)
-    Frame.Size = UDim2.new(0, 280, 0, 65)
-    
-    local UICorner = Instance.new("UICorner"); UICorner.CornerRadius = UDim.new(0, 10); UICorner.Parent = Frame
-    local UIStroke = Instance.new("UIStroke"); UIStroke.Parent = Frame; UIStroke.Color = Color3.fromRGB(45, 45, 45); UIStroke.Thickness = 1
+    Frame.Size = UDim2.new(0, 280, 0, 70)
+    Frame.ClipsDescendants = true
 
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = Frame
+
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Parent = Frame
+    UIStroke.Color = Color3.fromRGB(60, 60, 60)
+    UIStroke.Thickness = 1
+    UIStroke.Transparency = 1  -- começa invisível
+
+    -- Logo
     local Logo = Instance.new("ImageLabel")
     Logo.Parent = Frame
     Logo.BackgroundTransparency = 1
@@ -23,21 +38,100 @@ local function NotificacaoNightMystic(titulo, mensagem)
     Logo.Size = UDim2.new(0, 45, 0, 45)
     Logo.Image = LogoID
     Logo.ScaleType = Enum.ScaleType.Fit
+    Logo.ImageTransparency = 1
 
+    -- Title
     local Title = Instance.new("TextLabel")
-    Title.Parent = Frame; Title.BackgroundTransparency = 1; Title.Position = UDim2.new(0, 65, 0, 12); Title.Size = UDim2.new(1, -70, 0, 20)
-    Title.Font = Enum.Font.GothamBold; Title.Text = titulo; Title.TextColor3 = Color3.fromRGB(255, 255, 255); Title.TextSize = 14; Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = Frame
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 65, 0, 10)
+    Title.Size = UDim2.new(1, -75, 0, 22)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = titulo
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextTransparency = 1
+    Title.TextSize = 14
+    Title.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- Message
     local Msg = Instance.new("TextLabel")
-    Msg.Parent = Frame; Msg.BackgroundTransparency = 1; Msg.Position = UDim2.new(0, 65, 0, 32); Msg.Size = UDim2.new(1, -70, 0, 20)
-    Msg.Font = Enum.Font.GothamMedium; Msg.Text = mensagem; Msg.TextColor3 = Color3.fromRGB(200, 200, 200); Msg.TextSize = 12; Msg.TextXAlignment = Enum.TextXAlignment.Left
-    
-    TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(1, -300, 0.85, 0)}):Play()
+    Msg.Parent = Frame
+    Msg.BackgroundTransparency = 1
+    Msg.Position = UDim2.new(0, 65, 0, 32)
+    Msg.Size = UDim2.new(1, -75, 0, 20)
+    Msg.Font = Enum.Font.GothamMedium
+    Msg.Text = mensagem
+    Msg.TextColor3 = Color3.fromRGB(190, 190, 190)
+    Msg.TextTransparency = 1
+    Msg.TextSize = 12
+    Msg.TextXAlignment = Enum.TextXAlignment.Left
 
-    task.delay(10, function()
-        if Frame then
-            TweenService:Create(Frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0.85, 0)}):Play()
-            task.wait(0.5)
+    -- Progress bar (đếm ngược)
+    local BarBg = Instance.new("Frame")
+    BarBg.Parent = Frame
+    BarBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    BarBg.BackgroundTransparency = 0.4
+    BarBg.Position = UDim2.new(0, 10, 1, -8)
+    BarBg.Size = UDim2.new(1, -20, 0, 3)
+    BarBg.BorderSizePixel = 0
+
+    local UICornerBar = Instance.new("UICorner")
+    UICornerBar.CornerRadius = UDim.new(1, 0)
+    UICornerBar.Parent = BarBg
+
+    local Bar = Instance.new("Frame")
+    Bar.Parent = BarBg
+    Bar.BackgroundColor3 = Color3.fromRGB(120, 120, 255)
+    Bar.Size = UDim2.new(1, 0, 1, 0)
+    Bar.BorderSizePixel = 0
+
+    local UICornerBar2 = Instance.new("UICorner")
+    UICornerBar2.CornerRadius = UDim.new(1, 0)
+    UICornerBar2.Parent = Bar
+
+    -- ═══════════════════════════════════
+    -- TWEEN VÀO: trượt + fade đồng thời
+    -- ═══════════════════════════════════
+    local tweenInInfo = TweenInfo.new(TWEEN_IN_TIME, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    TweenService:Create(Frame, tweenInInfo, {
+        Position = UDim2.new(1, -295, 0.85, 0),
+        BackgroundTransparency = 0
+    }):Play()
+
+    TweenService:Create(UIStroke, tweenInInfo, {Transparency = 0}):Play()
+    TweenService:Create(Logo, tweenInInfo, {ImageTransparency = 0}):Play()
+    TweenService:Create(Title, tweenInInfo, {TextTransparency = 0}):Play()
+    TweenService:Create(Msg, tweenInInfo, {TextTransparency = 0}):Play()
+
+    -- Progress bar đếm ngược mượt mà
+    task.delay(TWEEN_IN_TIME * 0.5, function()
+        TweenService:Create(Bar,
+            TweenInfo.new(SHOW_DURATION, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
+            {Size = UDim2.new(0, 0, 1, 0)}
+        ):Play()
+    end)
+
+    -- ═══════════════════════════════════
+    -- TWEEN RA: trượt + fade đồng thời
+    -- ═══════════════════════════════════
+    task.delay(SHOW_DURATION, function()
+        if not Frame or not Frame.Parent then return end
+
+        local tweenOutInfo = TweenInfo.new(TWEEN_OUT_TIME, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+
+        TweenService:Create(Frame, tweenOutInfo, {
+            Position = UDim2.new(1, 20, 0.85, 0),
+            BackgroundTransparency = 1
+        }):Play()
+
+        TweenService:Create(UIStroke, tweenOutInfo, {Transparency = 1}):Play()
+        TweenService:Create(Logo, tweenOutInfo, {ImageTransparency = 1}):Play()
+        TweenService:Create(Title, tweenOutInfo, {TextTransparency = 1}):Play()
+        TweenService:Create(Msg, tweenOutInfo, {TextTransparency = 1}):Play()
+
+        task.wait(TWEEN_OUT_TIME)
+        if ScreenGui and ScreenGui.Parent then
             ScreenGui:Destroy()
         end
     end)
