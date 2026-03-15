@@ -11672,64 +11672,58 @@ D:AddButton({ Title = "Buy Soru", Description = "", Callback = function()
 D:AddButton({ Title = "Buy Ken", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("KenTalk", "Buy");
 	end });
-D:AddSeperator("Fighting - Style");
--- =========================================================
--- THAY THẾ PHẦN "Fighting - Style" HIỆN TẠI BẰNG CODE NÀY
--- =========================================================
 D:AddSeperator("Fighting - Style")
-
--- Dữ liệu các Melee (giữ nguyên như cũ)
-local MeleeData = {
-    ["Black Leg"] = {
+local MeleeCoords = {
+    ["Dark Step"] = {
         Key = "BuyBlackLeg",
         NPC = "Dark Step Teacher",
-        Pos = World1 and CFrame.new(-985, 13, 3988)
-            or World2 and CFrame.new(-4753, 35, -4850)
-            or World3 and CFrame.new(-5045, 371, -3181)
+        Pos = World1 and CFrame.new(-985, 13, 3988) 
+            or World2 and CFrame.new(-4753, 35, -4850) 
+            or World3 and CFrame.new(-5045, 371, -3181) 
             or nil
     },
-    ["Electro"] = {
+    ["Electric"] = {
         Key = "BuyElectro",
         NPC = "Mad Scientist",
-        Pos = World1 and CFrame.new(-5384, 13, -2148)
-            or World2 and CFrame.new(-4867, 35, -4766)
-            or World3 and CFrame.new(-4995, 314, -3203)
+        Pos = World1 and CFrame.new(-5384, 13, -2148) 
+            or World2 and CFrame.new(-4867, 35, -4766) 
+            or World3 and CFrame.new(-4995, 314, -3203) 
             or nil
     },
-    ["Fishman Karate"] = {
+    ["Water Kung Fu"] = {
         Key = "BuyFishmanKarate",
         NPC = "Water Kung Fu Teacher",
-        Pos = World1 and CFrame.new(61585, 18, 987)
-            or World2 and CFrame.new(-4958, 35, -4668)
-            or World3 and CFrame.new(-5023, 371, -3190)
+        Pos = World1 and CFrame.new(61585, 18, 987) 
+            or World2 and CFrame.new(-4958, 35, -4668) 
+            or World3 and CFrame.new(-5023, 371, -3190) 
             or nil
     },
-    ["Dragon Claw"] = {
+    ["Dragon Breath"] = {
         Key = "BuyDragonClaw",
         NPC = "Sabi",
-        Pos = World2 and CFrame.new(701, 187, 655)
-            or World3 and CFrame.new(-4981, 371, -3207)
+        Pos = World2 and CFrame.new(701, 187, 655) 
+            or World3 and CFrame.new(-4981, 371, -3207) 
             or nil
     },
     ["Superhuman"] = {
         Key = "BuySuperhuman",
         NPC = "Martial Arts Master",
-        Pos = World2 and CFrame.new(1374, 247, -5192)
-            or World3 and CFrame.new(-5004, 371, -3198)
+        Pos = World2 and CFrame.new(1374, 247, -5192) 
+            or World3 and CFrame.new(-5004, 371, -3198) 
             or nil
     },
     ["Death Step"] = {
         Key = "BuyDeathStep",
         NPC = "Phoeyu, the Reformed",
-        Pos = World2 and CFrame.new(6357, 296, -6762)
-            or World3 and CFrame.new(-4999, 314, -3221)
+        Pos = World2 and CFrame.new(6357, 296, -6762) 
+            or World3 and CFrame.new(-4999, 314, -3221) 
             or nil
     },
     ["Sharkman Karate"] = {
         Key = "BuySharkmanKarate",
         NPC = "Daigrock, the Sharkman",
-        Pos = World2 and CFrame.new(-2602, 238, -10316)
-            or World3 and CFrame.new(-4972, 314, -3222)
+        Pos = World2 and CFrame.new(-2602, 238, -10316) 
+            or World3 and CFrame.new(-4972, 314, -3222) 
             or nil
     },
     ["Dragon Talon"] = {
@@ -11754,134 +11748,122 @@ local MeleeData = {
     }
 }
 
--- Hàm kiểm tra đã có Melee chưa
-local function HasMelee(meleeName)
-    -- Chuyển đổi tên hiển thị thành tên trong game nếu cần
-    local gameName = meleeName
-    if meleeName == "Black Leg" then gameName = "Black Leg"
-    elseif meleeName == "Electro" then gameName = "Electro"
-    elseif meleeName == "Fishman Karate" then gameName = "Fishman Karate"
-    elseif meleeName == "Dragon Claw" then gameName = "Dragon Claw"
-    elseif meleeName == "Superhuman" then gameName = "Superhuman"
-    elseif meleeName == "Death Step" then gameName = "Death Step"
-    elseif meleeName == "Sharkman Karate" then gameName = "Sharkman Karate"
-    elseif meleeName == "Dragon Talon" then gameName = "Dragon Talon"
-    elseif meleeName == "Electric Claw" then gameName = "Electric Claw"
-    elseif meleeName == "Godhuman" then gameName = "Godhuman"
-    elseif meleeName == "Sanguine Art" then gameName = "Sanguine Art"
+local SelectedMelee = "Dark Step "
+
+local function GetAvailableMeleeOptions()
+    local list = {}
+    for name, data in pairs(MeleeCoords) do
+        if data.Pos then 
+            table.insert(list, name) 
+        end
     end
-    
-    -- Sử dụng hàm GetIn có sẵn để kiểm tra inventory
-    if GetIn and GetIn(gameName) then
-        return true
-    end
-    -- Fallback: kiểm tra trực tiếp
-    local plr = game.Players.LocalPlayer
-    return (plr.Backpack:FindFirstChild(gameName) or plr.Character:FindFirstChild(gameName)) ~= nil
+    table.sort(list)
+    return list
 end
 
--- Biến để theo dõi Melee đang được mua tự động
-_G.CurrentBuyingMelee = nil
-
--- Hàm mua Melee bằng Tween
-local function StartAutoBuyMelee(meleeName)
-    local melee = MeleeData[meleeName]
-    if not melee or not melee.Pos then
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Lỗi",
-            Text = "Melee không có ở Sea này!",
-            Duration = 3
-        })
-        return
+Shop:AddDropdown({
+    Name = "Choose Melee To Auto Buy",
+    Options = GetAvailableMeleeOptions(),
+    Default = "Dark Step",
+    Callback = function(Value)
+        SelectedMelee = Value
     end
+})
 
-    -- Kiểm tra nếu đã có rồi
-    if HasMelee(meleeName) then
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Melee",
-            Text = "Bạn đã sở hữu " .. meleeName .. " rồi!",
-            Duration = 3
-        })
-        return
-    end
-
-    -- Nếu đang mua một Melee khác, tắt nó đi
-    if _G.CurrentBuyingMelee and _G.CurrentBuyingMelee ~= meleeName then
-        _G.AutoBuyMelee = false
-    end
-
-    -- Bật chế độ auto buy cho Melee này
-    _G.AutoBuyMelee = true
-    _G.CurrentBuyingMelee = meleeName
-
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "Auto Buy",
-        Text = "Đang mua " .. meleeName .. "...",
-        Duration = 3
-    })
-
-    -- Vòng lặp mua
-    task.spawn(function()
-        while _G.AutoBuyMelee and _G.CurrentBuyingMelee == meleeName and not HasMelee(meleeName) do
-            pcall(function()
-                local plr = game.Players.LocalPlayer
-                local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-
-                local targetPos = melee.Pos
-                local dist = (targetPos.Position - hrp.Position).Magnitude
-
-                if dist > 10 then
-                    _tp(targetPos)
-                    task.wait(0.5)
-                else
-                    replicated.Remotes.CommF_:InvokeServer(melee.Key)
-                    task.wait(1)
+Shop:AddToggle({
+    Name = "Auto Buy Melee",
+    Default = GetSetting("AutoBuyMelee_Save", false),
+    Callback = function(Value)
+        _G.AutoBuyMelee = Value
+        _G.SaveData["AutoBuyMelee_Save"] = Value
+        SaveSettings()
+        
+        
+        if Value then
+            _G.MeleeNoclip = game:GetService("RunService").Stepped:Connect(function()
+                if not _G.AutoBuyMelee then 
+                    if _G.MeleeNoclip then _G.MeleeNoclip:Disconnect() end
+                    return 
+                end
+                local char = game.Players.LocalPlayer.Character
+                if char then
+                    for _, v in pairs(char:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide then
+                            v.CanCollide = false
+                        end
+                    end
                 end
             end)
-            task.wait(0.2)
+        else
+            if _G.MeleeNoclip then 
+                _G.MeleeNoclip:Disconnect()
+                _G.MeleeNoclip = nil
+            end
+            local char = game.Players.LocalPlayer.Character
+            if char then
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") then v.CanCollide = true end
+                end
+            end
         end
 
-        -- Khi mua xong hoặc bị tắt
-        if _G.AutoBuyMelee and _G.CurrentBuyingMelee == meleeName then
-            if HasMelee(meleeName) then
-                game.StarterGui:SetCore("SendNotification", {
-                    Title = "Thành công",
-                    Text = "Đã mua " .. meleeName .. "!",
-                    Duration = 3
-                })
-            end
-            _G.AutoBuyMelee = false
-            _G.CurrentBuyingMelee = nil
-        end
-    end)
-end
+        
+        task.spawn(function()
+            while _G.AutoBuyMelee do
+                task.wait()
+                if not _G.AutoBuyMelee then break end
 
--- Tạo các nút mua cho từng Melee (chỉ hiển thị nếu có ở Sea hiện tại)
-for meleeName, data in pairs(MeleeData) do
-    if data.Pos ~= nil then  -- Chỉ hiển thị nếu có tọa độ ở Sea này
-        D:AddButton({
-            Title = "Auto Buy " .. meleeName,
-            Description = "Tự động tìm đến " .. (data.NPC or "NPC") .. " và mua",
-            Callback = function()
-                StartAutoBuyMelee(meleeName)
-            end
-        })
-    end
-end
+                local data = MeleeCoords[SelectedMelee]
+                if not data or not data.Pos then
+                    
+                    if bearlib and bearlib.Notify then
+                        bearlib:Notify({
+                            Title = "Tsunami Hub",
+                            Message = "Lỗi: Không tìm thấy toạ độ cho Melee này ở Sea hiện tại!",
+                            Duration = 3
+                        })
+                    end
+                    _G.AutoBuyMelee = false
+                    break
+                end
 
--- Nút dừng lại nếu cần
-D:AddButton({
-    Title = "Stop Auto Buy",
-    Description = "Dừng quá trình mua tự động",
-    Callback = function()
-        _G.AutoBuyMelee = false
-        _G.CurrentBuyingMelee = nil
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Đã dừng",
-            Text = "Đã dừng mua tự động",
-            Duration = 2
-        })
+                local lp = game.Players.LocalPlayer
+                if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                    local hrp = lp.Character.HumanoidRootPart
+                    local dist = (hrp.Position - data.Pos.Position).Magnitude
+
+                    if dist > 15 then
+                        
+                        _tp(data.Pos)
+                    else
+                        
+                        shouldTween = false
+                        hrp.CFrame = data.Pos
+                        
+                        
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(data.Key)
+                        
+                        if data.Key == "BuyDragonClaw" then
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","1")
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","2")
+                        elseif data.Key == "BuySharkmanKarate" then
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate",true)
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+                        end
+                        
+                        
+                        if bearlib and bearlib.Notify then
+                            bearlib:Notify({
+                                Title = "Tsunami Hub",
+                                Message = "Đã mua: " .. SelectedMelee,
+                                Duration = 2
+                            })
+                        end
+                        task.wait(1)
+                    end
+                end
+            end
+        end)
     end
 })
 D:AddSeperator("Accessory");
