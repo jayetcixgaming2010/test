@@ -11761,7 +11761,7 @@ local function GetAvailableMeleeOptions()
     return list
 end
 
-Shop:AddDropdown({
+D:AddButton({
     Name = "Choose Melee To Auto Buy",
     Options = GetAvailableMeleeOptions(),
     Default = "Dark Step",
@@ -11770,7 +11770,7 @@ Shop:AddDropdown({
     end
 })
 
-Shop:AddToggle({
+D:AddButton({
     Name = "Auto Buy Melee",
     Default = GetSetting("AutoBuyMelee_Save", false),
     Callback = function(Value)
